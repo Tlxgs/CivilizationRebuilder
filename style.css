@@ -1,0 +1,298 @@
+* {
+    box-sizing: border-box;
+    user-select: none;
+}
+body {
+    background: #1a2a1f;
+    font-family: 'Segoe UI', 'Roboto', monospace;
+    margin: 0;
+    padding: 20px;
+}
+.game-container {
+    max-width: 1600px;
+    margin: 0 auto;
+    background: #0f1a0c;
+    border-radius: 1rem;
+    padding: 1rem;
+    box-shadow: 0 0 15px rgba(0,0,0,0.5);
+    color: #e0e0a0;
+}
+h2 {
+    margin-top: 0;
+    border-left: 5px solid #c9a53b;
+    padding-left: 0.8rem;
+}
+
+/* 左右布局 */
+.main-layout {
+    display: flex;
+    gap: 1rem;
+}
+.sidebar {
+    flex: 0 0 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+.main-content {
+    flex: 1;
+}
+
+/* 资源栏 */
+.resource-bar {
+    background: #2a3a24;
+    border-radius: 0.8rem;
+    padding: 0.4rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+    font-weight: bold;
+}
+.resource-item {
+    background: #1e2a1a;
+    padding: 0.2rem 0.4rem;
+    border-radius: 2rem;
+    cursor: help;
+    text-align: center;
+}
+
+/* 行动面板 */
+.actions-panel {
+    background: #2a3a24;
+    border-radius: 0.8rem;
+    padding: 0.8rem;
+}
+.actions-panel h3 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+    border-left: 3px solid #c9a53b;
+    padding-left: 0.5rem;
+}
+.action-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+.action-btn {
+    background: #3a5a30;
+    border: 1px solid #c9a53b;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    font-size: 0.9rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: 0.05s linear;
+    color: #e0e0a0;
+}
+.action-btn:hover {
+    background: #5a8a40;
+    transform: scale(1.02);
+}
+
+/* 选项卡 */
+.tabs {
+    display: flex;
+    gap: 0.2rem;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+}
+.tab-btn {
+    background: #2a3a24;
+    border: none;
+    color: #e0e0a0;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+    cursor: pointer;
+    font-weight: bold;
+}
+.tab-btn.active {
+    background: #3a5a30;
+    color: #ffdd99;
+    border-bottom: 2px solid #c9a53b;
+}
+.panel {
+    background: #1a2a14;
+    border-radius: 0 0.8rem 0.8rem 0.8rem;
+    padding: 1rem;
+    border: 1px solid #6a8a4a;
+    min-height: 450px;
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+/* 建筑网格布局：每行三个 */
+.building-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+}
+.building-card {
+    background: #2a3a22;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: help;
+}
+.building-card-info {
+    font-weight: bold;
+}
+.btn-group {
+    display: flex;
+    gap: 0.3rem;
+}
+.btn-square {
+    background: #3a5a30;
+    border: none;
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 0.3rem;
+    cursor: pointer;
+    font-weight: bold;
+}
+.btn-square:active {
+    background: #c9a53b;
+}
+
+/* 其他通用样式 */
+.grid-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+}
+.card-btn {
+    background: #2a3a22;
+    border: 1px solid #6a8a4a;
+    border-radius: 0.5rem;
+    padding: 0.5rem 0.8rem;
+    cursor: pointer;
+    text-align: left;
+    min-width: 180px;
+    transition: 0.05s linear;
+}
+.card-btn:hover {
+    background: #3a4a30;
+    border-color: #c9a53b;
+}
+.btn-rect {
+    background: #3a5a30;
+    border: none;
+    color: white;
+    padding: 0.3rem 0.8rem;
+    border-radius: 0.3rem;
+    cursor: pointer;
+}
+.policy-group {
+    margin-bottom: 1rem;
+}
+.policy-title {
+    font-weight: bold;
+    border-left: 4px solid #c9a53b;
+    padding-left: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+.radio-label {
+    display: block;
+    margin: 0.3rem 0;
+}
+.reset-area {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.8rem;
+    margin-bottom: 1rem;
+}
+.footer-bar {
+    margin-top: 1rem;
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.8rem;
+    color: #b0b07a;
+}
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.7);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+.modal-content {
+    background: #1a2a14;
+    border: 2px solid #c9a53b;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    min-width: 400px;
+    max-width: 90%;
+}
+.modal-close {
+    float: right;
+    font-size: 1.5rem;
+    cursor: pointer;
+}
+.modal-buttons {
+    margin-top: 1rem;
+    display: flex;
+    gap: 0.8rem;
+    justify-content: flex-end;
+}
+#import-text {
+    width: 100%;
+    background: #0a1008;
+    color: #e0e0a0;
+    border: 1px solid #6a8a4a;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    font-family: monospace;
+}
+.tooltip {
+    position: fixed;
+    background: #000000cc;
+    color: #ffffaa;
+    padding: 0.3rem 0.6rem;
+    border-radius: 0.4rem;
+    font-size: 0.7rem;
+    z-index: 2000;
+    pointer-events: none;
+    white-space: pre-line;
+    max-width: 300px;
+}
+/* 贸易面板样式 */
+.trade-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.8rem;
+}
+.trade-card {
+    background: #2a3a22;
+    border-radius: 0.5rem;
+    padding: 0.5rem;
+    border: 1px solid #6a8a4a;
+}
+.trade-name {
+    margin-bottom: 0.5rem;
+    text-align: center;
+}
+.trade-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+}
+.trade-buy-btn, .trade-sell-btn {
+    background: #3a5a30;
+    border: 1px solid #c9a53b;
+    border-radius: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    color: #e0e0a0;
+    font-size: 0.8rem;
+    flex: 1;
+}
+.trade-buy-btn:hover, .trade-sell-btn:hover {
+    background: #5a8a40;
+}

@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>文明重建者</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h2>文明重建者</h2>
+        
+        <div class="main-layout">
+            <!-- 左侧边栏：资源 + 行动 -->
+            <div class="sidebar">
+                <div id="resource-bar" class="resource-bar"></div>
+                <div id="actions-panel" class="actions-panel"></div>
+            </div>
+
+            <!-- 右侧主要内容：选项卡 -->
+            <div class="main-content">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="building">🏭 建筑</button>
+                    <button class="tab-btn" data-tab="tech">🔬 科技</button>
+                    <button class="tab-btn" data-tab="upgrade">⬆️ 升级</button>
+                    <button class="tab-btn" data-tab="policy">📜 政策</button>
+                    <button class="tab-btn" data-tab="trade">🏪 贸易</button>
+                    <button class="tab-btn" data-tab="permanent">✨ 永久科技</button>
+                    <button class="tab-btn" data-tab="reset">🔄 重置/存档</button>
+                </div>
+
+                <div id="panel-building" class="panel"></div>
+                <div id="panel-tech" class="panel" style="display:none;"></div>
+                <div id="panel-upgrade" class="panel" style="display:none;"></div>
+                <div id="panel-policy" class="panel" style="display:none;"></div>
+                <div id="panel-trade" class="panel" style="display:none;"></div>
+                <div id="panel-permanent" class="panel" style="display:none;"></div>
+                <div id="panel-reset" class="panel" style="display:none;"></div>
+            </div>
+        </div>
+
+        <div class="footer-bar">
+            <span id="save-indicator">💾 已自动保存</span>
+            <span><p>文明重建者 v0.1 <p>注：目前游戏仍处于早期开发状态，内容相对有限，且可能存在大量致命bug以及平衡性问题，且不能保证存档能够兼容新版本！</span>
+        </div>
+    </div>
+
+    <div id="import-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h3>导入存档</h3>
+            <textarea id="import-text" rows="6" placeholder="粘贴导出的存档代码..."></textarea>
+            <div class="modal-buttons">
+                <button id="confirm-import" class="btn-rect">确认导入</button>
+                <button id="cancel-import" class="btn-rect">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="data.js"></script>
+    <script src="utils.js"></script>
+    <script src="logic.js"></script>
+    <script src="saveLoad.js"></script>
+    <script src="ui.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
