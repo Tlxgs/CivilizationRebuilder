@@ -40,18 +40,7 @@ function getPermanentMultipliers() {
     };
 }
 
-// 更新建筑价格
-function updateBuildingPrices() {
-    const mult = getPermanentMultipliers().costRatio;
-    for (let b in GameState.buildings) {
-        const bd = GameState.buildings[b];
-        bd.price = {};
-        for (let r in bd.basePrice) {
-            const growth = 1 + (bd.costGrowth - 1) * mult;
-            bd.price[r] = Math.floor(bd.basePrice[r] * Math.pow(growth, bd.count));
-        }
-    }
-}
+
 
 // 更新升级价格
 function updateUpgradePrices() {
@@ -97,174 +86,197 @@ function getTechCapBonusForBuilding(buildingKey) {
     }
     return bonus;
 }
-// 获取某个建筑的详细加成（用于UI显示）
-function getBuildingStats(buildingKey) {
-    const bd = GameState.buildings[buildingKey];
-    if (!bd) return null;
-    
-    const mult = getPermanentMultipliers();
-    
-    let upgradePercent = (bd.efficiency - 1) * 100;
-    let permProdPercent = mult.prodPercent + mult.speedPercent;
-    let permConsPercent = mult.speedPercent;
-    
-    let policyProdPercent = 0;
-    let policyConsPercent = 0;
-    for (let polName in GameState.policies) {
-        const pol = GameState.policies[polName];
+
+// ==================== 加成聚合工具函数 ====================
+
+// 获取某个建筑的综合加成因子（返回 prodFactor, consFactor, capFactor）
+function getBuildingMultipliers(buildingKey) {
+    const mult = getPermanentMultipliers(); // 永恒全局加成
+
+    // 1. 科技加成（对特定建筑的乘算因子，累加）
+    let techProdBonus = 0;
+    let techConsBonus = 0;
+    let techCapBonus = 0;
+    for (let t in GameState.techs) {
+        const tech = GameState.techs[t];
+        if (!tech.researched || !tech.effect) continue;
+        const eff = tech.effect[buildingKey];
+        if (eff) {
+            if (eff.prodFactor) techProdBonus += eff.prodFactor;
+            if (eff.consFactor) techConsBonus += eff.consFactor;
+            if (eff.capFactor) techCapBonus += eff.capFactor;
+        }
+    }
+
+    // 2. 升级加成（累加）
+    let upgradeBonus = 0;
+    for (let u in GameState.upgrades) {
+        const up = GameState.upgrades[u];
+        if (up.level > 0 && up.effect[buildingKey]) {
+            upgradeBonus += up.effect[buildingKey] * up.level;
+        }
+    }
+
+    // 3. 政策加成（累加）
+    let policyProdBonus = 0;
+    let policyConsBonus = 0;
+    let policyCapBonus = 0;
+    for (let p in GameState.policies) {
+        const pol = GameState.policies[p];
         if (!pol.visible) continue;
         const opt = pol.options[pol.activePolicy];
-        if (opt.prod && opt.prod[buildingKey]) {
-            policyProdPercent += (opt.prod[buildingKey] - 1) * 100;
-        }
-        if (opt.cons && opt.cons[buildingKey]) {
-            policyConsPercent += (opt.cons[buildingKey] - 1) * 100;
-        }
+        if (opt.prodFactor && opt.prodFactor[buildingKey]) policyProdBonus += opt.prodFactor[buildingKey];
+        if (opt.consFactor && opt.consFactor[buildingKey]) policyConsBonus += opt.consFactor[buildingKey];
+        if (opt.capFactor && opt.capFactor[buildingKey]) policyCapBonus += opt.capFactor[buildingKey];
     }
-    
-    let prodMultiplier = (1 + upgradePercent/100)
-        * (1 + permProdPercent/100)
-        * (1 + policyProdPercent/100);
-    let consMultiplier = (1 + upgradePercent/100)
-        * (1 + permConsPercent/100)
-        * (1 + policyConsPercent/100);
-    
-    // 获取科技绝对数值加成
-    const techProdBonus = getTechProdBonusForBuilding(buildingKey);
-    
-    const details = [];
-    for (let r in bd.produce) {
-        let baseVal = bd.produce[r];
-        let isPositive = baseVal > 0;
-        
-        // 先加法：基础值 + 科技绝对加成
-        let adjustedBase = baseVal;
-        let techBonusValue = 0;
-        if (isPositive && techProdBonus[r]) {
-            techBonusValue = techProdBonus[r];
-            adjustedBase += techBonusValue;
-        }
-        
-        // 再乘法：乘以各种倍率
-        let multiplier = isPositive ? prodMultiplier : consMultiplier;
-        let finalPerBuilding = adjustedBase * multiplier;
-        let total = finalPerBuilding * bd.active;
-        
-        // 构建提示文本：按照 加法 → 乘法 顺序
-        let tooltipLines = [];
-        tooltipLines.push(`基础值: ${formatNumber(baseVal)}/秒`);
-        if (techBonusValue !== 0) {
-            tooltipLines.push(`科技绝对加成: +${formatNumber(techBonusValue)}/秒 → 小计 ${formatNumber(adjustedBase)}/秒`);
-        }
-        // 乘法因子列表
-        let multipliersList = [];
-        if (upgradePercent !== 0) multipliersList.push(`升级 ×${(1 + upgradePercent/100).toFixed(2)} (${upgradePercent > 0 ? '+' : ''}${upgradePercent.toFixed(0)}%)`);
-        if (isPositive && permProdPercent !== 0) multipliersList.push(`永久科技(产量) ×${(1 + permProdPercent/100).toFixed(2)} (${permProdPercent > 0 ? '+' : ''}${permProdPercent.toFixed(0)}%)`);
-        if (!isPositive && permConsPercent !== 0) multipliersList.push(`永久科技(消耗) ×${(1 + permConsPercent/100).toFixed(2)} (${permConsPercent > 0 ? '+' : ''}${permConsPercent.toFixed(0)}%)`);
-        if (isPositive && policyProdPercent !== 0) multipliersList.push(`政策 ×${(1 + policyProdPercent/100).toFixed(2)} (${policyProdPercent > 0 ? '+' : ''}${policyProdPercent.toFixed(0)}%)`);
-        if (!isPositive && policyConsPercent !== 0) multipliersList.push(`政策 ×${(1 + policyConsPercent/100).toFixed(2)} (${policyConsPercent > 0 ? '+' : ''}${policyConsPercent.toFixed(0)}%)`);
-        
-        if (multipliersList.length > 0) {
-            tooltipLines.push(`倍率组合: ${multipliersList.join(' × ')}`);
-        }
-        tooltipLines.push(`单个建筑净产量: ${formatNumber(finalPerBuilding)}/秒`);
-        tooltipLines.push(`总计 (${bd.active}个): ${formatNumber(total)}/秒`);
-        
-        details.push({
-            resource: r,
-            base: baseVal,
-            adjustedBase: adjustedBase,
-            finalPerBuilding: finalPerBuilding,
-            total: total,
-            isPositive: isPositive,
-            bonusText: tooltipLines.join('\n')
-        });
-    }
-    
-    return {
-        desc: bd.desc,
-        details: details,
-        activeCount: bd.active
-    };
+
+    // 4. 最终因子 = (1 + 科技累加) * (1 + 升级累加) * (1 + 政策累加) * 永恒全局
+    const prodFactor = (1 + techProdBonus) * (1 + upgradeBonus) * (1 + policyProdBonus) * mult.prodRatio;
+    const consFactor = (1 + techConsBonus) * (1 + upgradeBonus) * (1 + policyConsBonus) * mult.speedRatio;
+    const capFactor  = (1 + techCapBonus)  * (1 + upgradeBonus) * (1 + policyCapBonus)  * 1.0; // 上限暂不受永恒speed影响
+
+    return { prodFactor, consFactor, capFactor };
 }
 
-// 计算资源产量和上限（效率影响capProvide）
+// 重写 computeProductionAndCaps —— 采用新模型
 function computeProductionAndCaps() {
     const res = GameState.resources;
     const blds = GameState.buildings;
-    const mult = getPermanentMultipliers();
 
+    // 1. 重置所有资源的生产和上限
     for (let r in res) {
         res[r].production = 0;
         res[r].cap = res[r].baseCap;
     }
 
-    const policyProds = {}, policyCons = {};
-    for (let p in GameState.policies) {
-        const pol = GameState.policies[p];
-        if (pol.visible && pol.options[pol.activePolicy]) {
-            const opt = pol.options[pol.activePolicy];
-            if (opt.prod) Object.assign(policyProds, opt.prod);
-            if (opt.cons) Object.assign(policyCons, opt.cons);
-        }
-    }
+    // 2. 遍历所有建筑
+    for (let bKey in blds) {
+        const b = blds[bKey];
+        if (b.count === 0) continue;
 
-    for (let b in blds) {
-        const bd = blds[b];
-        if (bd.count === 0) continue;
-        
-        const techProdBonus = getTechProdBonusForBuilding(b);
-        const techCapBonus = getTechCapBonusForBuilding(b);
-        
-        const prodMult = bd.efficiency * mult.prodRatio * mult.speedRatio * (policyProds[b] || 1);
-        const consMult = bd.efficiency * mult.speedRatio * (policyCons[b] || 1);
+        const factors = getBuildingMultipliers(bKey);
+        const activeCount = b.active;
 
-        // 处理产出/消耗：先加科技绝对加成，再乘以倍率
-        for (let r in bd.produce) {
-            let baseVal = bd.produce[r];
-            let isPositive = baseVal > 0;
-            
-            let adjustedBase = baseVal;
-            if (isPositive && techProdBonus[r]) {
-                adjustedBase += techProdBonus[r];
-            }
-            
-            let final = isPositive ? adjustedBase * prodMult : adjustedBase * consMult;
-            res[r].production += final * bd.active;
+        // 处理产出（正资源）
+        for (let r in b.baseProduce) {
+            const baseVal = b.baseProduce[r];
+            const total = baseVal * activeCount * factors.prodFactor;
+            res[r].production += total;
         }
-        
-        // 处理上限提供（乘以建筑效率）
-        for (let r in bd.capProvide) {
-            let val = bd.capProvide[r];
-            // 加上科技绝对加成（如杜威分类法）
-            if (techCapBonus[r]) {
-                val += techCapBonus[r];
+
+        // 处理消耗（负资源）
+        for (let r in b.baseConsume) {
+            const baseVal = b.baseConsume[r];
+            const total = baseVal * activeCount * factors.consFactor;
+            res[r].production -= total;   // 消耗记为负产量
+        }
+
+        // 处理上限提供
+        for (let r in b.capProvide) {
+            const baseCap = b.capProvide[r];
+            // 上限提供受效率因子影响（与产出因子相同逻辑）
+            const totalCap = baseCap * activeCount * factors.capFactor;
+            // 额外应用永恒的上限加成（针对科学有特殊处理）
+            if (r === "科学") {
+                res[r].cap += totalCap * getPermanentMultipliers().sciCapRatio;
+            } else {
+                res[r].cap += totalCap * getPermanentMultipliers().capRatio;
             }
-            // 效率影响上限提供
-            let finalVal = val * bd.efficiency;
-            let totalVal = finalVal * bd.active;
-            // 遗物加成（全局）
-            if (r === "科学") totalVal *= mult.sciCapRatio;
-            else totalVal *= mult.capRatio;
-            res[r].cap += totalVal;
         }
     }
 }
 
+// 重写 getBuildingStats —— 返回详细加成明细（用于 tooltip）
+function getBuildingStats(buildingKey) {
+    const b = GameState.buildings[buildingKey];
+    if (!b) return null;
+
+    const factors = getBuildingMultipliers(buildingKey);
+    const activeCount = b.active;
+
+    // 收集各来源加成（用于展示）
+    const breakdown = {
+        techProd: 0, techCons: 0, techCap: 0,
+        upgrade: 0,
+        policyProd: 0, policyCons: 0, policyCap: 0,
+        eternalProd: getPermanentMultipliers().prodRatio - 1,
+        eternalCons: getPermanentMultipliers().speedRatio - 1,
+        eternalCap: 0
+    };
+
+    const details = [];
+    // 产出项
+    for (let r in b.baseProduce) {
+        const base = b.baseProduce[r];
+        const perBuilding = base * factors.prodFactor;
+        const total = perBuilding * activeCount;
+        details.push({
+            resource: r,
+            type: 'prod',
+            base,
+            perBuilding,
+            total,
+            factor: factors.prodFactor,
+            breakdown: { ...breakdown }
+        });
+    }
+    // 消耗项
+    for (let r in b.baseConsume) {
+        const base = b.baseConsume[r];
+        const perBuilding = base * factors.consFactor;
+        const total = perBuilding * activeCount;
+        details.push({
+            resource: r,
+            type: 'cons',
+            base,
+            perBuilding,
+            total,
+            factor: factors.consFactor,
+            breakdown: { ...breakdown }
+        });
+    }
+    // 上限项
+    for (let r in b.capProvide) {
+        const base = b.capProvide[r];
+        const perBuilding = base * factors.capFactor;
+        const total = perBuilding * activeCount;
+        details.push({
+            resource: r,
+            type: 'cap',
+            base,
+            perBuilding,
+            total,
+            factor: factors.capFactor,
+            breakdown: { ...breakdown }
+        });
+    }
+
+    return { details, activeCount };
+}
+
+function updateBuildingPrices() {
+    const mult = getPermanentMultipliers().costRatio;
+    for (let b in GameState.buildings) {
+        const bd = GameState.buildings[b];
+        bd.price = {};
+        for (let r in bd.basePrice) {
+            const growth = 1 + (bd.costGrowth - 1) * mult;
+            bd.price[r] = Math.floor(bd.basePrice[r] * Math.pow(growth, bd.count));
+        }
+    }
+}
 // 热度衰减
 function updateHeatDecay(deltaSec) {
     for (let r in GameState.resources) {
         const res = GameState.resources[r];
         if (res.hasOwnProperty('heat') && res.heat !== undefined) {
-            // 每秒衰减 0.05% 向 1 靠近，deltaSec 为秒数
-            let decay = res.heat * 0.0005 * deltaSec;
+            let decay = res.heat * 0.001 * deltaSec;
             if (res.heat > 1) {
                 res.heat = Math.max(1, res.heat - decay);
             } else if (res.heat < 1) {
                 res.heat = Math.min(1, res.heat + decay);
             }
-            // 限制范围 0.5 ~ 20
-            res.heat = Math.min(20, Math.max(0.5, res.heat));
+            res.heat = Math.min(100, Math.max(0.01, res.heat));
         }
     }
 }

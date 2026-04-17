@@ -24,67 +24,45 @@ function buyBuilding(key) {
     updateBuildingPrices();
     return true;
 }
-
-// 研究科技（修正）
 function researchTech(key) {
     const t = GameState.techs[key];
     if (t.researched) return false;
     if (!consumeResources(t.price)) return false;
     t.researched = true;
-    
+
     if (t.unlocks) {
-        t.unlocks.forEach(b => {
-            if (GameState.buildings[b]) GameState.buildings[b].visible = true;
-        });
+        t.unlocks.forEach(b => { if (GameState.buildings[b]) GameState.buildings[b].visible = true; });
     }
     if (t.unlocksPolicies) {
-        t.unlocksPolicies.forEach(p => {
-            if (GameState.policies[p]) GameState.policies[p].visible = true;
-        });
+        t.unlocksPolicies.forEach(p => { if (GameState.policies[p]) GameState.policies[p].visible = true; });
     }
     if (t.unlocksUpgrades) {
-        t.unlocksUpgrades.forEach(u => {
-            if (GameState.upgrades[u]) GameState.upgrades[u].visible = true;
-        });
+        t.unlocksUpgrades.forEach(u => { if (GameState.upgrades[u]) GameState.upgrades[u].visible = true; });
     }
-    
-    if (t.effect) {
-        for (let building in t.effect) {
-            const eff = t.effect[building];
-            if (typeof eff === 'number') {
-                if (GameState.buildings[building]) {
-                    GameState.buildings[building].efficiency += eff;
-                }
-            }
-            // 对象类型（如 {prod:..., cap:...}）不需要直接修改，会在utils中动态读取
-        }
-    }
-    
-    if (key === "管理学") GameState.policies["基础资源政策"].visible = true;
-    if (key === "冶炼管理") GameState.policies["冶炼方式"].visible = true;
-    if (key === "金融学") GameState.policies["经济观念"].visible = true;
-    if (key === "林业工程") GameState.upgrades["伐木场优化"].visible = true;
-    if (key === "高效采石") GameState.upgrades["采石场优化"].visible = true;
-    if (key === "压缩存储技术") GameState.upgrades["储存优化"].visible = true;
-    if (key === "运筹学") GameState.upgrades["工厂优化"].visible = true;
     return true;
 }
 
-// 购买升级（增加建筑效率）
+// 购买升级：每级增加加成值
 function buyUpgrade(key) {
     const up = GameState.upgrades[key];
     if (!consumeResources(up.price)) return false;
     up.level++;
-    for (let b in up.effect) {
-        if (GameState.buildings[b]) {
-            GameState.buildings[b].efficiency += up.effect[b];
-        }
-    }
     updateUpgradePrices();
     return true;
 }
 
-// 购买永久科技
+function switchPolicy(policyName, optionValue) {
+    const policy = GameState.policies[policyName];
+    if (!policy) return false;
+    const option = policy.options[optionValue];
+    const cost = option.price || 0;
+    if ((GameState.resources["政策点"]?.amount || 0) < cost) return false;
+    GameState.resources["政策点"].amount -= cost;
+    policy.activePolicy = optionValue;
+    return true;
+}
+
+
 function buyPermanent(key) {
     const p = GameState.permanent[key];
     if (p.researched) return false;
@@ -104,10 +82,12 @@ function buyPermanent(key) {
 // 作弊填满资源
 function cheatFillResources() {
     for (let r in GameState.resources) {
-        if (r === "遗物") continue;
+        if (r === "遗物") continue;  // 遗物不填满
         const res = GameState.resources[r];
+        if (!res.visible) continue;   // 只填满已可见的资源
         if (res.cap === Infinity) continue;
         res.amount = res.cap;
+        // 如果原本 amount 为0，填满后设为可见（但原本已可见无需重复设置）
         if (res.amount > 0) res.visible = true;
     }
 }
@@ -135,7 +115,7 @@ function performAction(actionId) {
             break;
         case "nuke_reset":
             const scienceCap = GameState.resources["科学"].cap;
-            const relicGain = Math.floor(Math.log(scienceCap))**2;
+            const relicGain = Math.floor(Math.log(scienceCap)**2);
             if (relicGain > 0) {
                 GameState.resources["遗物"].amount += relicGain;
             }
@@ -152,15 +132,11 @@ function performAction(actionId) {
     return true;
 }
 
-// 重置建筑到原始状态
 function resetBuildingsToOriginal() {
     for (let b in GameState.buildings) {
         const bd = GameState.buildings[b];
-        bd.produce = JSON.parse(JSON.stringify(bd.originalProduce));
-        bd.capProvide = JSON.parse(JSON.stringify(bd.originalCapProvide));
         bd.count = 0;
         bd.active = 0;
-        bd.efficiency = 1.0;
         bd.visible = false;
     }
 }
@@ -190,7 +166,7 @@ function softResetKeepRelic() {
     updateUpgradePrices();
 }
 
-// 软重置（保留遗物和永久科技）
+// 软重置
 function softReset() {
     const relic = GameState.resources["遗物"]?.amount || 0;
     const permBackup = JSON.parse(JSON.stringify(GameState.permanent));
@@ -221,24 +197,11 @@ function hardReset() {
     location.reload();
 }
 
-// 资源更新（每tick 0.2秒）
-function tickResources(deltaSec = 0.2) {
-    computeProductionAndCaps();
-    const res = GameState.resources;
-    for (let r in res) {
-        let prod = res[r].production;
-        let newAmount = res[r].amount + prod * deltaSec;
-        res[r].amount = Math.min(res[r].cap, Math.max(0, newAmount));
-        if (res[r].amount > 0.01) res[r].visible = true;
-    }
-}
-// 在文件末尾添加贸易相关函数
 
-// 获取当前市场交易量（每次交易的基础数量）
 function getMarketTradeVolume() {
     const market = GameState.buildings["市场"];
     if (!market || !market.visible) return 0;
-    return market.active * market.efficiency * 10;
+    return market.active * 10; 
 }
 
 // 购买资源
@@ -265,7 +228,7 @@ function buyResource(resourceName) {
     // 增加热度
     if (gainResource > 0.0001) {
         let increase = 0.1 * Math.random() + Math.sqrt(heat) * 0.1;
-        res.heat = Math.min(20, res.heat + increase);
+        res.heat = Math.min(100, res.heat + increase);
     }
     return true;
 }
@@ -293,28 +256,7 @@ function sellResource(resourceName) {
     // 降低热度
     if (sellResourceAmount > 0.0001) {
         let decrease = 0.1 * Math.random() + Math.sqrt(heat) * 0.1;
-        res.heat = Math.max(0.5, res.heat - decrease);
+        res.heat = Math.max(0.01, res.heat - decrease);
     }
-    return true;
-}
-
-// 修改政策切换逻辑：消耗政策点
-// 在 ui.js 的 change 事件中调用新函数，而不是直接修改
-function switchPolicy(policyName, optionValue) {
-    const policy = GameState.policies[policyName];
-    if (!policy) return false;
-    
-    const option = policy.options[optionValue];
-    const cost = option.price || 0;
-    
-    // 检查政策点是否足够
-    if ((GameState.resources["政策点"]?.amount || 0) < cost) return false;
-    
-    // 扣除政策点
-    GameState.resources["政策点"].amount -= cost;
-    
-    // 切换政策
-    policy.activePolicy = optionValue;
-    
     return true;
 }

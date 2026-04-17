@@ -13,11 +13,12 @@ function gameLoop(now) {
     let delta = (now - lastTimestamp) / 1000;
     if (delta >= TICK_INTERVAL) {
         let ticks = Math.floor(delta / TICK_INTERVAL);
-        for (let i = 0; i < Math.min(ticks, 5); i++) {
+        for (let i = 0; i < ticks; i++) {
             tickResources(TICK_INTERVAL);
         }
         lastTimestamp = now - (delta % TICK_INTERVAL) * 1000;
-        renderResources();  // 只刷新资源栏
+        renderResources();
+        updateBuyButtonsColor();
     }
 }
 
