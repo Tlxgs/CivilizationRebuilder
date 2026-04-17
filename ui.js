@@ -94,7 +94,7 @@ function renderActionsPanel() {
     if (hasNuke) {
         html += `<button class="action-btn" data-action="nuke_reset">发射核弹</button>`;
     }
-    html += `<button class="action-btn" data-action="cheat_fill">作弊：填满资源</button>`;
+    //html += `<button class="action-btn" data-action="cheat_fill">作弊：填满资源</button>`;
     html += '</div>';
     container.innerHTML = html;
     
