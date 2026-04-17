@@ -45,15 +45,13 @@ function decryptData(encryptedBase64) {
 // ==================== 生成精简存档数据 ====================
 function getSaveData() {
     const saveData = {
-        version: "1.0",                     // 存档版本号，用于未来迁移
-        resources: {},
-        buildings: {},
-        techs: {},
-        upgrades: {},
-        policies: {},
-        permanent: {}
+        version: "1.0",
+        gameDays: GameState.gameDays,
+        activeEventId: GameState.activeRandomEvent ? GameState.activeRandomEvent.id : null,
+        activeEventEndDay: GameState.activeEventEndDay || 0,
+        eventLogs: GameState.eventLogs.slice(),
+        resources: {}, buildings: {}, techs: {}, upgrades: {}, policies: {}, permanent: {}
     };
-
     // 只保存资源的动态字段：数量、热度、可见性（可选）
     for (let r in GameState.resources) {
         const res = GameState.resources[r];
@@ -173,6 +171,16 @@ function refreshGameStateFromSave(saveData) {
             }
         }
     }
+        for (let t in GameState.techs) {
+        const tech = GameState.techs[t];
+        if (tech.researched && tech.unlocks) {
+            tech.unlocks.forEach(b => {
+                if (GameState.buildings[b]) {
+                    GameState.buildings[b].visible = true;
+                }
+            });
+        }
+    }
 
     // 7. 恢复升级数据
     if (saveData.upgrades) {
@@ -194,6 +202,22 @@ function refreshGameStateFromSave(saveData) {
                 if (saved.visible !== undefined) GameState.policies[p].visible = saved.visible;
             }
         }
+    }
+        // 恢复日期、事件、日志
+    if (saveData.gameDays !== undefined) GameState.gameDays = saveData.gameDays;
+    if (saveData.eventLogs) GameState.eventLogs = saveData.eventLogs;
+    if (saveData.activeEventId) {
+        const eventDef = RANDOM_EVENTS.find(e => e.id === saveData.activeEventId);
+        if (eventDef) {
+            GameState.activeRandomEvent = { ...eventDef };
+            GameState.activeEventEndDay = saveData.activeEventEndDay;
+        } else {
+            GameState.activeRandomEvent = null;
+            GameState.activeEventEndDay = 0;
+        }
+    } else {
+        GameState.activeRandomEvent = null;
+        GameState.activeEventEndDay = 0;
     }
 
     // 9. 重新计算价格、生产、上限，并刷新界面

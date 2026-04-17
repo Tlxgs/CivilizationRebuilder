@@ -2,10 +2,10 @@
 setInterval(() => {
     saveGame();
 }, 10000);
-
-// 游戏主循环（每0.2秒更新资源）
 let lastTimestamp = 0;
-const TICK_INTERVAL = 0.2; // 秒
+const TICK_INTERVAL = 0.2;
+let pendingTicks = 0;
+let dayTickAcc = 0;
 
 function gameLoop(now) {
     requestAnimationFrame(gameLoop);
@@ -15,13 +15,18 @@ function gameLoop(now) {
         let ticks = Math.floor(delta / TICK_INTERVAL);
         for (let i = 0; i < ticks; i++) {
             tickResources(TICK_INTERVAL);
+            dayTickAcc++;
+            if (dayTickAcc >= 5) {   // 5 tick = 1秒 = 1日
+                dayTickAcc = 0;
+                advanceDay();        // 调用日期推进函数
+            }
         }
         lastTimestamp = now - (delta % TICK_INTERVAL) * 1000;
         renderResources();
         updateBuyButtonsColor();
+        renderLogPanel();            // 实时刷新日志显示
     }
 }
-
 // 初始化游戏
 window.onload = () => {
     initGameData();

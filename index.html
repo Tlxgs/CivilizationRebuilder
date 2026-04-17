@@ -9,9 +9,10 @@
 <body>
     <div class="game-container">
         <h2>文明重建者</h2>
-        
+                     <div id="happiness-display">幸福度: 100%</div>
         <div class="main-layout">
             <!-- 左侧边栏：资源 + 行动 -->
+
             <div class="sidebar">
                 <div id="resource-bar" class="resource-bar"></div>
                 <div id="actions-panel" class="actions-panel"></div>
@@ -27,6 +28,7 @@
                     <button class="tab-btn" data-tab="trade">贸易</button>
                     <button class="tab-btn" data-tab="permanent">永恒</button>
                     <button class="tab-btn" data-tab="reset">重置/存档</button>
+                    <button class="tab-btn" data-tab="changelog">更新日志</button>
                 </div>
 
                 <div id="panel-building" class="panel"></div>
@@ -36,12 +38,17 @@
                 <div id="panel-trade" class="panel" style="display:none;"></div>
                 <div id="panel-permanent" class="panel" style="display:none;"></div>
                 <div id="panel-reset" class="panel" style="display:none;"></div>
+                <div id="panel-changelog" class="panel" style="display:none;"></div>
             </div>
+            <div class="log-panel">
+                <div class="log-header">当前日期：<span id="current-date">0年1日</span></div>
+            <div id="event-log-list" class="event-log-list"></div>
+        </div>
         </div>
 
         <div class="footer-bar">
             <span id="save-indicator">💾 已自动保存</span>
-            <span><p>文明重建者 v0.1 <p>注：目前游戏仍处于早期开发状态，内容相对有限，且可能存在大量致命bug以及平衡性问题，且不能保证存档能够兼容新版本！</span>
+            <span>游戏尚处早期开发，可能存在较多bug，且内容有限：当您发现进度极其缓慢代表你基本通关了。</span>
         </div>
     </div>
 

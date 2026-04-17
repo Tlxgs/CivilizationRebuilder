@@ -83,6 +83,7 @@ function buyPermanent(key) {
 function cheatFillResources() {
     for (let r in GameState.resources) {
         if (r === "遗物") continue;  // 遗物不填满
+        if (r === "暗能量") continue; 
         const res = GameState.resources[r];
         if (!res.visible) continue;   // 只填满已可见的资源
         if (res.cap === Infinity) continue;
@@ -115,15 +116,24 @@ function performAction(actionId) {
             break;
         case "nuke_reset":
             const scienceCap = GameState.resources["科学"].cap;
-            const relicGain = Math.floor(Math.log(scienceCap)**2);
+            const relicGain = getRelicGain();
             if (relicGain > 0) {
                 GameState.resources["遗物"].amount += relicGain;
             }
-            softResetKeepRelic();
+            softResetKeepPermanent();
+            break;
+        case "vacuum_decay":
+            const extraRelic = getRelicGain() * 2;
+            const darkMatterCount = GameState.buildings["暗物质研究所"]?.count || 0;
+            if (confirm(`执行真空衰变！\n获得额外遗物：${extraRelic}\n获得暗能量：${darkMatterCount}\n确定要重置吗？`)) {
+                vacuumDecayReset();
+                renderAll();
+            }
             break;
         case "cheat_fill":
             cheatFillResources();
             GameState.resources["遗物"].amount += 100;
+            GameState.resources["暗能量"].amount +=100;
             computeProductionAndCaps();
             break;
         default:
@@ -140,20 +150,21 @@ function resetBuildingsToOriginal() {
         bd.visible = false;
     }
 }
-
-// 软重置但保留遗物（核弹用）
-function softResetKeepRelic() {
+function softResetKeepPermanent() {
+    GameState.happiness = 100;
     const relic = GameState.resources["遗物"]?.amount || 0;
+    const darkEnergy = GameState.resources["暗能量"]?.amount || 0;
     const permBackup = JSON.parse(JSON.stringify(GameState.permanent));
-    
+
     for (let r in GameState.resources) {
-        let def = (r === "遗物") ? relic : 0;
-        GameState.resources[r].amount = def;
-        GameState.resources[r].visible = (def > 0) || (r === "木头") || (r === "科学");
+        if (r === "遗物") GameState.resources[r].amount = relic;
+        else if (r === "暗能量") GameState.resources[r].amount = darkEnergy;
+        else GameState.resources[r].amount = 0;
+        GameState.resources[r].visible = (GameState.resources[r].amount > 0) || (r === "木头") || (r === "科学");
     }
-    
+
     resetBuildingsToOriginal();
-    
+
     for (let t in GameState.techs) GameState.techs[t].researched = false;
     for (let u in GameState.upgrades) {
         GameState.upgrades[u].level = 0;
@@ -161,32 +172,7 @@ function softResetKeepRelic() {
     }
     for (let p in GameState.policies) GameState.policies[p].visible = false;
     GameState.permanent = permBackup;
-    
-    updateBuildingPrices();
-    updateUpgradePrices();
-}
 
-// 软重置
-function softReset() {
-    const relic = GameState.resources["遗物"]?.amount || 0;
-    const permBackup = JSON.parse(JSON.stringify(GameState.permanent));
-    
-    for (let r in GameState.resources) {
-        let def = (r === "遗物") ? relic : 0;
-        GameState.resources[r].amount = def;
-        GameState.resources[r].visible = (def > 0) || (r === "木头") || (r === "科学");
-    }
-    
-    resetBuildingsToOriginal();
-    
-    for (let t in GameState.techs) GameState.techs[t].researched = false;
-    for (let u in GameState.upgrades) {
-        GameState.upgrades[u].level = 0;
-        GameState.upgrades[u].visible = false;
-    }
-    for (let p in GameState.policies) GameState.policies[p].visible = false;
-    GameState.permanent = permBackup;
-    
     updateBuildingPrices();
     updateUpgradePrices();
 }
@@ -200,8 +186,8 @@ function hardReset() {
 
 function getMarketTradeVolume() {
     const market = GameState.buildings["市场"];
-    if (!market || !market.visible) return 0;
-    return market.active * 10; 
+    const starmarket = GameState.buildings["星际交易站"];
+    return (market?.active || 0) * 10 + (starmarket?.active || 0) * 5000; 
 }
 
 // 购买资源
@@ -227,8 +213,8 @@ function buyResource(resourceName) {
     
     // 增加热度
     if (gainResource > 0.0001) {
-        let increase = 0.1 * Math.random() + Math.sqrt(heat) * 0.1;
-        res.heat = Math.min(100, res.heat + increase);
+        let increase = 0.08 * Math.random() + Math.sqrt(heat) * 0.08;
+        res.heat = Math.min(1000, res.heat + increase);
     }
     return true;
 }
@@ -255,8 +241,100 @@ function sellResource(resourceName) {
     
     // 降低热度
     if (sellResourceAmount > 0.0001) {
-        let decrease = 0.1 * Math.random() + Math.sqrt(heat) * 0.1;
-        res.heat = Math.max(0.01, res.heat - decrease);
+        let decrease = 0.08 * Math.random() + Math.sqrt(heat) * 0.08;
+        res.heat = Math.max(0.001, res.heat - decrease);
     }
     return true;
+}
+function vacuumDecayReset() {
+    // 额外获得遗物：核弹获取量的2倍
+    const extraRelic = getRelicGain() * 2;
+    // 获得暗能量数量 = 暗物质研究所数量（重置前的数量）
+    const darkMatterLabCount = GameState.buildings["暗物质研究所"]?.count || 0;
+    const extraDarkEnergy = darkMatterLabCount;
+
+    GameState.resources["遗物"].amount += extraRelic;
+    GameState.resources["暗能量"].amount += extraDarkEnergy;
+
+    softResetKeepPermanent();
+}
+// 添加一条日志
+function addEventLog(text) {
+    const totalDays = GameState.gameDays;
+    const year = Math.floor(totalDays / 365);
+    const day = (totalDays % 365) + 1;
+    const dateStr = `${year}年${day}日`;
+    GameState.eventLogs.unshift({ dateStr, text });  // 最新在前
+    if (GameState.eventLogs.length > 20) GameState.eventLogs.pop();
+}
+
+// 结束当前随机事件
+function endCurrentEvent() {
+    if (!GameState.activeRandomEvent) return;
+    const event = GameState.activeRandomEvent;
+    addEventLog(`[事件结束] ${event.name} 效果已消失`);
+    GameState.activeRandomEvent = null;
+    computeProductionAndCaps();
+    if (typeof renderAll === 'function') renderAll();
+}
+
+function triggerRandomEvent() {
+    if (GameState.activeRandomEvent) return false;
+    if (Math.random() > 0.01) return false;  // 1%概率
+
+    const event = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+    GameState.activeRandomEvent = { ...event };
+    const startDay = GameState.gameDays;
+    GameState.activeEventEndDay = startDay + event.durationDays;
+
+    let effectDesc = Object.entries(event.effects)
+        .map(([res, mul]) => {
+            const percent = Math.abs((mul - 1) * 100);
+            if (mul > 1) {
+                return `${res}产量 +${percent.toFixed(0)}%`;
+            } else if (mul < 1) {
+                return `${res}产量 -${percent.toFixed(0)}%`;
+            }
+        })
+        .join(', ');
+    addEventLog(`随机事件触发：${event.name}！${event.desc} (${effectDesc})，持续${event.durationDays}天`);
+    computeProductionAndCaps();
+    if (typeof renderAll === 'function') renderAll();
+    return true;
+}
+// 每天推进（每1秒调用一次，即5 tick）
+function advanceDay() {
+    GameState.gameDays++;
+    const year = Math.floor(GameState.gameDays / 365);
+    const day = (GameState.gameDays % 365) + 1;
+    const dateElem = document.getElementById('current-date');
+    if (dateElem) dateElem.innerText = `${year}年${day}日`;
+
+    if (GameState.activeRandomEvent && GameState.gameDays >= GameState.activeEventEndDay) {
+        endCurrentEvent();
+    }
+
+    if (!GameState.activeRandomEvent) {
+        triggerRandomEvent();
+    }
+
+    if (typeof renderLogPanel === 'function') renderLogPanel();
+}
+
+// 渲染日志面板
+function renderLogPanel() {
+    const container = document.getElementById('event-log-list');
+    if (!container) return;
+    if (!GameState.eventLogs || GameState.eventLogs.length === 0) {
+        container.innerHTML = '<div class="log-entry" style="color:#8a9aac;">暂无事件日志</div>';
+        return;
+    }
+    let html = '';
+    for (let log of GameState.eventLogs) {
+        html += `<div class="log-entry">
+                    <span class="log-date">[${log.dateStr}]</span>
+                    <span>${log.text}</span>
+                 </div>`;
+    }
+    container.innerHTML = html;
 }

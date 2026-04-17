@@ -16,6 +16,7 @@ function getPermanentMultipliers() {
     let costRatio = 1.0;
     let globalProd = 0;
     let globalSpeed = 0;
+    let globalSpaceProd = 0; 
     let capPerRelic = 0;
     let sciCapPerRelicLog = 0;
 
@@ -26,6 +27,7 @@ function getPermanentMultipliers() {
         if (eff.costRatio) costRatio *= eff.costRatio;
         if (eff.globalProd) globalProd += eff.globalProd;
         if (eff.globalSpeed) globalSpeed += eff.globalSpeed;
+        if (eff.globalSpaceProd) globalSpaceProd += eff.globalSpaceProd;
         if (eff.capPerRelic) capPerRelic += eff.capPerRelic;
         if (eff.sciCapPerRelicLog) sciCapPerRelicLog += eff.sciCapPerRelicLog;
     }
@@ -33,13 +35,13 @@ function getPermanentMultipliers() {
         costRatio: costRatio,
         prodRatio: 1 + globalProd,
         speedRatio: 1 + globalSpeed,
+        spaceProdRatio: 1 + globalSpaceProd,
         capRatio: 1 + relic * capPerRelic,
         sciCapRatio: 1 + Math.log(1 + relic) * sciCapPerRelicLog,
         prodPercent: globalProd * 100,
         speedPercent: globalSpeed * 100
     };
 }
-
 
 
 // 更新升级价格
@@ -87,13 +89,14 @@ function getTechCapBonusForBuilding(buildingKey) {
     return bonus;
 }
 
-// ==================== 加成聚合工具函数 ====================
-
-// 获取某个建筑的综合加成因子（返回 prodFactor, consFactor, capFactor）
+// ==================== 加成聚合工具函数（重构版） ====================
+// 获取某个建筑的综合加成因子
+// 返回：prodFactor, consFactor, 以及一个根据资源名返回最终上限因子的函数
 function getBuildingMultipliers(buildingKey) {
-    const mult = getPermanentMultipliers(); // 永恒全局加成
+    const mult = getPermanentMultipliers(); // 永恒全局加成（产量、消耗等，不包含上限）
+    const relicAmount = GameState.resources["遗物"]?.amount || 0;
 
-    // 1. 科技加成（对特定建筑的乘算因子，累加）
+    // 1. 科技加成（累加）
     let techProdBonus = 0;
     let techConsBonus = 0;
     let techCapBonus = 0;
@@ -130,19 +133,78 @@ function getBuildingMultipliers(buildingKey) {
         if (opt.capFactor && opt.capFactor[buildingKey]) policyCapBonus += opt.capFactor[buildingKey];
     }
 
-    // 4. 最终因子 = (1 + 科技累加) * (1 + 升级累加) * (1 + 政策累加) * 永恒全局
-    const prodFactor = (1 + techProdBonus) * (1 + upgradeBonus) * (1 + policyProdBonus) * mult.prodRatio;
-    const consFactor = (1 + techConsBonus) * (1 + upgradeBonus) * (1 + policyConsBonus) * mult.speedRatio;
-    const capFactor  = (1 + techCapBonus)  * (1 + upgradeBonus) * (1 + policyCapBonus)  * 1.0; // 上限暂不受永恒speed影响
+    // 4. 建筑加成（累加）
+    let buildingProdBonus = 0;
+    let buildingConsBonus = 0;
+    let buildingCapBonus = 0;
+    for (let b in GameState.buildings) {
+        const bld = GameState.buildings[b];
+        if (!bld.modifiers || bld.active === 0) continue;
+        for (let mod of bld.modifiers) {
+            if (mod.target === buildingKey) {
+                if (mod.prodFactor) buildingProdBonus += mod.prodFactor * bld.active;
+                if (mod.consFactor) buildingConsBonus += mod.consFactor * bld.active;
+                if (mod.capFactor) buildingCapBonus += mod.capFactor * bld.active;
+            }
+        }
+    }
 
-    return { prodFactor, consFactor, capFactor };
+    // 5. 各乘区独立相乘（产量、消耗）
+    let prodFactor = (1 + techProdBonus)
+                     * (1 + upgradeBonus)
+                     * (1 + policyProdBonus)
+                     * (1 + buildingProdBonus)
+                     * mult.prodRatio;
+
+    const consFactor = (1 + techConsBonus)
+                     * (1 + upgradeBonus)      // 升级同时影响消耗
+                     * (1 + policyConsBonus)
+                     * (1 + buildingConsBonus)
+                     * mult.speedRatio;
+
+    // 6. 基础上限乘区（不包括永久上限，永久上限在 getCapFactor 中根据资源类型动态乘）
+    const baseCapFactor = (1 + techCapBonus)
+                        * (1 + upgradeBonus)
+                        * (1 + policyCapBonus)
+                        * (1 + buildingCapBonus);
+
+    // 太空建筑额外产量乘区（仅产量）
+    const buildingType = GameState.buildings[buildingKey]?.type;
+    if (buildingType === "太空") {
+        prodFactor *= mult.spaceProdRatio;
+    }
+
+    // 返回一个包含 getCapFactor 函数的对象
+    return {
+        prodFactor,
+        consFactor,
+        getCapFactor: (resourceName) => {
+            // 根据资源类型获取永久上限加成
+            let permanentCapFactor = 1;
+            if (resourceName === "科学") {
+                permanentCapFactor = mult.sciCapRatio;
+            } else {
+                permanentCapFactor = mult.capRatio;
+            }
+            // 最终上限因子 = 基础上限乘区 × 永久上限加成
+            return baseCapFactor * permanentCapFactor;
+        }
+    };
 }
 
-// 重写 computeProductionAndCaps —— 采用新模型
+// 计算所有资源的产量和上限
 function computeProductionAndCaps() {
     const res = GameState.resources;
     const blds = GameState.buildings;
-
+    // 计算幸福度（累加所有建筑的 happinessEffect * 激活数量）
+    let totalHappiness = 100; // 基础100%
+    for (let bKey in blds) {
+        const b = blds[bKey];
+        if (b.active > 0 && b.happinessEffect) {
+            totalHappiness += b.happinessEffect * b.active;
+        }
+    }
+    GameState.happiness = Math.max(0, totalHappiness); // 不低于0
     // 1. 重置所有资源的生产和上限
     for (let r in res) {
         res[r].production = 0;
@@ -157,10 +219,13 @@ function computeProductionAndCaps() {
         const factors = getBuildingMultipliers(bKey);
         const activeCount = b.active;
 
-        // 处理产出（正资源）
+        // 处理产出：乘入幸福度因子
+        const happinessFactor = GameState.happiness / 100;
+        const activeEvent = GameState.activeRandomEvent;
         for (let r in b.baseProduce) {
             const baseVal = b.baseProduce[r];
-            const total = baseVal * activeCount * factors.prodFactor;
+            let eventMul = (activeEvent && activeEvent.effects[r]) ? activeEvent.effects[r] : 1;
+            const total = baseVal * activeCount * factors.prodFactor * happinessFactor * eventMul;
             res[r].production += total;
         }
 
@@ -168,25 +233,19 @@ function computeProductionAndCaps() {
         for (let r in b.baseConsume) {
             const baseVal = b.baseConsume[r];
             const total = baseVal * activeCount * factors.consFactor;
-            res[r].production -= total;   // 消耗记为负产量
+            res[r].production -= total;
         }
 
-        // 处理上限提供
+        // 处理上限提供（现在完全使用 factors.getCapFactor）
         for (let r in b.capProvide) {
             const baseCap = b.capProvide[r];
-            // 上限提供受效率因子影响（与产出因子相同逻辑）
-            const totalCap = baseCap * activeCount * factors.capFactor;
-            // 额外应用永恒的上限加成（针对科学有特殊处理）
-            if (r === "科学") {
-                res[r].cap += totalCap * getPermanentMultipliers().sciCapRatio;
-            } else {
-                res[r].cap += totalCap * getPermanentMultipliers().capRatio;
-            }
+            const totalCap = baseCap * activeCount * factors.getCapFactor(r);
+            res[r].cap += totalCap;
         }
     }
 }
 
-// 重写 getBuildingStats —— 返回详细加成明细（用于 tooltip）
+// 获取建筑详细统计（用于悬浮提示）
 function getBuildingStats(buildingKey) {
     const b = GameState.buildings[buildingKey];
     if (!b) return null;
@@ -199,16 +258,31 @@ function getBuildingStats(buildingKey) {
         techProd: 0, techCons: 0, techCap: 0,
         upgrade: 0,
         policyProd: 0, policyCons: 0, policyCap: 0,
+        buildingProd: 0, buildingCons: 0, buildingCap: 0,
         eternalProd: getPermanentMultipliers().prodRatio - 1,
         eternalCons: getPermanentMultipliers().speedRatio - 1,
         eternalCap: 0
     };
 
+    // 计算建筑加成的具体数值（用于 breakdown）
+    for (let bld in GameState.buildings) {
+        const srcBld = GameState.buildings[bld];
+        if (!srcBld.modifiers || srcBld.active === 0) continue;
+        for (let mod of srcBld.modifiers) {
+            if (mod.target === buildingKey) {
+                if (mod.prodFactor) breakdown.buildingProd += mod.prodFactor * srcBld.active;
+                if (mod.consFactor) breakdown.buildingCons += mod.consFactor * srcBld.active;
+                if (mod.capFactor) breakdown.buildingCap += mod.capFactor * srcBld.active;
+            }
+        }
+    }
+
     const details = [];
     // 产出项
+    const happinessFactor = GameState.happiness/100
     for (let r in b.baseProduce) {
         const base = b.baseProduce[r];
-        const perBuilding = base * factors.prodFactor;
+        const perBuilding = base * factors.prodFactor*happinessFactor;
         const total = perBuilding * activeCount;
         details.push({
             resource: r,
@@ -235,10 +309,10 @@ function getBuildingStats(buildingKey) {
             breakdown: { ...breakdown }
         });
     }
-    // 上限项
     for (let r in b.capProvide) {
         const base = b.capProvide[r];
-        const perBuilding = base * factors.capFactor;
+        const capFactor = factors.getCapFactor(r);
+        const perBuilding = base * capFactor;
         const total = perBuilding * activeCount;
         details.push({
             resource: r,
@@ -246,7 +320,7 @@ function getBuildingStats(buildingKey) {
             base,
             perBuilding,
             total,
-            factor: factors.capFactor,
+            factor: capFactor,
             breakdown: { ...breakdown }
         });
     }
@@ -280,15 +354,51 @@ function updateHeatDecay(deltaSec) {
         }
     }
 }
-
 function tickResources(deltaSec = 0.2) {
     computeProductionAndCaps();
-    const res = GameState.resources;
-    for (let r in res) {
-        let prod = res[r].production;
-        let newAmount = res[r].amount + prod * deltaSec;
-        res[r].amount = Math.min(res[r].cap, Math.max(0, newAmount));
-        if (res[r].amount > 0.01) res[r].visible = true;
+    
+    // 检查资源枯竭并停用相关建筑
+    let needRecompute = false;
+    for (let r in GameState.resources) {
+        const res = GameState.resources[r];
+        // 数量为0（或接近0）且净产量为负
+        if (res.amount <= 0.00001 && res.production < -0.00001) {
+            // 停用所有消耗该资源的建筑
+            for (let bKey in GameState.buildings) {
+                const b = GameState.buildings[bKey];
+                if (b.active > 0 && b.baseConsume && b.baseConsume[r] && b.baseConsume[r] > 0) {
+                    b.active = 0;
+                    needRecompute = true;
+                }
+            }
+
+        }
     }
+    if (needRecompute) {
+        computeProductionAndCaps(); // 重新计算产量
+        // 刷新界面，让玩家看到建筑激活数量变为0
+        if (typeof window.renderAll === 'function') {
+            window.renderAll();
+        }
+    }
+    
+    // 更新资源数量
+    for (let r in GameState.resources) {
+        let prod = GameState.resources[r].production;
+        let newAmount = GameState.resources[r].amount + prod * deltaSec;
+        GameState.resources[r].amount = Math.min(GameState.resources[r].cap, Math.max(0, newAmount));
+        if (GameState.resources[r].amount > 0.01) GameState.resources[r].visible = true;
+    }
+    
     updateHeatDecay(deltaSec);
+}
+// 获取当前核弹重置可获得的遗物数量（考虑粒子加速器加成）
+function getRelicGain() {
+    const scienceCap = GameState.resources["科学"].cap;
+    let baseGain = Math.floor(Math.log(scienceCap) ** 2);
+    // 粒子加速器：每个（无论激活）增加2%遗物获取
+    const accelerator = GameState.buildings["粒子加速器"];
+    const acceleratorCount = accelerator ? accelerator.count : 0;
+    const multiplier = 1 + acceleratorCount * 0.02;
+    return Math.floor(baseGain * multiplier);
 }

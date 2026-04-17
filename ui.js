@@ -1,6 +1,9 @@
 // 悬浮提示
 let currentTooltip = null;
-
+let shiftPressed = false;
+window.addEventListener('keydown', (e) => { if (e.key === 'Shift') shiftPressed = true; });
+window.addEventListener('keyup', (e) => { if (e.key === 'Shift') shiftPressed = false; });
+window.addEventListener('blur', () => { shiftPressed = false; }); // 窗口失焦时重置
 function showTooltip(element, text) {
     if (currentTooltip) currentTooltip.remove();
     const tooltip = document.createElement('div');
@@ -84,8 +87,9 @@ function renderResources() {
 function renderActionsPanel() {
     const container = document.getElementById('actions-panel');
     const hasNuke = GameState.techs["曼哈顿计划"]?.researched || false;
+    const hasVacuumDecay = GameState.techs["真空衰变"]?.researched || false;
     const scienceCap = GameState.resources["科学"].cap;
-    const relicGain = Math.floor(Math.log(scienceCap)**2);
+    const relicGain = getRelicGain();
     
     let html = '<h3>行动</h3><div class="action-buttons">';
     html += `<button class="action-btn" data-action="collect_wood">收集木头</button>`;
@@ -93,6 +97,9 @@ function renderActionsPanel() {
     html += `<button class="action-btn" data-action="research_tech">研究科技</button>`;
     if (hasNuke) {
         html += `<button class="action-btn" data-action="nuke_reset">发射核弹</button>`;
+    }
+    if (hasVacuumDecay) {
+        html += `<button class="action-btn" data-action="vacuum_decay">真空衰变</button>`;
     }
     //html += `<button class="action-btn" data-action="cheat_fill">作弊：填满资源</button>`;
     html += '</div>';
@@ -112,36 +119,84 @@ function renderActionsPanel() {
                 tooltipText = "立即获得 <strong>+1 科学</strong><br>";
                 break;
             case "nuke_reset":
-                tooltipText = `发动核弹！<br>效果：重置你的所有资源、建筑、科技，并额外获得 <strong>${relicGain} 遗物</strong><br>`;
+                tooltipText = `发动核弹！重置你的所有资源、建筑、科技，并额外获得遗物`;
+                break;
+            case "vacuum_decay":
+                tooltipText = `真空衰变！\n重置游戏，获得更多遗物，并获得暗能量（取决于暗物质研究所数量）`;
                 break;
             case "cheat_fill":
-                tooltipText = "作弊：将所有资源（除遗物外）填满至当前上限";
+                tooltipText = "作弊：将所有资源填满至当前上限";
                 break;
         }
         btn.addEventListener('mouseenter', (e) => showTooltip(btn, tooltipText));
     });
 }
+// ui.js - 按分类渲染建筑面板
 function renderBuildingPanel() {
     const panel = document.getElementById('panel-building');
-    let html = '<div class="building-grid">';
+    
+    // 定义分类顺序和显示名称
+    const categories = [
+        { key: "生产", label: "生产建筑" },
+        { key: "工厂", label: "工厂建筑" },
+        { key: "电力", label: "电力建筑" },
+        { key: "科学", label: "科学建筑" },
+        { key: "存储", label: "存储建筑" },
+        { key: "太空", label: "太空建筑" },
+        { key: "其他", label: "其他建筑" }
+    ];
+    
+    // 按分类收集可见建筑
+    let categorizedBuildings = {};
+    for (let cat of categories) {
+        categorizedBuildings[cat.key] = [];
+    }
+    
     for (let b in GameState.buildings) {
         const bd = GameState.buildings[b];
         if (!bd.visible) continue;
-        html += `<div class="building-card" data-building="${b}">
-            <div class="building-card-info">
-                <strong>${b}</strong><br>
-                <small>${bd.active}/${bd.count}</small>
-            </div>
-            <div class="btn-group">
-                <button class="btn-square buy-btn" data-building="${b}">买</button>
-                <button class="btn-square plus-btn" data-building="${b}">+</button>
-                <button class="btn-square minus-btn" data-building="${b}">-</button>
-            </div>
-        </div>`;
+        const type = bd.type || "其他"; // 兼容未定义type的情况，默认为其他
+        if (categorizedBuildings[type]) {
+            categorizedBuildings[type].push(b);
+        } else {
+            categorizedBuildings["其他"].push(b);
+        }
     }
-    html += '</div>';
+    
+    let html = '';
+    for (let cat of categories) {
+        const buildings = categorizedBuildings[cat.key];
+        if (buildings.length === 0) continue;
+        
+        html += `<div class="building-category" style="margin-bottom: 1rem;">
+                    <h3 style="border-left: 4px solid #2a7faa; padding-left: 5px; margin: 0 0 5px 0;">${cat.label}</h3>
+                    <div class="building-grid">`;
+        
+        for (let b of buildings) {
+            const bd = GameState.buildings[b];
+            html += `<div class="building-card" data-building="${b}">
+                        <div class="building-card-info">
+                            <strong>${b}</strong>
+                            <small>${bd.active}/${bd.count}</small>
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-square buy-btn" data-building="${b}">买</button>
+                            <button class="btn-square plus-btn" data-building="${b}">+</button>
+                            <button class="btn-square minus-btn" data-building="${b}">-</button>
+                        </div>
+                    </div>`;
+        }
+        
+        html += `</div></div>`;
+    }
+    
+    if (html === '') {
+        html = '<p>暂无可用建筑</p>';
+    }
+    
     panel.innerHTML = html;
-
+    
+    // 重新绑定悬浮提示 (与原有逻辑保持一致)
     document.querySelectorAll('.building-card').forEach(card => {
         const bName = card.dataset.building;
         const bd = GameState.buildings[bName];
@@ -151,23 +206,44 @@ function renderBuildingPanel() {
                 .map(([r, amt]) => `${r} ${formatNumber(amt)}`)
                 .join(', ');
             let tooltipHtml = `<strong>${bName}</strong><br>${bd.desc}<br>数量: ${bd.count} | 激活: ${bd.active}<br>价格: ${priceStr}<br><br>`;
-
+            
             if (stats && stats.details) {
                 for (let det of stats.details) {
                     if (det.type === 'prod') {
-                        const sign = '+';
-                        tooltipHtml += `<strong>${det.resource}:</strong> ${sign}${formatNumber(det.perBuilding)}/秒<br>`;
+                        tooltipHtml += `<strong>${det.resource}:</strong> +${formatNumber(det.perBuilding)}/秒<br>`;
                     } else if (det.type === 'cons') {
-                        const sign = '-';
-                        tooltipHtml += `<strong>${det.resource}:</strong> ${sign}${formatNumber(det.perBuilding)}/秒<br>`;
+                        tooltipHtml += `<strong>${det.resource}:</strong> -${formatNumber(det.perBuilding)}/秒<br>`;
                     } else if (det.type === 'cap') {
                         tooltipHtml += `<strong>${det.resource}上限:</strong> +${formatNumber(det.perBuilding)}<br>`;
                     }
                 }
             }
+            if (bd.modifiers && bd.modifiers.length > 0) {
+                tooltipHtml += `<br><strong>提供加成：</strong><br>`;
+                for (let mod of bd.modifiers) {
+                    if (mod.prodFactor) {
+                        tooltipHtml += `${mod.target} 产量 +${(mod.prodFactor * 100).toFixed(0)}%<br>`;
+                    }
+                    if (mod.consFactor) {
+                        let sign = mod.consFactor > 0 ? '+' : '';
+                        tooltipHtml += `${mod.target} 消耗 ${sign}${(mod.consFactor * 100).toFixed(0)}%<br>`;
+                    }
+                    if (mod.capFactor) {
+                        tooltipHtml += `${mod.target} 上限 +${(mod.capFactor * 100).toFixed(0)}%<br>`;
+                    }
+                }
+            }
+                        // ========= 新增：显示建筑对幸福度的影响 =========
+            if (bd.happinessEffect !== undefined && bd.happinessEffect !== 0) {
+                const sign = bd.happinessEffect > 0 ? '+' : '';
+                const effectPercent = (bd.happinessEffect ).toFixed(1);
+                tooltipHtml += `<br><strong>幸福度影响：</strong> ${sign}${effectPercent}%<br>`;
+            }
             showTooltip(card, tooltipHtml);
         });
     });
+    
+    // 更新购买按钮颜色
     updateBuyButtonsColor();
 }
 
@@ -398,6 +474,8 @@ function renderResetPanel() {
             <button class="btn-rect" id="import-save">导入存档</button>
         </div>
         <p>每10秒自动保存</p>
+        <p>按住shift键可以每次购买/加减10个建筑！</p>
+        <p>本游戏灵感来源于《猫国建设者》《进化》等优秀放置游戏</p>
     `;
 }
 
@@ -430,7 +508,7 @@ function renderTradePanel() {
         const sellCost = volume / res.value;
         
         html += `<div class="trade-card">
-            <div class="trade-name"><strong>${r}</strong> <span style="font-size:0.8rem;">🔥: ${heat.toFixed(3)}</span></div>
+            <div class="trade-name"><strong>${r}</strong> <span style="font-size:0.8rem;"></span></div>
             <div class="trade-buttons">
                 <button class="trade-buy-btn" data-resource="${r}">买 ${formatNumber(buyGet)} ${r} (${formatNumber(buyCost)} 金)</button>
                 <button class="trade-sell-btn" data-resource="${r}">卖 ${formatNumber(sellCost)} ${r} (${formatNumber(sellGet)} 金)</button>
@@ -446,10 +524,7 @@ function renderTradePanel() {
             const resource = btn.dataset.resource;
             if (buyResource(resource)) {
                 renderAll();
-                saveGame();
-            } else {
-                alert("交易失败：金不足或市场未解锁");
-            }
+            } 
         });
         btn.addEventListener('mouseenter', (e) => {
             const resource = btn.dataset.resource;
@@ -466,9 +541,6 @@ function renderTradePanel() {
             const resource = btn.dataset.resource;
             if (sellResource(resource)) {
                 renderAll();
-                saveGame();
-            } else {
-                alert("交易失败：资源不足或市场未解锁");
             }
         });
         btn.addEventListener('mouseenter', (e) => {
@@ -484,6 +556,7 @@ function renderTradePanel() {
 }
 
 function renderAll() {
+    renderHappiness();
     renderResources();
     renderActionsPanel();
     renderBuildingPanel();
@@ -493,7 +566,9 @@ function renderAll() {
     renderPermanentPanel();
     renderResetPanel();
     renderTradePanel();
-    updateTabsVisibility();  // 新增：更新标签可见性
+    renderChangelogPanel();
+    renderLogPanel();
+    updateTabsVisibility();
 }
 function bindEvents() {
     // 选项卡切换（关键修复：加入 'trade'）
@@ -502,7 +577,7 @@ function bindEvents() {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const tab = btn.dataset.tab;
-            const panels = ['building', 'tech', 'upgrade', 'policy', 'trade', 'permanent', 'reset'];
+            const panels = ['building', 'tech', 'upgrade', 'policy', 'trade', 'permanent',  'reset','changelog'];
             panels.forEach(p => {
                 const panelEl = document.getElementById(`panel-${p}`);
                 if (panelEl) {
@@ -521,8 +596,8 @@ function bindEvents() {
         if (btn.dataset.action) {
             if (btn.dataset.action === 'nuke_reset') {
                 const scienceCap = GameState.resources["科学"].cap;
-                const relicGain = Math.floor(Math.log(scienceCap)**2);
-                if (confirm(`发射核弹！\n将执行软重置（保留遗物和永恒升级），并根据当前科学上限获得 ${relicGain} 遗物。\n确定要发射核弹吗？`)) {
+                const relicGain = getRelicGain();
+                if (confirm(`发射核弹！\n将执行软重置，并根据当前科学上限获得 ${relicGain} 遗物。\n确定要发射核弹吗？`)) {
                     performAction(btn.dataset.action);
                     renderAll();
                 }
@@ -535,18 +610,35 @@ function bindEvents() {
         
         // 建筑按钮
         if (btn.classList.contains('buy-btn')) {
-            buyBuilding(btn.dataset.building);
-            renderAll();
+            const buildingKey = btn.dataset.building;
+            const maxTimes = shiftPressed ? 10 : 1;
+            let success = false;
+            for (let i = 0; i < maxTimes; i++) {
+                if (buyBuilding(buildingKey)) {
+                    success = true;
+                } else {
+                    break; // 买不起或达到上限则停止
+                }
+            }
+            if (success) renderAll();
         } else if (btn.classList.contains('plus-btn')) {
-            const b = btn.dataset.building;
-            const bd = GameState.buildings[b];
-            if (bd.active < bd.count) bd.active++;
-            renderAll();
+            const buildingKey = btn.dataset.building;
+            const bd = GameState.buildings[buildingKey];
+            const maxTimes = shiftPressed ? 10 : 1;
+            const increase = Math.min(maxTimes, bd.count - bd.active);
+            if (increase > 0) {
+                bd.active += increase;
+                renderAll();
+            }
         } else if (btn.classList.contains('minus-btn')) {
-            const b = btn.dataset.building;
-            const bd = GameState.buildings[b];
-            if (bd.active > 0) bd.active--;
-            renderAll();
+            const buildingKey = btn.dataset.building;
+            const bd = GameState.buildings[buildingKey];
+            const maxTimes = shiftPressed ? 10 : 1;
+            const decrease = Math.min(maxTimes, bd.active);
+            if (decrease > 0) {
+                bd.active -= decrease;
+                renderAll();
+            }
         } else if (btn.classList.contains('tech-btn')) {
             researchTech(btn.dataset.tech);
             renderAll();
@@ -559,7 +651,7 @@ function bindEvents() {
         
         // ========= 重置按钮（硬重置加确认） =========
         } else if (btn.id === 'hard-reset') {
-            if (confirm("警告：硬重置将清除所有游戏数据，包括永恒和遗物，并重新开始。确定吗？")) {
+            if (confirm("警告：硬重置将清除所有游戏数据，包括永恒升级，并重新开始。确定吗？")) {
                 hardReset();
             }
         } else if (btn.id === 'manual-save') {
@@ -615,6 +707,7 @@ function updateBuyButtonsColor() {
         }
     }
 }
+// ui.js - 修复资源贡献显示符号
 function getResourceContributions(resourceName) {
     const contributions = [];
     for (let b in GameState.buildings) {
@@ -625,9 +718,11 @@ function getResourceContributions(resourceName) {
         // 只取产出或消耗类型的详情，忽略上限类型
         const detail = stats.details.find(d => d.resource === resourceName && (d.type === 'prod' || d.type === 'cons'));
         if (detail && Math.abs(detail.total) > 0.0001) {
+            // 关键修复：消耗类型贡献值取负，产出类型保持正
+            const value = detail.type === 'cons' ? -detail.total : detail.total;
             contributions.push({
                 building: b,
-                value: detail.total
+                value: value
             });
         }
     }
@@ -675,7 +770,8 @@ function updateTabsVisibility() {
     const hasPermanent = (relicAmount > 0) || hasResearchedPermanent;
     const permanentTab = document.querySelector('.tab-btn[data-tab="permanent"]');
     if (permanentTab) permanentTab.style.display = hasPermanent ? '' : 'none';
-
+    const changelogTab = document.querySelector('.tab-btn[data-tab="changelog"]');
+    if (changelogTab) changelogTab.style.display = '';
     // 如果当前激活的标签被隐藏，自动切换到第一个可见标签
     const activeTab = document.querySelector('.tab-btn.active');
     if (activeTab && activeTab.style.display === 'none') {
@@ -687,5 +783,38 @@ function updateTabsVisibility() {
             const buildingTab = document.querySelector('.tab-btn[data-tab="building"]');
             if (buildingTab) buildingTab.click();
         }
+    }
+}
+
+
+// 渲染更新日志面板
+function renderChangelogPanel() {
+    const panel = document.getElementById('panel-changelog');
+    if (!panel) return;
+    
+    let html = '<div style="max-height: 500px; overflow-y: auto; padding-right: 10px;">';
+    
+    for (let log of ChangelogData.logs) {
+        html += `
+            <div style="margin-bottom: 24px; border-left: 3px solid #2a7faa; padding-left: 15px;">
+                <h3 style="margin: 0 0 5px 0; color: #1e384b;">${log.version} <span style="font-size: 0.85rem; color: #6c7a8a;">(${log.date})</span></h3>
+                <ul style="margin: 8px 0 0 0; padding-left: 20px; color: #2d3f53;">
+        `;
+        for (let change of log.changes) {
+            html += `<li style="margin: 4px 0;">${change}</li>`;
+        }
+        html += `
+                </ul>
+            </div>
+        `;
+    }
+    
+    panel.innerHTML = html;
+}
+function renderHappiness() {
+    const el = document.getElementById('happiness-display');
+    if (el) {
+        const happiness = GameState.happiness || 100;
+        el.innerHTML = `😊 幸福度: ${happiness.toFixed(1)}%`;
     }
 }
