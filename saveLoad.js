@@ -113,7 +113,6 @@ function saveGame() {
     localStorage.setItem('civilizationRebuilder', JSON.stringify(saveData));
 }
 
-// 核心：将存档数据（精简或旧版）合并到当前 GameState（已重新初始化为最新静态数据）
 function refreshGameStateFromSave(saveData) {
     // 1. 备份永恒升级状态（因为 initGameData 会重置它们）
     const permBackup = {};

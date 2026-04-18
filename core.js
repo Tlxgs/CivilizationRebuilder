@@ -131,12 +131,6 @@ class GameEngine {
                 vacuumDecayReset();
                 return true;
             },
-            cheat_fill: () => {
-                GameState.resources["遗物"].amount += 100;
-                GameState.resources["暗能量"].amount += 100;
-                computeProductionAndCaps();
-                return true;
-            }
         };
 
         const handler = handlers[actionId];

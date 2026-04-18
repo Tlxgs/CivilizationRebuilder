@@ -168,8 +168,9 @@ const ModifierSystem = (function() {
         const crystalBonus = sumBySource('crystal');
 
         let prodFactor = (1 + techBonus) * (1 + upgradeBonus) * (1 + policyBonus)
-                       * (1 + buildingBonus) * (1 + crystalBonus)
-                       * (1 + modData.globalProdAdd);
+                    * (1 + buildingBonus) * (1 + crystalBonus)
+                    * (1 + modData.globalProdAdd)
+                    * (1 + modData.globalSpeedAdd); 
         if (buildingType === '太空') {
             prodFactor *= (1 + modData.spaceProdAdd);
         }

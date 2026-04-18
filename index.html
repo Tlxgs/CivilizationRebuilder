@@ -48,6 +48,16 @@
                     <span id="current-season">(春)</span>
                 </div>
             <div id="event-log-list" class="event-log-list"></div>
+            <!-- 在 main-layout 闭合后，log-panel 同级位置添加 -->
+            <div id="building-detail-panel" class="building-detail-panel" style="display: none;">
+                <div class="detail-header">
+                    <span id="detail-building-name">建筑名称</span>
+                    <button id="close-detail-panel" class="detail-close">&times;</button>
+                </div>
+                <div id="detail-content" class="detail-content">
+                    <!-- 动态内容 -->
+                </div>
+            </div>
         </div>
         </div>
     </div>
@@ -75,6 +85,7 @@
     <script src="saveLoad.js"></script>
     <script src="formulas.js"></script> 
     <script src="production.js"></script>
+    <script src="changeLog.js"></script>
     <!-- UI 模块 -->
     <script src="ui/common.js"></script>
     <script src="ui/resources.js"></script>
@@ -91,6 +102,8 @@
     <script src="ui/log.js"></script>
     <script src="ui/tabs.js"></script>
     <script src="ui/buildings.js"></script>
+    <script src="ui/buildingDetail.js"></script>
+
     <script src="ui/index.js"></script>   <!-- 最后 -->
 
     <!-- 主入口 -->

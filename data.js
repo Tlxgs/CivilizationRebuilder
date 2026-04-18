@@ -302,24 +302,4 @@ const RANDOM_EVENTS = [
     { id: "solar_flare", name: "太阳耀斑", desc: "太阳活动增强，电力产量下降", effects: { 电力: 0.6 }, durationDays: 365 },
     { id: "oil_discovery",name:"发现油田",desc:"发现了一片巨大油田",effects:{石油:3.0},durationDays:365}
 ];
-const ChangelogData = {
-    version: "v0.2",
-    logs: [
-        { version: "v0.2", date: "2026-04-18", changes: [
-            "增加军事相关科技建筑，增加晶体系统",
-        ]},
-        { version: "v0.1", date: "2026-04-18", changes: [
-            "游戏初始版本发布",
-            "包含建筑、科技、升级、政策、贸易、永恒系统",
-        ]}
-    ]
-};
-function getCurrentSeason() {
-    const dayOfYear = GameState.gameDays % 360;
-    if (dayOfYear < 90) return 'spring';
-    if (dayOfYear < 180) return 'summer';
-    if (dayOfYear < 270) return 'autumn';
-    return 'winter';
-}
 
-window.getCurrentSeason = getCurrentSeason;

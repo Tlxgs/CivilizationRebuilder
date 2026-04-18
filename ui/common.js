@@ -76,6 +76,25 @@ function bindEvents() {
             document.getElementById('import-modal').style.display = 'flex';
         }
     });
+        // 建筑卡片点击显示详情（事件委托）
+    document.addEventListener('click', (e) => {
+        // 查找被点击的 .building-card（包括其子元素）
+        const card = e.target.closest('.building-card');
+        if (!card) return;
+        
+        // 如果点击的是按钮，不触发详情（让按钮自己的事件处理）
+        if (e.target.closest('button')) return;
+        
+        const buildingId = card.dataset.building;
+        if (buildingId && typeof showBuildingDetail === 'function') {
+            showBuildingDetail(buildingId);
+        }
+    });
+
+    // 关闭详情面板按钮
+    document.getElementById('close-detail-panel')?.addEventListener('click', () => {
+        document.getElementById('building-detail-panel').style.display = 'none';
+    });
 
     // 政策 radio 切换
     document.addEventListener('change', e => {

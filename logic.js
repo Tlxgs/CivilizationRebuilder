@@ -60,6 +60,7 @@ function hardReset() {
     localStorage.clear();
     location.reload();
     ModifierSystem.clearCache();
+    renderAll();
 }
 
 function getMarketTradeVolume() {
