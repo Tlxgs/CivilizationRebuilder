@@ -111,7 +111,6 @@ function getSaveData() {
 function saveGame() {
     const saveData = getSaveData();
     localStorage.setItem('civilizationRebuilder', JSON.stringify(saveData));
-    const ind = document.getElementById('save-indicator');
 }
 
 // 核心：将存档数据（精简或旧版）合并到当前 GameState（已重新初始化为最新静态数据）
@@ -195,21 +194,7 @@ function refreshGameStateFromSave(saveData) {
     for (let t in GameState.techs) {
         const tech = GameState.techs[t];
         if (tech.researched) {
-            if (tech.unlocks) {
-                tech.unlocks.forEach(b => {
-                    if (GameState.buildings[b]) GameState.buildings[b].visible = true;
-                });
-            }
-            if (tech.unlocksPolicies) {
-                tech.unlocksPolicies.forEach(p => {
-                    if (GameState.policies[p]) GameState.policies[p].visible = true;
-                });
-            }
-            if (tech.unlocksUpgrades) {
-                tech.unlocksUpgrades.forEach(u => {
-                    if (GameState.upgrades[u]) GameState.upgrades[u].visible = true;
-                });
-            }
+            applyTechUnlocks(tech);
         }
     }
         // 恢复日期、事件、日志
