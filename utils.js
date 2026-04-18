@@ -149,25 +149,31 @@ function getBuildingMultipliers(buildingKey) {
         }
     }
 
-    // 5. 各乘区独立相乘（产量、消耗）
-    let prodFactor = (1 + techProdBonus)
-                     * (1 + upgradeBonus)
-                     * (1 + policyProdBonus)
-                     * (1 + buildingProdBonus)
-                     * mult.prodRatio;
-
-    const consFactor = (1 + techConsBonus)
-                     * (1 + upgradeBonus)      // 升级同时影响消耗
-                     * (1 + policyConsBonus)
-                     * (1 + buildingConsBonus)
-                     * mult.speedRatio;
-
-    // 6. 基础上限乘区（不包括永久上限，永久上限在 getCapFactor 中根据资源类型动态乘）
-    const baseCapFactor = (1 + techCapBonus)
-                        * (1 + upgradeBonus)
-                        * (1 + policyCapBonus)
-                        * (1 + buildingCapBonus);
-
+    let crystalProdBonus = 0;
+    let crystalConsBonus = 0;
+    let crystalCapBonus = 0;
+    for (let crystal of GameState.crystals.equipped) {
+        if (!crystal) continue;
+        for (let eff of crystal.effects) {
+            if (eff.type === 'prod' && (eff.target === buildingKey || eff.target === 'global')) {
+                crystalProdBonus += eff.value;
+            }
+            if (eff.type === 'cons' && (eff.target === buildingKey || eff.target === 'global')) {
+                crystalConsBonus += eff.value;
+            }
+            if (eff.type === 'cap' && (eff.target === buildingKey || eff.target === 'global')) {
+                crystalCapBonus += eff.value;
+            }
+        }
+    }
+    
+    // 将晶体加成加入乘区（与其他加成相加）
+    let prodFactor = (1 + techProdBonus) * (1 + upgradeBonus) * (1 + policyProdBonus) 
+                     * (1 + buildingProdBonus) * mult.prodRatio * (1 + crystalProdBonus);
+    const consFactor = (1 + techConsBonus) * (1 + upgradeBonus) * (1 + policyConsBonus) 
+                     * (1 + buildingConsBonus) * mult.speedRatio * (1 + crystalConsBonus);
+    const baseCapFactor = (1 + techCapBonus) * (1 + upgradeBonus) * (1 + policyCapBonus) 
+                        * (1 + buildingCapBonus) * (1 + crystalCapBonus);
     // 太空建筑额外产量乘区（仅产量）
     const buildingType = GameState.buildings[buildingKey]?.type;
     if (buildingType === "太空") {
@@ -214,6 +220,19 @@ function computeProductionAndCaps() {
             totalHappiness += b.happinessEffect * b.active;
         }
     }
+        // 新增：晶体幸福度加成
+    let crystalHappiness = 0;
+    if (GameState.crystals && GameState.crystals.equipped) {
+        for (let crystal of GameState.crystals.equipped) {
+            if (!crystal) continue;
+            for (let eff of crystal.effects) {
+                if (eff.type === 'happiness') {
+                    crystalHappiness += eff.value * 100;
+                }
+            }
+        }
+    }
+    totalHappiness += crystalHappiness;
     GameState.happiness = Math.max(0, totalHappiness); // 不低于0
     // 1. 重置所有资源的生产和上限
     for (let r in res) {

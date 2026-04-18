@@ -103,7 +103,7 @@ function getSaveData() {
             researched: GameState.permanent[perm].researched
         };
     }
-
+    saveData.crystals = JSON.parse(JSON.stringify(GameState.crystals));
     return saveData;
 }
 
@@ -227,6 +227,18 @@ function refreshGameStateFromSave(saveData) {
     } else {
         GameState.activeRandomEvent = null;
         GameState.activeEventEndDay = 0;
+    }
+    if (saveData.crystals) {
+        // 确保结构完整
+        GameState.crystals = {
+            equipped: saveData.crystals.equipped || [null, null, null],
+            inventory: saveData.crystals.inventory || []
+        };
+    } else {
+        // 旧存档没有晶体数据，确保使用初始化的空结构
+        if (!GameState.crystals) {
+            GameState.crystals = { equipped: [null, null, null], inventory: [] };
+        }
     }
 
     // 9. 重新计算价格、生产、上限，并刷新界面

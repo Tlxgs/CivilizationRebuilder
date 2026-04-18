@@ -35,6 +35,7 @@ function initGameData() {
         "氚": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false},
         "核燃料": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 20, heat: 1 },
         "太空宜居度": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false },
+        "军备": { baseCap: 100, cap:100, amount: 0, production: 0, visible: false},
         "遗物": { baseCap: 1000000, cap: 1000000, amount: 0, production: 0, visible: false },
         "暗能量":{baseCap:1000000,cap:1000000,amount:0,production:0,visible:false},
         "时间晶体":{baseCap:1000000,cap:1000000,amount:0,production:0,visible:false}
@@ -409,6 +410,24 @@ function initGameData() {
             basePrice: {钢: 50000,金: 5000}, price: {钢: 50000,金: 5000}, costGrowth: 1.1,
             baseProduce: {}, baseConsume: {电力:0.05}, capProvide: {金:1000},
             count: 0, active: 0, visible: false, desc: "交易效率远远高于市场"
+        },
+        "军营": {
+            type: "军事",
+            basePrice: {铁: 1000, 铜: 800}, price: {铁: 1000, 铜: 800}, costGrowth: 1.3,
+            baseProduce: {军备: 0.2}, baseConsume: {铁: 0.5, 铜: 0.3,政策点:0.1}, capProvide: {军备:10},
+            count: 0, active: 0, visible: false, 
+            desc: "训练士兵，生产军备。消耗金属和政策点。"
+        },
+        "军工厂": {
+            type: "军事",
+            basePrice: {金属板: 1000, 钢: 800}, price: {金属板: 1000, 钢: 800}, costGrowth: 1.3,
+            baseProduce: {}, baseConsume: {钢:0.2,电力:0.2}, capProvide: {},
+            count: 0, active: 0, visible: false, 
+            modifiers: [
+                {target: "军营",prodFactor: 0.05 },
+                {target:"军营",capFactor:0.05} ,
+            ],
+            desc: "提高军营效率。"
         }
     };
 
@@ -439,6 +458,8 @@ function initGameData() {
         "铜冶炼": { price: {科学: 150,煤: 10}, prereq: ["化学"], desc: "以黄铜矿等硫化铜精矿为原料，通过焙烧、熔炼、吹炼、精炼等工序提取金属铜", unlocks: ["铜冶炼厂"], researched: false },
         "铁冶炼": { price: {科学: 180,煤: 20}, prereq: ["煤矿生产"], desc: "在高温下，用还原剂将铁矿石还原得到生铁", unlocks: ["铁冶炼厂"], researched: false },
         "管理学": { price: {科学: 200}, prereq: ["铁冶炼"], desc: "管理学是研究管理规律、方法与模式，以提升组织效益的综合性交叉学科。", unlocks: ["行政机关"], unlocksPolicies: ["基础资源政策"], researched: false },
+        "军事理论": { price: {科学: 150}, prereq: ["管理学"], desc: "解锁军营，可以生产军备并发动战争。", unlocks: ["军营"], researched: false },
+        "军工技术":{price:{科学:800,钢:200},prereq:["军事理论"],desc:"建设军工厂来提高战斗力",unlocks:["军工厂"],researched:false},
         "冶炼管理": { price: {科学: 300,铁: 20}, prereq: ["管理学"], desc: "解锁冶炼方式政策", unlocksPolicies: ["冶炼方式"], researched: false },
         "初等数学": { price: {科学: 200}, prereq: ["印刷术"], desc: "初等数学涵盖算术、代数、几何、三角学及概率统计等基础内容", researched: false },
         "微积分": { price: {科学: 220}, prereq: ["初等数学"], desc: "微积分是研究函数变化率和累积变化的数学分支，主要包括微分学、积分学及其应用。", unlocks: ["大学"], researched: false },
@@ -652,7 +673,10 @@ function initGameData() {
     GameState.activeRandomEvent = null;
     GameState.activeEventEndDay = 0;
     GameState.eventLogs = [];              // 日志数组，每项 { dateStr, text }
-
+        GameState.crystals = {
+        equipped: [null, null, null], 
+        inventory: []                   // 库存，最多3个
+    };
 }
 // 随机事件定义
 const RANDOM_EVENTS = [
@@ -664,8 +688,11 @@ const RANDOM_EVENTS = [
     { id: "oil_discovery",name:"发现油田",desc:"发现了一片巨大油田",effects:{石油:3.0},durationDays:365}
 ];
 const ChangelogData = {
-    version: "v0.1",
+    version: "v0.2",
     logs: [
+        { version: "v0.2", date: "2026-04-18", changes: [
+            "增加军事相关科技建筑，增加晶体系统",
+        ]},
         { version: "v0.1", date: "2026-04-18", changes: [
             "游戏初始版本发布",
             "包含建筑、科技、升级、政策、贸易、永恒系统",
