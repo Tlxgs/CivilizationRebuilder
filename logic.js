@@ -205,3 +205,26 @@ function discardCrystal(inventoryIndex) {
     computeProductionAndCaps();
     renderAll();
 }
+// 获取所有有产量产出的建筑（即 baseProduce 不为空）
+function getBuildingsWithProduce() {
+    return Object.keys(GameState.buildings).filter(key => {
+        const b = GameState.buildings[key];
+        return b.baseProduce && Object.keys(b.baseProduce).length > 0;
+    });
+}
+
+// 获取所有有消耗的建筑
+function getBuildingsWithConsume() {
+    return Object.keys(GameState.buildings).filter(key => {
+        const b = GameState.buildings[key];
+        return b.baseConsume && Object.keys(b.baseConsume).length > 0;
+    });
+}
+
+// 获取所有提供上限的建筑
+function getBuildingsWithCap() {
+    return Object.keys(GameState.buildings).filter(key => {
+        const b = GameState.buildings[key];
+        return b.capProvide && Object.keys(b.capProvide).length > 0;
+    });
+}
