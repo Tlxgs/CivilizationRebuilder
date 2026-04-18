@@ -1,4 +1,6 @@
 // ui/buildings.js
+// ui/buildings.js - getBuildingTooltip 修改后（仅展示修改部分）
+
 function getBuildingTooltip(buildingKey) {
     const bd = GameState.buildings[buildingKey];
     const stats = getBuildingStats(buildingKey);
@@ -34,21 +36,14 @@ function getBuildingTooltip(buildingKey) {
             }
         }
     }
-    
-    if (buildingKey === "博物馆") {
-        const relicAmt = GameState.resources["遗物"]?.amount || 0;
-        const bonus = 0.1 * Math.log(Math.pow(2.72, 5) + relicAmt);
-        const sign = bonus > 0 ? '+' : '';
-        html += `<br><strong>幸福度影响：</strong> ${sign}${bonus.toFixed(2)}% (该影响基于遗物数量)<br>`;
-    } else if (bd.happinessEffect !== undefined && bd.happinessEffect !== 0) {
-        const sign = bd.happinessEffect > 0 ? '+' : '';
-        const effectPercent = bd.happinessEffect.toFixed(1);
-        html += `<br><strong>幸福度影响：</strong> ${sign}${effectPercent}%<br>`;
+    if (stats && stats.happinessPerBuilding !== undefined && stats.happinessPerBuilding !== 0) {
+        const sign = stats.happinessPerBuilding > 0 ? '+' : '';
+        const percent = stats.happinessPerBuilding.toFixed(2);
+        html += `<br><strong>幸福度影响：</strong> ${sign}${percent}%<br>`;
     }
 
     return html;
 }
-
 function renderBuildingPanel() {
     const panel = document.getElementById('panel-building');
     

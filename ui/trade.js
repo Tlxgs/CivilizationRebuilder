@@ -17,7 +17,7 @@ function renderTradePanel() {
     for (let r in GameState.resources) {
         const res = GameState.resources[r];
         if (r === "金") continue;
-        if (!res.hasOwnProperty('value')) continue;
+        if (res.value === undefined) continue;
         if (!res.visible && res.amount === 0) continue;
         
         const heat = res.heat || 1;

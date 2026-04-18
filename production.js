@@ -1,237 +1,141 @@
-// production.js - 基于原始正确逻辑的生产计算引擎
+// production.js - 支持建筑自定义 calc 函数
 const ProductionEngine = (function() {
-    // ----- 从原始 utils.js 移植的正确函数 -----
-    function getPermanentMultipliers() {
-        const perm = GameState.permanent;
-        const relic = GameState.resources["遗物"]?.amount || 0;
-        let costRatio = 1.0;
-        let globalProd = 0;
-        let globalSpeed = 0;
-        let globalSpaceProd = 0;
-        let capPerRelic = 0;
-        let sciCapPerRelicLog = 0;
-
-        for (let key in perm) {
-            const p = perm[key];
-            if (!p.researched) continue;
-            const eff = p.effect || {};
-            if (eff.costRatio) costRatio *= eff.costRatio;
-            if (eff.globalProd) globalProd += eff.globalProd;
-            if (eff.globalSpeed) globalSpeed += eff.globalSpeed;
-            if (eff.globalSpaceProd) globalSpaceProd += eff.globalSpaceProd;
-            if (eff.capPerRelic) capPerRelic += eff.capPerRelic;
-            if (eff.sciCapPerRelicLog) sciCapPerRelicLog += eff.sciCapPerRelicLog;
+    
+    function defaultCalc(state, buildingId, building, cfg, modData, happinessFactor, eventMultipliers) {
+        const prodMult = ModifierSystem.calcProdMultiplier(modData, buildingId, cfg.type);
+        const consMult = ModifierSystem.calcConsMultiplier(modData, buildingId);
+        const active = building.active;
+        
+        const production = {};
+        const consumption = {};
+        const cap = {};
+        
+        for (let r in cfg.baseProduce) {
+            const baseVal = cfg.baseProduce[r];
+            const eventMul = eventMultipliers[r] || 1;
+            production[r] = baseVal * active * prodMult * happinessFactor * eventMul;
         }
-        return {
-            costRatio,
-            prodRatio: 1 + globalProd,
-            speedRatio: 1 + globalSpeed,
-            spaceProdRatio: 1 + globalSpaceProd,
-            capRatio: 1 + relic * capPerRelic,
-            sciCapRatio: 1 + Math.log(1 + relic) * sciCapPerRelicLog
-        };
+        for (let r in cfg.baseConsume) {
+            const baseVal = cfg.baseConsume[r];
+            consumption[r] = baseVal * active * consMult;
+        }
+        for (let r in cfg.capProvide) {
+            const baseVal = cfg.capProvide[r];
+            const capMult = ModifierSystem.calcCapMultiplier(modData, buildingId, r);
+            cap[r] = baseVal * active * capMult;
+        }
+        
+        return { production, consumption, cap };
     }
 
-    function getBuildingMultipliers(buildingKey) {
-        const mult = getPermanentMultipliers();
-        const relicAmount = GameState.resources["遗物"]?.amount || 0;
-
-        // 科技加成
-        let techProdBonus = 0, techConsBonus = 0, techCapBonus = 0;
-        for (let t in GameState.techs) {
-            const tech = GameState.techs[t];
-            if (!tech.researched || !tech.effect) continue;
-            const eff = tech.effect[buildingKey];
-            if (eff) {
-                if (eff.prodFactor) techProdBonus += eff.prodFactor;
-                if (eff.consFactor) techConsBonus += eff.consFactor;
-                if (eff.capFactor) techCapBonus += eff.capFactor;
-            }
-        }
-
-        // 升级加成
-        let upgradeBonus = 0;
-        for (let u in GameState.upgrades) {
-            const up = GameState.upgrades[u];
-            if (up.level > 0 && up.effect[buildingKey]) {
-                upgradeBonus += up.effect[buildingKey] * up.level;
-            }
-        }
-
-        // 政策加成
-        let policyProdBonus = 0, policyConsBonus = 0, policyCapBonus = 0;
-        for (let p in GameState.policies) {
-            const pol = GameState.policies[p];
-            if (!pol.visible) continue;
-            const opt = pol.options[pol.activePolicy];
-            if (opt.prodFactor && opt.prodFactor[buildingKey]) policyProdBonus += opt.prodFactor[buildingKey];
-            if (opt.consFactor && opt.consFactor[buildingKey]) policyConsBonus += opt.consFactor[buildingKey];
-            if (opt.capFactor && opt.capFactor[buildingKey]) policyCapBonus += opt.capFactor[buildingKey];
-        }
-
-        // 建筑间加成
-        let buildingProdBonus = 0, buildingConsBonus = 0, buildingCapBonus = 0;
-        for (let b in GameState.buildings) {
-            const bld = GameState.buildings[b];
-            if (!bld.modifiers || bld.active === 0) continue;
-            for (let mod of bld.modifiers) {
-                if (mod.target === buildingKey) {
-                    if (mod.prodFactor) buildingProdBonus += mod.prodFactor * bld.active;
-                    if (mod.consFactor) buildingConsBonus += mod.consFactor * bld.active;
-                    if (mod.capFactor) buildingCapBonus += mod.capFactor * bld.active;
-                }
-            }
-        }
-
-        // 晶体加成
-        let crystalProdBonus = 0, crystalConsBonus = 0, crystalCapBonus = 0;
-        for (let crystal of GameState.crystals.equipped) {
-            if (!crystal) continue;
-            for (let eff of crystal.effects) {
-                if (eff.type === 'prod' && (eff.target === buildingKey || eff.target === 'global')) {
-                    crystalProdBonus += eff.value;
-                }
-                if (eff.type === 'cons' && (eff.target === buildingKey || eff.target === 'global')) {
-                    crystalConsBonus += eff.value;
-                }
-                if (eff.type === 'cap' && (eff.target === buildingKey || eff.target === 'global')) {
-                    crystalCapBonus += eff.value;
-                }
-            }
-        }
-
-        let prodFactor = (1 + techProdBonus) * (1 + upgradeBonus) * (1 + policyProdBonus)
-                       * (1 + buildingProdBonus) * mult.prodRatio * (1 + crystalProdBonus);
-        const consFactor = (1 + techConsBonus) * (1 + upgradeBonus) * (1 + policyConsBonus)
-                         * (1 + buildingConsBonus) * mult.speedRatio * (1 + crystalConsBonus);
-        const baseCapFactor = (1 + techCapBonus) * (1 + upgradeBonus) * (1 + policyCapBonus)
-                            * (1 + buildingCapBonus) * (1 + crystalCapBonus);
-
-        const buildingType = GameState.buildings[buildingKey]?.type;
-        if (buildingType === "太空") {
-            prodFactor *= mult.spaceProdRatio;
-        }
-
-        function getCapFactor(resourceName) {
-            let permanentCapFactor = 1;
-            if (resourceName === "科学") {
-                permanentCapFactor = mult.sciCapRatio;
-            } else {
-                permanentCapFactor = mult.capRatio;
-            }
-            return baseCapFactor * permanentCapFactor;
-        }
-
-        return { prodFactor, consFactor, getCapFactor };
-    }
-
-    // ----- 核心计算 -----
     function computeProductionAndCaps() {
-        const res = GameState.resources;
-        const blds = GameState.buildings;
+        const state = GameState;
+        const res = state.resources;
+        const blds = state.buildings;
 
-        // 幸福度
-        let totalHappiness = 100;
-        const relicAmount = GameState.resources["遗物"]?.amount || 0;
-        for (let bKey in blds) {
-            const b = blds[bKey];
-            if (b.active <= 0) continue;
-            if (bKey === "博物馆") {
-                const perMuseumBonus = 0.1 * Math.log(Math.pow(2.72, 5) + relicAmount);
-                totalHappiness += perMuseumBonus * b.active;
-            } else if (b.happinessEffect) {
-                totalHappiness += b.happinessEffect * b.active;
-            }
-        }
-        let crystalHappiness = 0;
-        for (let crystal of GameState.crystals.equipped) {
-            if (!crystal) continue;
-            for (let eff of crystal.effects) {
-                if (eff.type === 'happiness') crystalHappiness += eff.value * 100;
-            }
-        }
-        totalHappiness += crystalHappiness;
-        GameState.happiness = Math.max(0, totalHappiness);
-        const happinessFactor = GameState.happiness / 100;
+        const modData = ModifierSystem.collectModifiers(state);
+        state.happiness = ModifierSystem.calcHappiness(state, modData);
+        const happinessFactor = state.happiness / 100;
 
-        // 重置产量上限
         for (let r in res) {
             res[r].production = 0;
             res[r].cap = res[r].baseCap;
         }
 
-        const activeEvent = GameState.activeRandomEvent;
+        const activeEvent = state.activeRandomEvent;
+        const eventMultipliers = activeEvent ? activeEvent.effects : {};
 
         for (let bKey in blds) {
-            const b = blds[bKey];
-            if (b.count === 0) continue;
+            const building = blds[bKey];
+            if (building.active === 0) continue;
 
-            const factors = getBuildingMultipliers(bKey);
-            const activeCount = b.active;
+            const cfg = BUILDINGS_CONFIG[bKey];
+            if (!cfg) continue;
 
-            // 产出
-            for (let r in b.baseProduce) {
-                const baseVal = b.baseProduce[r];
-                const eventMul = (activeEvent && activeEvent.effects[r]) ? activeEvent.effects[r] : 1;
-                const total = baseVal * activeCount * factors.prodFactor * happinessFactor * eventMul;
-                res[r].production += total;
+            let effects;
+            if (typeof cfg.calc === 'function') {
+                effects = cfg.calc(state, bKey, building, cfg, modData, happinessFactor, eventMultipliers);
+            } else {
+                effects = defaultCalc(state, bKey, building, cfg, modData, happinessFactor, eventMultipliers);
             }
 
-            // 消耗
-            for (let r in b.baseConsume) {
-                const baseVal = b.baseConsume[r];
-                const total = baseVal * activeCount * factors.consFactor;
-                res[r].production -= total;
+            for (let r in effects.production) {
+                res[r].production += effects.production[r] || 0;
             }
-
-            // 上限
-            for (let r in b.capProvide) {
-                const baseCap = b.capProvide[r];
-                const totalCap = baseCap * activeCount * factors.getCapFactor(r);
-                res[r].cap += totalCap;
+            for (let r in effects.consumption) {
+                res[r].production -= effects.consumption[r] || 0;
+            }
+            for (let r in effects.cap) {
+                res[r].cap += effects.cap[r] || 0;
             }
         }
     }
 
     function getBuildingStats(buildingKey) {
-        const b = GameState.buildings[buildingKey];
-        if (!b) return null;
-        const factors = getBuildingMultipliers(buildingKey);
-        const activeCount = b.active;
-        const happinessFactor = GameState.happiness / 100;
+        const state = GameState;
+        const building = state.buildings[buildingKey];
+        if (!building) return null;
+
+        const cfg = BUILDINGS_CONFIG[buildingKey];
+        if (!cfg) return null;
+
+        const modData = ModifierSystem.collectModifiers(state);
+        const happinessFactor = state.happiness / 100;
+        const eventMultipliers = state.activeRandomEvent?.effects || {};
+
+        let perBuildingEffects;
+        if (typeof cfg.calc === 'function') {
+            const virtualBuilding = { ...building, active: 1 };
+            perBuildingEffects = cfg.calc(state, buildingKey, virtualBuilding, cfg, modData, happinessFactor, eventMultipliers);
+        } else {
+            const virtualBuilding = { ...building, active: 1 };
+            perBuildingEffects = defaultCalc(state, buildingKey, virtualBuilding, cfg, modData, happinessFactor, eventMultipliers);
+        }
 
         const details = [];
-        for (let r in b.baseProduce) {
-            const base = b.baseProduce[r];
-            const perBuilding = base * factors.prodFactor * happinessFactor;
-            details.push({ resource: r, type: 'prod', base, perBuilding, total: perBuilding * activeCount });
+        for (let r in perBuildingEffects.production) {
+            const per = perBuildingEffects.production[r] || 0;
+            details.push({ resource: r, type: 'prod', perBuilding: per, total: per * building.active });
         }
-        for (let r in b.baseConsume) {
-            const base = b.baseConsume[r];
-            const perBuilding = base * factors.consFactor;
-            details.push({ resource: r, type: 'cons', base, perBuilding, total: perBuilding * activeCount });
+        for (let r in perBuildingEffects.consumption) {
+            const per = perBuildingEffects.consumption[r] || 0;
+            details.push({ resource: r, type: 'cons', perBuilding: per, total: per * building.active });
         }
-        for (let r in b.capProvide) {
-            const base = b.capProvide[r];
-            const perBuilding = base * factors.getCapFactor(r);
-            details.push({ resource: r, type: 'cap', base, perBuilding, total: perBuilding * activeCount });
+        for (let r in perBuildingEffects.cap) {
+            const per = perBuildingEffects.cap[r] || 0;
+            details.push({ resource: r, type: 'cap', perBuilding: per, total: per * building.active });
         }
-        return { details, activeCount };
+        // 提取幸福度贡献（单建筑）
+        const happinessPerBuilding = perBuildingEffects.happiness !== undefined 
+            ? perBuildingEffects.happiness 
+            : (cfg.happinessEffect || 0);   // 兼容未迁移的建筑
+
+        return { 
+            details, 
+            activeCount: building.active,
+            happinessPerBuilding,
+            happinessTotal: happinessPerBuilding * building.active
+        };
+        return { details, activeCount: building.active };
     }
 
     function updateBuildingPrices() {
-        const mult = getPermanentMultipliers().costRatio;
+        const modData = ModifierSystem.collectModifiers(GameState);
+        const costMult = ModifierSystem.calcCostMultiplier(modData);
         for (let b in GameState.buildings) {
             const bd = GameState.buildings[b];
-            bd.price = Formulas.calcBuildingPrice(bd.basePrice, bd.costGrowth, bd.count, mult);
+            const cfg = BUILDINGS_CONFIG[b];
+            if (!cfg) continue;
+            bd.price = Formulas.calcBuildingPrice(cfg.basePrice, cfg.costGrowth, bd.count, costMult);
         }
     }
 
     function updateUpgradePrices() {
-        const mult = getPermanentMultipliers().costRatio;
+        const modData = ModifierSystem.collectModifiers(GameState);
+        const costMult = ModifierSystem.calcCostMultiplier(modData);
         for (let u in GameState.upgrades) {
             const up = GameState.upgrades[u];
-            up.price = Formulas.calcUpgradePrice(up.basePrice, up.growth, up.level, mult);
+            up.price = Formulas.calcUpgradePrice(up.basePrice, up.growth, up.level, costMult);
         }
     }
 
@@ -251,20 +155,33 @@ const ProductionEngine = (function() {
         return contributions;
     }
 
+    function getPermanentMultipliers() {
+        const modData = ModifierSystem.collectModifiers(GameState);
+        return {
+            costRatio: modData.costRatio,
+            prodRatio: 1 + modData.globalProdAdd,
+            speedRatio: 1 + modData.globalSpeedAdd,
+            spaceProdRatio: 1 + modData.spaceProdAdd,
+            capRatio: 1 + modData.relic * modData.capPerRelic,
+            sciCapRatio: 1 + Math.log(1 + modData.relic) * modData.sciCapPerRelicLog
+        };
+    }
+
     return {
         computeProductionAndCaps,
         getBuildingStats,
         updateBuildingPrices,
         updateUpgradePrices,
         getResourceContributions,
-        getPermanentMultipliers
+        getPermanentMultipliers,
+        defaultCalc
     };
 })();
 
+window.ProductionEngine = ProductionEngine;
 window.computeProductionAndCaps = ProductionEngine.computeProductionAndCaps;
 window.getBuildingStats = ProductionEngine.getBuildingStats;
 window.updateBuildingPrices = ProductionEngine.updateBuildingPrices;
 window.updateUpgradePrices = ProductionEngine.updateUpgradePrices;
 window.getResourceContributions = ProductionEngine.getResourceContributions;
 window.getPermanentMultipliers = ProductionEngine.getPermanentMultipliers;
-window.ProductionEngine = ProductionEngine;

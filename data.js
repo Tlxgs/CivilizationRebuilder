@@ -13,426 +13,42 @@ let GameState = {
 
 function initGameData() {
     GameState.happiness = 100; 
-    GameState.resources = {
-        "电力": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false },
-        "木头": { baseCap: 100, cap: 100, amount: 0, production: 0, visible: false, value: 1, heat: 1 },
-        "石头": { baseCap: 100, cap: 100, amount: 0, production: 0, visible: false, value: 2, heat: 1 },
-        "科学": { baseCap: 100, cap: 100, amount: 0, production: 0, visible: false },
-        "政策点": { baseCap: 100, cap: 100, amount: 0, production: 0, visible: false },
-        "煤": { baseCap: 100, cap: 100, amount: 0, production: 0, visible: false, value: 1.5, heat: 1 },
-        "铜": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 3, heat: 1 },
-        "铁": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 3, heat: 1 },
-        "铝": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 4, heat: 1 },
-        "金": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false },
-        "钢": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 6, heat: 1 },
-        "钛": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 8, heat: 1 },
-        "建材": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 5, heat: 1 },
-        "石油": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 4, heat: 1 },
-        "塑料": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 6, heat: 1 },
-        "金属板": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 7, heat: 1 },
-        "碳纤维": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 12, heat: 1 },
-        "铀": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 15, heat: 1 },
-        "氚": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false},
-        "核燃料": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 20, heat: 1 },
-        "太空宜居度": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false },
-        "军备": { baseCap: 100, cap:100, amount: 0, production: 0, visible: false},
-        "遗物": { baseCap: 1000000, cap: 1000000, amount: 0, production: 0, visible: false },
-        "暗能量":{baseCap:1000000,cap:1000000,amount:0,production:0,visible:false},
-        "时间晶体":{baseCap:1000000,cap:1000000,amount:0,production:0,visible:false}
-    };
+    GameState.resources = {};
+    GameState.season = 0;
+    GameState.seasonDayCounter = 0;   // 当前季节已过天数
+    for (let rKey in RESOURCES_CONFIG) {
+        const cfg = RESOURCES_CONFIG[rKey];
+        
+        // 运行时动态字段（初始值）
+        const dynamic = {
+            cap: cfg.baseCap,        // 初始上限等于基础上限
+            amount: 0,
+            production: 0,
+            visible: false
+        };
+        Object.setPrototypeOf(dynamic, cfg);
+        
+        GameState.resources[rKey] = dynamic;
+    }
 
-    // ==================== 建筑定义 ====================
-    // baseProduce: 正产出数值 (单位/秒)   baseConsume: 消耗数值 (正数)   capProvide: 提供的基础上限
-    GameState.buildings = {
-        "伐木场": {
-            type: "生产",
-            basePrice: {木头: 10}, price: {木头: 10}, costGrowth: 1.15,
-            baseProduce: {木头: 0.2}, baseConsume: {}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "生产木材"
-        },
-        "采石场": {
-            type: "生产",
-            basePrice: {木头: 5,石头: 5}, price: {木头: 5,石头: 5}, costGrowth: 1.15,
-            baseProduce: {石头: 0.2}, baseConsume: {}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "开采石头"
-        },
-        "仓库": {
-            type: "存储",
-            basePrice: {木头: 50,石头: 50}, price: {木头: 50,石头: 50}, costGrowth: 1.08,
-            baseProduce: {}, baseConsume: {}, capProvide: {木头: 50,石头: 50},
-            count: 0, active: 0, visible: false, desc: "提高木头和石头的储存上限"
-        },
-        "集装箱": {
-            type: "存储",
-            basePrice: {铁: 40,铜: 20}, price: {铁: 40,铜: 20}, costGrowth: 1.2,
-            baseProduce: {}, baseConsume: {},
-            capProvide: {木头:500,石头:500,煤:200,铜:200,铁:200,钢:200,铝:200},
-            count: 0, active: 0, visible: false, desc: "储存更多资源"
-        },
-        "大型仓库": {
-            type: "存储",
-            basePrice: {金属板: 40,钢: 40}, price: {金属板: 40,钢: 40}, costGrowth: 1.1,
-            baseProduce: {}, baseConsume: {电力: 0.05},
-            capProvide: {木头:3000,石头:3000,煤:500,铜:500,铁:500,钢:200,铝:200,金:200,建材:200,塑料:200,金属板:200},
-            count: 0, active: 0, visible: false, desc: "消耗电力，大幅提升多种资源上限"
-        },
-        "煤矿": {
-            type: "生产",
-            basePrice: {石头: 100}, price: {石头: 100}, costGrowth: 1.20,
-            baseProduce: {煤: 0.1}, baseConsume: {}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "生产少量煤"
-        },
-        "大型煤矿": {
-            type: "生产", 
-            basePrice: {建材: 20,木头: 200}, price: {建材: 20,木头: 200}, costGrowth: 1.15,
-            baseProduce: {},
-            baseConsume: {电力: 0.15}, 
-            capProvide: {煤:100},
-            count: 0, active: 0, visible: false, 
-            desc: "提供煤储存，同时使煤矿产量+10%",
-            modifiers: [
-                { target: "煤矿", prodFactor: 0.10 } 
-            ]
-        },
-        "工具加工站":{
-            type: "生产", 
-            basePrice: {铁: 500,石头: 500}, price: {铁: 500,石头: 500}, costGrowth: 1.15,
-            baseProduce: {},
-            baseConsume: {电力: 0.10}, 
-            capProvide: {},
-            count: 0, active: 0, visible: false, 
-            desc: "制造工具来提高伐木场和采石场产量",
-            modifiers: [
-                { target: "伐木场", prodFactor: 0.02 }, 
-                { target: "采石场", prodFactor: 0.02 } 
-            ]
-
-        },
-        "金矿": {
-            type: "生产",
-            basePrice: {铁: 80,木头: 500}, price: {铁: 80,木头: 500}, costGrowth: 1.20,
-            baseProduce: {金: 0.05}, baseConsume: {}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "生产少量金"
-        },
-        "铜冶炼厂": {
-            type: "工厂",
-            happinessEffect:-0.1,
-            basePrice: {石头: 50}, price: {石头: 50}, costGrowth: 1.1,
-            baseProduce: {铜: 0.05}, baseConsume: {煤: 0.1, 石头: 0.5}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "消耗煤和石头，生产铜"
-        },
-        "铁冶炼厂": {
-            type: "工厂",
-            happinessEffect:-0.1,
-            basePrice: {石头: 30,铜: 5}, price: {石头: 30,铜: 5}, costGrowth: 1.1,
-            baseProduce: {铁: 0.05}, baseConsume: {煤: 0.2, 石头: 0.5}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "消耗煤和石头，生产铁"
-        },
-        "行政机关": {
-            type: "其他",
-            happinessEffect:0.5,
-            basePrice: {木头: 100,铁: 30}, price: {木头: 100,铁: 30}, costGrowth: 2.0,
-            baseProduce: {政策点: 0.05}, baseConsume: {科学: 0.2}, capProvide: {政策点: 50},
-            count: 0, active: 0, visible: false, desc: "消耗科学，生产政策点"
-        },
-        "图书馆": {
-            type: "科学",
-            basePrice: {木头: 20}, price: {木头: 20}, costGrowth: 1.2,
-            baseProduce: {科学: 0.15}, baseConsume: {}, capProvide: {科学: 10},
-            count: 0, active: 0, visible: false, desc: "生产科学，增加科学上限"
-        },
-        "大学": {
-            type: "科学",
-            basePrice: {铜: 30,铁: 30}, price: {铜: 30,铁: 30}, costGrowth: 1.2,
-            baseProduce: {科学: 0.2}, baseConsume: {电力: 0.1}, capProvide: {科学: 40},
-            count: 0, active: 0, visible: false, desc: "消耗电力，生产科学"
-        },
-        "博物馆": {
-            type: "科学",
-            happinessEffect:0.5,
-            basePrice: {石头: 300,铜: 100}, price: {石头: 300,铜: 100}, costGrowth: 1.2,
-            baseProduce: {科学: 0.2, 金: 0.1}, baseConsume: {}, capProvide: {科学: 50},
-            count: 0, active: 0, visible: false, desc: "研究遗物，生产科学和金"
-        },
-        "科学院": {
-            type: "科学", 
-            basePrice: {塑料: 30,金属板: 30}, price: {塑料: 30,金属板: 30}, costGrowth: 1.15,
-            baseProduce: {}, 
-            baseConsume: {电力: 0.15}, 
-            capProvide: {}, 
-            count: 0, active: 0, visible: false,
-            desc: "提供先进理论，使大学科学产出和上限+5%",
-            modifiers: [
-                { target: "大学", prodFactor: 0.05, capFactor: 0.05 } 
-            ]
-        },
-        "暗物质研究所":{
-            type:"太空",
-            basePrice:{钛:5000,碳纤维:500,科学:500},price:{钛:5000,碳纤维:500},costGrowth:1.10,
-            baseProduce:{电力:0.1,科学:0.1},
-            baseConsume:{太空宜居度:0.05},
-            capProvide:{},
-            count:0,active:0,visible:false,
-            desc:"从暗物质中提取永不枯竭的能量！这似乎是永动机？",
-        },
-        "蒸汽机": {
-            type: "电力",
-            basePrice: {石头: 100,铁: 20}, price: {石头: 100,铁: 20}, costGrowth: 1.12,
-            baseProduce: {电力: 0.2}, baseConsume: {煤: 0.2}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "消耗煤，产生电力"
-        },
-        "建材工厂": {
-            type: "工厂",
-            happinessEffect:-0.2,
-            basePrice: {铁: 50,木头: 200}, price: {铁: 50,木头: 200}, costGrowth: 1.10,
-            baseProduce: {建材: 0.1}, baseConsume: {木头: 5, 石头: 2, 铁: 0.1, 电力: 0.1},
-            capProvide: {建材: 50},
-            count: 0, active: 0, visible: false, desc: "生产建材"
-        },
-        "炼钢厂": {
-            type: "工厂",
-            happinessEffect:-0.2,
-            basePrice: {建材: 30,铜: 100}, price: {建材: 30,铜: 100}, costGrowth: 1.15,
-            baseProduce: {钢: 0.05}, baseConsume: {煤: 0.1, 铁: 0.3}, capProvide: {钢: 50},
-            count: 0, active: 0, visible: false, desc: "将铁冶炼成钢"
-        },
-        "电解铝厂": {
-            type: "工厂",
-            happinessEffect:-0.2,
-            basePrice: {建材: 30,钢: 40}, price: {建材: 30,钢: 40}, costGrowth: 1.15,
-            baseProduce: {铝: 0.05}, baseConsume: {电力: 0.25, 石头: 0.5}, capProvide: {铝: 50},
-            count: 0, active: 0, visible: false, desc: "生产铝"
-        },
-        "金属加工厂": {
-            type: "工厂",
-            happinessEffect:-0.2,
-            basePrice: {建材: 50,铁: 100}, price: {建材: 50,铁: 100}, costGrowth: 1.10,
-            baseProduce: {金属板: 0.05}, baseConsume: {电力: 0.1, 铜: 0.5, 铝: 0.2},
-            capProvide: {金属板: 50},
-            count: 0, active: 0, visible: false, desc: "生产金属板"
-        },
-        "塑料厂": {
-            type: "工厂",
-            happinessEffect:-0.2,
-            basePrice: {金属板: 30,建材: 30}, price: {金属板: 30,建材: 30}, costGrowth: 1.10,
-            baseProduce: {塑料: 0.1}, baseConsume: {电力: 0.1, 石油: 0.3}, capProvide: {塑料: 50},
-            count: 0, active: 0, visible: false, desc: "生产塑料"
-        },
-        "碳纤维厂": {
-            type: "工厂",
-            happinessEffect:-0.2,
-            basePrice: {金属板: 200,塑料: 100}, price: {金属板: 200,塑料: 100}, costGrowth: 1.08,
-            baseProduce: {碳纤维: 0.1}, baseConsume: {电力: 0.3, 煤: 0.1}, capProvide: {碳纤维: 50},
-            count: 0, active: 0, visible: false, desc: "生产碳纤维"
-        },
-        "核燃料工厂": {
-            type: "工厂",
-            happinessEffect:-0.2,
-            basePrice: {金属板: 150,铁: 400}, price: {金属板: 150,铁: 400}, costGrowth: 1.08,
-            baseProduce: {核燃料: 0.1}, baseConsume: {电力: 0.5, 铀: 0.1}, capProvide: {核燃料: 50},
-            count: 0, active: 0, visible: false, desc: "生产核燃料"
-        },
-        "市场": {
-            type: "其他",
-            basePrice: {建材: 20,金: 20}, price: {建材: 20,金: 20}, costGrowth: 1.05,
-            baseProduce: {}, baseConsume: {}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "提升单次交易数量。这不仅意味着你可以点击较少次，更意味着你可以在物品涨价到你无法承受之前买更多！"
-        },
-        "油田": {
-            type: "生产",
-            basePrice: {金属板: 10,钢: 30}, price: {金属板: 10,钢: 30}, costGrowth: 1.10,
-            baseProduce: {石油: 0.2}, baseConsume: {电力: 0.2}, capProvide: {石油: 20},
-            count: 0, active: 0, visible: false, desc: "开采石油"
-        },
-        "石油发电厂": {
-            type: "电力",
-            basePrice:{建材:50,钢:50}, price:{建材:50,钢:50}, costGrowth:1.2,
-            baseProduce:{电力:0.25}, baseConsume:{石油:0.1}, capProvide:{},
-            count:0, active:0, visible:false, desc:"使用石油发电"
-        },
-        "太阳能板": {
-            type: "电力",
-            basePrice: {塑料: 30,铜: 200}, price: {塑料: 30,铜: 200}, costGrowth: 1.04,
-            baseProduce: {电力: 0.1}, baseConsume: {}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "清洁电力"
-        },
-        "电池": {
-            type: "电力",
-            basePrice: {铜: 300,铁: 300}, price: {铜: 300,铁: 300}, costGrowth: 1.2,
-            baseProduce: {}, baseConsume: {}, capProvide: {电力: 200},
-            count: 0, active: 0, visible: false, desc: "储存电力"
-        },
-        "铀矿": {
-            type: "生产",
-            basePrice: {铁: 300,建材: 150}, price: {铁: 300,建材: 150}, costGrowth: 1.1,
-            baseProduce: {铀: 0.1}, baseConsume: {}, capProvide: {铀: 50},
-            count: 0, active: 0, visible: false, desc: "开采铀"
-        },
-        "裂变反应堆": {
-            type: "电力",
-            basePrice: {金属板: 100,铀: 30}, price: {金属板: 100,铀: 30}, costGrowth: 1.15,
-            baseProduce: {电力: 0.5}, baseConsume: {核燃料: 0.02}, capProvide: {铀: 50},
-            count: 0, active: 0, visible: false, desc: "核能发电"
-        },
-        "粒子加速器": {
-            type: "科学",
-            basePrice:{金属板:500,建材:500,科学:500}, price:{金属板:500,建材:500,科学:500}, costGrowth:1.06,
-            baseProduce:{科学:0.3}, baseConsume:{电力:0.3}, capProvide:{},
-            count:0, active:0, visible:false, desc:"产出科学，同时每个粒子加速器（无论是否激活）增加2%遗物获取。"
-        },
-        "轨道电梯": {
-            type: "太空",
-            basePrice: {碳纤维: 5000, 钛: 3000, 金属板: 8000},
-            price: {碳纤维: 5000, 钛: 3000, 金属板: 8000},
-            costGrowth: 1.08,
-            baseProduce: {},
-            baseConsume: {电力: 0.2},
-            capProvide: {},
-            count: 0, active: 0, visible: false,
-            desc: "提升月球建筑产量",
-            modifiers: [
-                { target: "月球铁矿", prodFactor: 0.02 },
-                { target: "月球铜矿", prodFactor: 0.02 },
-                { target: "月球钛矿", prodFactor: 0.02 }
-            ]
-        },
-        "月球基地": {
-            type: "太空",
-            basePrice: {金属板: 50,碳纤维: 100}, price: {金属板: 50,碳纤维: 100}, costGrowth: 1.06,
-            baseProduce: {太空宜居度: 0.2}, baseConsume: {电力: 0.3},
-            capProvide: {铀:200,钛:200,碳纤维:200,核燃料:50,太空宜居度:50},
-            count: 0, active: 0, visible: false, desc: "月球殖民"
-        },
-        "气态行星基地": {
-            type: "太空",
-            basePrice: {钛: 10000,塑料: 5000}, price: {钛: 10000,塑料: 5000}, costGrowth: 1.10,
-            baseProduce: {太空宜居度: 0.1}, baseConsume: {电力: 0.3},
-            capProvide: {氚:200,核燃料:200,太空宜居度:50},
-            modifiers: [
-                { target: "氚提取站", prodFactor: 0.02},
-                {target:"氚燃料厂",prodFactor:0.02} ,
-
-            ],
-            count: 0, active: 0, visible: false, desc: "这里环境远比月球恶劣，宜居度很差"
-        },
-        "月球铁矿": {
-            type: "太空",
-            basePrice: {钢: 50,碳纤维: 150}, price: {钢: 50,碳纤维: 150}, costGrowth: 1.10,
-            baseProduce: {铁: 0.3}, baseConsume: {电力: 0.2, 太空宜居度: 0.2}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "月球铁矿"
-        },
-        "月球铜矿": {
-            type: "太空",
-            basePrice: {铝: 50,碳纤维: 150}, price: {铝: 50,碳纤维: 150}, costGrowth: 1.10,
-            baseProduce: {铜: 0.3}, baseConsume: {电力: 0.2, 太空宜居度: 0.2}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "月球铜矿"
-        },
-        "月球钛矿": {
-            type: "太空",
-            basePrice: {金属板: 100,碳纤维: 250}, price: {金属板: 100,碳纤维: 250}, costGrowth: 1.12,
-            baseProduce: {钛: 0.1}, baseConsume: {电力: 0.4, 太空宜居度: 0.2}, capProvide: {钛: 50},
-            count: 0, active: 0, visible: false, desc: "月球钛矿"
-        },
-        "月球研究所": {
-            type: "太空",
-            basePrice: {钛: 250,钢: 400}, price: {钛: 250,钢: 400}, costGrowth: 1.12,
-            baseProduce: {科学: 0.1}, baseConsume: {电力: 0.4, 太空宜居度: 0.2},
-            capProvide: {科学: 100},
-            count: 0, active: 0, visible: false, desc: "月球科研建筑"
-        },
-        "月球工厂": {
-            type: "太空", 
-            basePrice: {钛: 300,碳纤维: 300}, price:{钛: 300,碳纤维: 300}, costGrowth: 1.15,
-            baseProduce: {},
-            baseConsume: {电力: 0.15,太空宜居度:0.1}, 
-            capProvide: {},
-            count: 0, active: 0, visible: false, 
-            desc: "提高各个工厂产出",
-            modifiers: [
-                { target: "建材工厂", prodFactor: 0.05 },
-                {target:"炼钢厂",prodFactor:0.05} ,
-                {target:"电解铝厂",prodFactor:0.05},
-                {target:"金属加工厂",prodFactor:0.05},
-                {target:"塑料厂",prodFactor:0.05},
-                {target:"碳纤维厂",prodFactor:0.05},
-                {target:"核燃料工厂",prodFactor:0.05},
-
-            ]
-        },
-        "氚提取站":{
-            type:"太空",
-            basePrice: {建材: 20000,金属板: 10000}, price: {建材: 20000,金属板: 10000}, costGrowth: 1.15,
-            baseProduce: {氚: 0.1}, baseConsume: {电力: 0.4, 太空宜居度: 0.3},
-            capProvide: {氚: 100},
-            count: 0, active: 0, visible: false, desc: "从气态行星上提取氚"
-        },
-        "氚燃料厂": {
-            type: "太空",
-            basePrice: {钛: 10000,碳纤维: 20000}, 
-            price: {钛: 10000,碳纤维: 20000}, 
-            costGrowth: 1.12,
-            baseProduce: {核燃料: 0.2}, 
-            baseConsume: {氚: 0.05, 电力: 0.2, 太空宜居度: 0.5},
-            capProvide: {核燃料: 100},
-            count: 0, active: 0, visible: false, 
-            desc: "将氚加工成核燃料，用于更高效的聚变反应"
-        },
-        "聚变反应堆": {
-            type: "电力",
-            basePrice: {金属板: 10000,碳纤维: 5000,核燃料: 1000}, 
-            price: {金属板: 10000,碳纤维: 5000,核燃料: 1000}, 
-            costGrowth: 1.05,
-            baseProduce: {电力: 1.0}, 
-            baseConsume: {核燃料: 0.20},
-            capProvide: {},
-            count: 0, active: 0, visible: false, 
-            desc: "通过核聚变产生大量清洁能源，是未来文明的基石"
-        },
-
-        "太空剧院":{
-            type:"太空",
-            basePrice:{金属板:500,塑料:500},price:{金属板:500,塑料:50},costGrowth:1.20,
-            happinessEffect:2,
-            baseProduce:{},
-            baseConsume:{电力:0.1,科学:2},
-            capProvide:{},
-            count:0,active:0,visible:false,
-            desc:"使用暗能量表演魔术，提高幸福度"
-        },
-        "戴森球":{
-            type: "太空",
-            basePrice: {钛: 500000,金属板: 500000}, price: {钛: 500000,金属板: 500000}, costGrowth: 1.2,
-            baseProduce: {电力:1.0}, baseConsume: {}, capProvide: {},
-            count: 0, active: 0, visible: false, desc: "围绕太阳建造一个巨大的戴森球"
-        },
-        "星际交易站":{
-            type: "太空",
-            basePrice: {钢: 50000,金: 5000}, price: {钢: 50000,金: 5000}, costGrowth: 1.1,
-            baseProduce: {}, baseConsume: {电力:0.05}, capProvide: {金:1000},
-            count: 0, active: 0, visible: false, desc: "交易效率远远高于市场"
-        },
-        "军营": {
-            type: "军事",
-            basePrice: {铁: 1000, 铜: 800}, price: {铁: 1000, 铜: 800}, costGrowth: 1.3,
-            baseProduce: {军备: 0.2}, baseConsume: {铁: 0.5, 铜: 0.3,政策点:0.1}, capProvide: {军备:10},
-            count: 0, active: 0, visible: false, 
-            desc: "训练士兵，生产军备。消耗金属和政策点。"
-        },
-        "军工厂": {
-            type: "军事",
-            basePrice: {金属板: 1000, 钢: 800}, price: {金属板: 1000, 钢: 800}, costGrowth: 1.3,
-            baseProduce: {}, baseConsume: {钢:0.2,电力:0.2}, capProvide: {},
-            count: 0, active: 0, visible: false, 
-            modifiers: [
-                {target: "军营",prodFactor: 0.05 },
-                {target:"军营",capFactor:0.05} ,
-            ],
-            desc: "提高军营效率。"
-        }
-    };
+    GameState.buildings = {};
+    for (let bKey in BUILDINGS_CONFIG) {
+        const cfg = BUILDINGS_CONFIG[bKey];
+        
+        // 运行时动态字段
+        const dynamic = {
+            count: 0,
+            active: 0,
+            visible: false,
+            price: { ...cfg.basePrice }   // 初始价格
+        };
+        
+        Object.setPrototypeOf(dynamic, cfg);
+        
+        GameState.buildings[bKey] = dynamic;
+    }
 
     // ==================== 科技定义 ====================
-    // effect 中使用 prodFactor / consFactor / capFactor 表示百分比加成 (例如 0.05 = +5%)
     GameState.techs = {
         "伐木技术": { price: {科学: 5}, prereq: null, desc: "要致富，先撸树！", unlocks: ["伐木场"], researched: false },
         "采石技术": { price: {科学: 5}, prereq: ["伐木技术"], desc: "徒手挖石头", unlocks: ["采石场"], researched: false },
@@ -467,7 +83,6 @@ function initGameData() {
             effect: {大学: {capFactor: 0.20}}, researched: false },
         "牛顿力学": { price: {科学: 250}, prereq: ["初等数学"], desc: "研究低速宏观弱引力下的物体运动规律。", researched: false },
         "相对论":{price:{科学:500},prereq:["牛顿力学"],desc:"时空是一个整体，也许我们有办法穿越时间。",researched:false},
-        //"时间穿越":{price:{科学:2000,暗能量:0.1},prereq:["相对论"],desc:"利用宇宙中的暗能量，产生时间晶体。",unlocks:["时间晶体机"],researched:false},
         "电磁感应": { price: {科学: 300}, prereq: ["牛顿力学"], desc: "解锁蒸汽机，准确来说是蒸汽发电机。", unlocks: ["蒸汽机"], researched: false },
         "热学": { price: {科学: 300}, prereq: ["牛顿力学"], desc: "研究如何更好利用热量", researched: false },
         "改良蒸汽机": { price: {科学: 320,煤: 30}, prereq: ["热学"], desc: "蒸汽机电力+20%",
@@ -699,3 +314,12 @@ const ChangelogData = {
         ]}
     ]
 };
+function getCurrentSeason() {
+    const dayOfYear = GameState.gameDays % 360;
+    if (dayOfYear < 90) return 'spring';
+    if (dayOfYear < 180) return 'summer';
+    if (dayOfYear < 270) return 'autumn';
+    return 'winter';
+}
+
+window.getCurrentSeason = getCurrentSeason;

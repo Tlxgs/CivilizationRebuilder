@@ -62,14 +62,25 @@ const GameLoop = (function() {
     }
 
     // 天数推进
+    // gameloop.js 的 advanceDay 函数中添加
     function advanceDay() {
         GameState.gameDays++;
         
         // 更新日期显示
-        const year = Math.floor(GameState.gameDays / 365);
-        const day = (GameState.gameDays % 365) + 1;
+        const year = Math.floor(GameState.gameDays / 360);  // 一年360天
+        const day = (GameState.gameDays % 360) + 1;
         const dateElem = document.getElementById('current-date');
         if (dateElem) dateElem.innerText = `${year}年${day}日`;
+
+        // 计算并更新季节显示
+        const dayOfYear = GameState.gameDays % 360;
+        let seasonText = '';
+        if (dayOfYear < 90) seasonText = '春';
+        else if (dayOfYear < 180) seasonText = '夏';
+        else if (dayOfYear < 270) seasonText = '秋';
+        else seasonText = '冬';
+        const seasonElem = document.getElementById('current-season');
+        if (seasonElem) seasonElem.innerText = `(${seasonText})`;
 
         // 检查随机事件是否结束
         if (GameState.activeRandomEvent && GameState.gameDays >= GameState.activeEventEndDay) {

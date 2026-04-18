@@ -59,6 +59,7 @@ function vacuumDecayReset() {
 function hardReset() {
     localStorage.clear();
     location.reload();
+    ModifierSystem.clearCache();
 }
 
 function getMarketTradeVolume() {
@@ -71,7 +72,7 @@ function buyResource(resourceName) {
     const volume = getMarketTradeVolume();
     if (volume <= 0) return false;
     const res = GameState.resources[resourceName];
-    if (!res || !res.hasOwnProperty('value')) return false;
+    if (!res || res.value === undefined) return false;   // 修改点
     const { costGold, gainResource } = Formulas.calcBuyResourceParams(volume, res.value, res.heat || 1);
     if ((GameState.resources["金"]?.amount || 0) < costGold) return false;
     GameState.resources["金"].amount -= costGold;
@@ -89,7 +90,7 @@ function sellResource(resourceName) {
     const volume = getMarketTradeVolume();
     if (volume <= 0) return false;
     const res = GameState.resources[resourceName];
-    if (!res || !res.hasOwnProperty('value')) return false;
+    if (!res || res.value === undefined) return false;   // 修改点
     const { sellAmount, gainGold } = Formulas.calcSellResourceParams(volume, res.value, res.heat || 1);
     if (res.amount < sellAmount) return false;
     res.amount -= sellAmount;
