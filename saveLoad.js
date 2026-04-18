@@ -112,8 +112,6 @@ function saveGame() {
     const saveData = getSaveData();
     localStorage.setItem('civilizationRebuilder', JSON.stringify(saveData));
     const ind = document.getElementById('save-indicator');
-    if (ind) ind.innerText = '💾 已保存';
-    setTimeout(() => { if(ind) ind.innerText = '💾 已保存'; }, 1500);
 }
 
 // 核心：将存档数据（精简或旧版）合并到当前 GameState（已重新初始化为最新静态数据）
@@ -171,16 +169,6 @@ function refreshGameStateFromSave(saveData) {
             }
         }
     }
-        for (let t in GameState.techs) {
-        const tech = GameState.techs[t];
-        if (tech.researched && tech.unlocks) {
-            tech.unlocks.forEach(b => {
-                if (GameState.buildings[b]) {
-                    GameState.buildings[b].visible = true;
-                }
-            });
-        }
-    }
 
     // 7. 恢复升级数据
     if (saveData.upgrades) {
@@ -200,6 +188,27 @@ function refreshGameStateFromSave(saveData) {
                 const saved = saveData.policies[p];
                 if (saved.activePolicy !== undefined) GameState.policies[p].activePolicy = saved.activePolicy;
                 if (saved.visible !== undefined) GameState.policies[p].visible = saved.visible;
+            }
+        }
+    }
+    // 根据已研究的科技解锁建筑、政策、升级的可见性
+    for (let t in GameState.techs) {
+        const tech = GameState.techs[t];
+        if (tech.researched) {
+            if (tech.unlocks) {
+                tech.unlocks.forEach(b => {
+                    if (GameState.buildings[b]) GameState.buildings[b].visible = true;
+                });
+            }
+            if (tech.unlocksPolicies) {
+                tech.unlocksPolicies.forEach(p => {
+                    if (GameState.policies[p]) GameState.policies[p].visible = true;
+                });
+            }
+            if (tech.unlocksUpgrades) {
+                tech.unlocksUpgrades.forEach(u => {
+                    if (GameState.upgrades[u]) GameState.upgrades[u].visible = true;
+                });
             }
         }
     }
@@ -259,7 +268,6 @@ function importGame(encryptedText) {
         const decryptedJson = decryptData(encryptedText);
         if (!decryptedJson) throw new Error('解密失败');
         const data = JSON.parse(decryptedJson);
-        // 简单校验：必须包含核心动态字段（resources/buildings等）
         if (data.resources && data.buildings && data.techs) {
             refreshGameStateFromSave(data);
             alert('导入成功！');

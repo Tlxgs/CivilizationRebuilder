@@ -233,10 +233,14 @@ function renderBuildingPanel() {
                     }
                 }
             }
-                        // ========= 新增：显示建筑对幸福度的影响 =========
-            if (bd.happinessEffect !== undefined && bd.happinessEffect !== 0) {
+            if (bName === "博物馆") {
+                const relicAmt = GameState.resources["遗物"]?.amount || 0;
+                const bonus =  0.1 * Math.log(2.72**5 + relicAmt);
+                const sign = bonus > 0 ? '+' : '';
+                tooltipHtml += `<br><strong>幸福度影响：</strong> ${sign}${bonus.toFixed(2)}% (该影响基于遗物数量)<br>`;
+            } else if (bd.happinessEffect !== undefined && bd.happinessEffect !== 0) {
                 const sign = bd.happinessEffect > 0 ? '+' : '';
-                const effectPercent = (bd.happinessEffect ).toFixed(1);
+                const effectPercent = (bd.happinessEffect).toFixed(1);
                 tooltipHtml += `<br><strong>幸福度影响：</strong> ${sign}${effectPercent}%<br>`;
             }
             showTooltip(card, tooltipHtml);
@@ -474,8 +478,10 @@ function renderResetPanel() {
             <button class="btn-rect" id="import-save">导入存档</button>
         </div>
         <p>每10秒自动保存</p>
-        <p>按住shift键可以每次购买/加减10个建筑！</p>
+        <p>按住shift键可以每次购买/加减10个建筑</p>
         <p>本游戏灵感来源于《猫国建设者》《进化》等优秀放置游戏</p>
+        <p>目前游戏还处于开发阶段，存档不稳定，因此请经常导出存档</p>
+        <p>如果你发现进度过于缓慢，代表你基本通关了</p>
     `;
 }
 

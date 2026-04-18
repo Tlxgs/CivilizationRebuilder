@@ -196,11 +196,21 @@ function getBuildingMultipliers(buildingKey) {
 function computeProductionAndCaps() {
     const res = GameState.resources;
     const blds = GameState.buildings;
-    // 计算幸福度（累加所有建筑的 happinessEffect * 激活数量）
+    // 计算幸福度（累加所有建筑的 happinessEffect * 激活数量，博物馆动态计算）
     let totalHappiness = 100; // 基础100%
+    const relicAmount = GameState.resources["遗物"]?.amount || 0;   // 获取当前遗物数量
+    
     for (let bKey in blds) {
         const b = blds[bKey];
-        if (b.active > 0 && b.happinessEffect) {
+        if (b.active <= 0) continue;
+        
+        // 博物馆特殊处理：动态加成
+        if (bKey === "博物馆") {
+            const perMuseumBonus =  0.1 * Math.log(2.72**5 + relicAmount);
+            totalHappiness += perMuseumBonus * b.active;
+        } 
+        // 其他建筑使用固定的 happinessEffect
+        else if (b.happinessEffect && b.happinessEffect !== 0) {
             totalHappiness += b.happinessEffect * b.active;
         }
     }

@@ -35,9 +35,9 @@ function initGameData() {
         "氚": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false},
         "核燃料": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false, value: 20, heat: 1 },
         "太空宜居度": { baseCap: 50, cap: 50, amount: 0, production: 0, visible: false },
-        "遗物": { baseCap: 10000, cap: 10000, amount: 0, production: 0, visible: false },
-        "暗能量":{baseCap:10000,cap:10000,amount:0,production:0,visible:false},
-        "时间晶体":{baseCap:10000,cap:10000,amount:0,production:0,visible:false}
+        "遗物": { baseCap: 1000000, cap: 1000000, amount: 0, production: 0, visible: false },
+        "暗能量":{baseCap:1000000,cap:1000000,amount:0,production:0,visible:false},
+        "时间晶体":{baseCap:1000000,cap:1000000,amount:0,production:0,visible:false}
     };
 
     // ==================== 建筑定义 ====================
@@ -393,7 +393,7 @@ function initGameData() {
             basePrice:{金属板:500,塑料:500},price:{金属板:500,塑料:50},costGrowth:1.20,
             happinessEffect:2,
             baseProduce:{},
-            baseConsume:{电力:0.1},
+            baseConsume:{电力:0.1,科学:2},
             capProvide:{},
             count:0,active:0,visible:false,
             desc:"使用暗能量表演魔术，提高幸福度"
@@ -471,10 +471,19 @@ function initGameData() {
         "运筹学": { price: {科学: 600}, prereq: ["高等代数"], desc: "运筹学主要目的是在决策时为管理人员提供科学依据，是实现有效管理、正确决策和现代化管理的重要方法之一", unlocksUpgrades: ["工厂优化"], researched: false },
         "大宗存储技术": { price: {科学: 480}, prereq: ["金属加工"], desc: "解锁大型仓库", unlocks: ["大型仓库"], researched: false },
         "有机化学": { price: {科学: 500}, prereq: ["电解铝"], desc: "有机化学是研究有机化合物的组成、结构、性质、制备方法与应用的科学", unlocks: ["油田"], researched: false },
+        "生物学":{price:{科学:1000},prereq:["有机化学"],desc:"研究生物的科学",researched: false},
+        "基因编辑":{price:{科学:10000},prereq:["生物学"],desc:"人们开始尝试编辑自己的基因，科学家警告这可能造成严重后果",researched:false},
+        "碳纤维亲和":{
+            price:{科学:15000},prereq:["基因编辑"],desc:"⚠️这是一种使人更加适应碳纤维的基因，但是副作用是人们变得更笨了，且目前没有任何手段消除该副作用。碳纤维厂产出+100%，大学科学上限-10%",effect:{碳纤维厂:{prodFactor:1.0},大学:{capFactor:-0.1}},researched:false
+        },
+        "保守基因":{
+            price:{科学:15000},prereq:["基因编辑"],desc:"⚠️这是一种使人更加保守和不愿探索的基因，且目前没有任何手段消除该副作用。月球基地产出-10%，蒸汽机和石油发电厂产出+20%",effect:{石油发电厂:{prodFactor:0.2},蒸汽机:{prodFactor:0.2},月球基地:{prodFactor:-0.2}}
+        },
         "材料化学": { price: {科学: 550}, prereq: ["有机化学"], desc: "材料化学是一门从化学角度研究和设计材料的学科，强调材料的组成、结构与性能之间的关系，并结合实验与应用开发新材料", unlocks: ["科学院"], researched: false },
         "石油加工": { price: {科学: 550}, prereq: ["有机化学"], desc: "石油加工是将原油通过物理分离和化学转化加工成燃料油及化工原料的工业体系，包括预处理、蒸馏、催化裂化、加氢处理、精制及化工延伸等多个环节", unlocks: ["塑料厂"], researched: false },
         "石油发电":{price:{科学:600,石油:50},prereq:["石油加工"],desc:"石油发电主要通过燃烧原油或石油制品产生高温蒸汽或直接驱动内燃机，推动发电机发电",unlocks:["石油发电厂"],researched:false},
         "太阳能": { price: {科学: 800}, prereq: ["石油加工"], desc: "太阳能是由太阳内部氢原子发生氢氦聚变释放出巨大核能而产生的，来自太阳的辐射能量", unlocks: ["太阳能板"], researched: false },
+        "能源规划":{price:{科学:900},prereq:["太阳能"],desc:"更好地规划能源设施的建造",unlocksPolicies:["能源政策"],researched:false},
         "储能技术": { price: {科学: 700}, prereq: ["金属加工"], desc: "储能是通过介质或设备将能量存储起来，并在需要时释放的技术体系，是电力系统高效运行的核心支撑", unlocks: ["电池"], researched: false },
         "原子结构模型": { price: {科学: 800}, prereq: ["储能技术"], desc: "通过α粒子散射实验建立原子核式模型", researched: false },
         "核物理": { price: {科学: 900}, prereq: ["原子结构模型"], desc: "核物理是研究原子核结构、性质及其相互作用规律的物理学分支，同时为核能、核技术及相关应用提供理论和技术基础", unlocks: ["铀矿"], researched: false },
@@ -576,48 +585,57 @@ function initGameData() {
                             capFactor: {图书馆:0.05, 大学:0.05} },
                 "金钱至上": { price: 60, prodFactor: {图书馆:-0.80, 大学:-0.80, 金矿:0.30} }
             }
+        },
+        "能源政策": {
+            activePolicy: "默认", visible: false,
+            options: {
+                "默认": { price: 0, prodFactor: {}, consFactor: {}, capFactor: {} },
+                "重视清洁能源": { price: 200, prodFactor: {太阳能板:1.0, 裂变反应堆:0.2, 聚变反应堆:0.1,石油发电厂:-0.6,蒸汽机:-0.6}, },
+                "发展传统能源": { price: 200, prodFactor: {石油发电厂:0.30, 蒸汽机:0.30, 太阳能板:-0.80} }
+            }
         }
     };
 
     // ==================== 永恒升级 ====================
     GameState.permanent = {
-        "节约成本I": { price: {遗物: 10}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: null },
-        "节约成本II": { price: {遗物: 30}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本I"] },
-        "节约成本III": { price: {遗物: 100}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本II"] },
-        "节约成本IV": { price: {遗物: 200}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本III"] },
-        "节约成本V": { price: {遗物: 500}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本IV"] },
-        "节约成本VI": { price: {遗物: 1000,暗能量:10}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本V"] },
-        "节约成本VII": { price: {遗物: 1500,暗能量:20}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VI"] },
-        "节约成本VIII": { price: {遗物: 2000,暗能量:40}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VII"] },
-        "节约成本IX": { price: {遗物: 2500,暗能量:80}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VIII"] },
-        "节约成本X": { price: {遗物: 3000,暗能量:160}, researched: false, desc: "成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本IX"] },
-        "高效生产I": { price: {遗物: 1}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: null },
-        "高效生产II": { price: {遗物: 5}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产I"] },
-        "高效生产III": { price: {遗物: 10}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产II"] },
-        "高效生产IV": { price: {遗物: 20}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产III"] },
-        "高效生产V": { price: {遗物: 30}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产IV"] },
-        "高效生产VI": { price: {遗物: 40}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产V"] },
-        "高效生产VII": { price: {遗物: 50}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VI"] },
-        "高效生产VIII": { price: {遗物: 60}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VII"] },
-        "高效生产IX": { price: {遗物: 80}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VIII"] },
-        "高效生产X": { price: {遗物: 100}, researched: false, desc: "产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产IX"] },
-        "高速生产I": { price: {遗物: 10}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: null },
-        "高速生产II": { price: {遗物: 20}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产I"] },
-        "高速生产III": { price: {遗物: 40}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产II"] },
-        "高速生产IV": { price: {遗物: 80}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产III"] },
-        "高速生产V": { price: {遗物: 160}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产IV"] },
-        "高速生产VI": { price: {遗物: 240}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产V"] },
-        "高速生产VII": { price: {遗物: 360}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VI"] },
-        "高速生产VIII": { price: {遗物: 480}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VII"] },
-        "高速生产IX": { price: {遗物: 600}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VIII"] },
-        "高速生产X": { price: {遗物: 800}, researched: false, desc: "速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产IX"] },
+        "节约成本I": { price: {遗物: 10}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: null },
+        "节约成本II": { price: {遗物: 30}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本I"] },
+        "节约成本III": { price: {遗物: 100}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本II"] },
+        "节约成本IV": { price: {遗物: 200}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本III"] },
+        "节约成本V": { price: {遗物: 500}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本IV"] },
+        "节约成本VI": { price: {遗物: 1000,暗能量:10}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本V"] },
+        "节约成本VII": { price: {遗物: 1500,暗能量:20}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VI"] },
+        "节约成本VIII": { price: {遗物: 2000,暗能量:40}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VII"] },
+        "节约成本IX": { price: {遗物: 2500,暗能量:80}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VIII"] },
+        "节约成本X": { price: {遗物: 3000,暗能量:160}, researched: false, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本IX"] },
+        "高效生产I": { price: {遗物: 1}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: null },
+        "高效生产II": { price: {遗物: 5}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产I"] },
+        "高效生产III": { price: {遗物: 10}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产II"] },
+        "高效生产IV": { price: {遗物: 20}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产III"] },
+        "高效生产V": { price: {遗物: 30}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产IV"] },
+        "高效生产VI": { price: {遗物: 40}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产V"] },
+        "高效生产VII": { price: {遗物: 50}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VI"] },
+        "高效生产VIII": { price: {遗物: 60}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VII"] },
+        "高效生产IX": { price: {遗物: 80}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VIII"] },
+        "高效生产X": { price: {遗物: 100}, researched: false, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产IX"] },
+        "高速生产I": { price: {遗物: 10}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: null },
+        "高速生产II": { price: {遗物: 20}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产I"] },
+        "高速生产III": { price: {遗物: 40}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产II"] },
+        "高速生产IV": { price: {遗物: 80}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产III"] },
+        "高速生产V": { price: {遗物: 160}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产IV"] },
+        "高速生产VI": { price: {遗物: 240}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产V"] },
+        "高速生产VII": { price: {遗物: 360}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VI"] },
+        "高速生产VIII": { price: {遗物: 480}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VII"] },
+        "高速生产IX": { price: {遗物: 600}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VIII"] },
+        "高速生产X": { price: {遗物: 800}, researched: false, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产IX"] },
         "空间压缩I": { price: {遗物: 5}, researched: false, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: null },
         "空间压缩II": { price: {遗物: 20}, researched: false, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩I"] },
-        "空间压缩III": { price: {遗物: 50}, researched: false, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩II"] },
-        "空间压缩IV": { price: {遗物: 100}, researched: false, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩III"] },
-        "空间压缩V": { price: {遗物: 200}, researched: false, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩IV"] },
+        "空间压缩III": { price: {遗物: 100}, researched: false, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩II"] },
+        "空间压缩IV": { price: {遗物: 200}, researched: false, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩III"] },
+        "空间压缩V": { price: {遗物: 400}, researched: false, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩IV"] },
         "技术爆炸": { price: {遗物: 50}, researched: false, desc: "根据遗物数量提升少量科学上限", effect: { sciCapPerRelicLog: 0.05 }, prereq: null },
         "宇宙学": { price: {遗物: 50,暗能量:1}, researched: false, desc: "研究宇宙的奥秘，提高太空建筑产量10%(消耗不变)", effect: {globalSpaceProd:0.10}, prereq: null },
+        "宇宙起源": { price: {遗物: 500,暗能量:100}, researched: false, desc: "研究宇宙起源的学科，提高太空建筑产量20%(消耗不变)", effect: {globalSpaceProd:0.20}, prereq: null },
         
     };
 
@@ -646,9 +664,9 @@ const RANDOM_EVENTS = [
     { id: "oil_discovery",name:"发现油田",desc:"发现了一片巨大油田",effects:{石油:3.0},durationDays:365}
 ];
 const ChangelogData = {
-    version: "v0.2",
+    version: "v0.1",
     logs: [
-        { version: "v0.1", date: "2026-04-17", changes: [
+        { version: "v0.1", date: "2026-04-18", changes: [
             "游戏初始版本发布",
             "包含建筑、科技、升级、政策、贸易、永恒系统",
         ]}

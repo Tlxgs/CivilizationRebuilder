@@ -16,9 +16,9 @@ function gameLoop(now) {
         for (let i = 0; i < ticks; i++) {
             tickResources(TICK_INTERVAL);
             dayTickAcc++;
-            if (dayTickAcc >= 5) {   // 5 tick = 1秒 = 1日
+            if (dayTickAcc >= 5) {  
                 dayTickAcc = 0;
-                advanceDay();        // 调用日期推进函数
+                advanceDay();      
             }
         }
         lastTimestamp = now - (delta % TICK_INTERVAL) * 1000;
