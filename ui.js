@@ -90,11 +90,16 @@ function renderActionsPanel() {
     const hasVacuumDecay = GameState.techs["真空衰变"]?.researched || false;
     const scienceCap = GameState.resources["科学"].cap;
     const relicGain = getRelicGain();
+    const hasMilitary = GameState.techs["军事理论"]?.researched || false;
+
     
     let html = '<h3>行动</h3><div class="action-buttons">';
     html += `<button class="action-btn" data-action="collect_wood">收集木头</button>`;
     html += `<button class="action-btn" data-action="collect_stone">收集石头</button>`;
     html += `<button class="action-btn" data-action="research_tech">研究科技</button>`;
+    if (hasMilitary) {
+        html += `<button class="action-btn" data-action="war">发动战争</button>`;
+    }
     if (hasNuke) {
         html += `<button class="action-btn" data-action="nuke_reset">发射核弹</button>`;
     }
@@ -117,6 +122,9 @@ function renderActionsPanel() {
                 break;
             case "research_tech":
                 tooltipText = "立即获得 <strong>+1 科学</strong><br>";
+                break;
+            case "war":
+                tooltipText = "消耗所有军备，随机获得晶体。消耗军备越多，晶体品质越高。";
                 break;
             case "nuke_reset":
                 tooltipText = `发动核弹！重置你的所有资源、建筑、科技，并额外获得遗物`;
@@ -143,6 +151,7 @@ function renderBuildingPanel() {
         { key: "科学", label: "科学建筑" },
         { key: "存储", label: "存储建筑" },
         { key: "太空", label: "太空建筑" },
+        { key: "军事", label: "军事建筑" },
         { key: "其他", label: "其他建筑" }
     ];
     
@@ -575,6 +584,7 @@ function renderAll() {
     renderTradePanel();
     renderChangelogPanel();
     renderLogPanel();
+    renderCrystalPanel();  
     updateTabsVisibility();
 }
 function bindEvents() {
@@ -584,7 +594,7 @@ function bindEvents() {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const tab = btn.dataset.tab;
-            const panels = ['building', 'tech', 'upgrade', 'policy', 'trade', 'permanent',  'reset','changelog'];
+            const panels = ['building', 'tech', 'upgrade', 'policy', 'trade','crystal', 'permanent',  'reset','changelog'];
             panels.forEach(p => {
                 const panelEl = document.getElementById(`panel-${p}`);
                 if (panelEl) {
@@ -763,8 +773,11 @@ function updateTabsVisibility() {
     const market = GameState.buildings["市场"];
     const hasTrade = market && market.visible;
     const tradeTab = document.querySelector('.tab-btn[data-tab="trade"]');
+    //晶体
     if (tradeTab) tradeTab.style.display = hasTrade ? '' : 'none';
-
+    const hasCrystalTab = GameState.techs["军事理论"]?.researched || false;
+    const crystalTab = document.querySelector('.tab-btn[data-tab="crystal"]');
+    if (crystalTab) crystalTab.style.display = hasCrystalTab ? '' : 'none';
     // 永恒标签：遗物数量大于0 或者 存在任何已研究的永恒升级
     const relicAmount = GameState.resources["遗物"]?.amount || 0;
     let hasResearchedPermanent = false;
@@ -824,4 +837,78 @@ function renderHappiness() {
         const happiness = GameState.happiness || 100;
         el.innerHTML = `😊 幸福度: ${happiness.toFixed(1)}%`;
     }
+}
+function renderCrystalPanel() {
+    const panel = document.getElementById('panel-crystal');
+    if (!panel) return;
+
+    const crystals = GameState.crystals;
+    let html = `<div style="margin-bottom: 20px;">
+        <h3>装备槽位 (生效中)</h3>
+        <div class="crystal-slots">`;
+    for (let i = 0; i < crystals.equipped.length; i++) {
+        const crystal = crystals.equipped[i];
+        html += `<div class="crystal-slot">
+            <div class="crystal-card ${crystal ? '' : 'empty'}">`;
+        if (crystal) {
+            html += `<div class="crystal-name">${crystal.name}</div>
+                    <div class="crystal-effects">${formatCrystalEffects(crystal.effects)}</div>
+                    <button class="btn-rect unequip-crystal" data-slot="${i}">卸下</button>`;
+        } else {
+            html += `<div class="empty-slot">空槽位</div>`;
+        }
+        html += `</div></div>`;
+    }
+    html += `</div><h3>库存槽位</h3><div class="crystal-slots">`;
+    for (let i = 0; i < crystals.inventory.length; i++) {
+        const crystal = crystals.inventory[i];
+        html += `<div class="crystal-slot">
+            <div class="crystal-card">
+                <div class="crystal-name">${crystal.name}</div>
+                <div class="crystal-effects">${formatCrystalEffects(crystal.effects)}</div>
+                <div class="crystal-buttons">
+                    <button class="btn-rect equip-crystal" data-inv-index="${i}">装备</button>
+                    <button class="btn-rect discard-crystal" data-inv-index="${i}">丢弃</button>
+                </div>
+            </div>
+        </div>`;
+    }
+    for (let i = crystals.inventory.length; i < 3; i++) {
+        html += `<div class="crystal-slot"><div class="crystal-card empty">空闲库存槽</div></div>`;
+    }
+    html += `</div></div>`;
+    panel.innerHTML = html;
+
+    // 绑定事件
+    document.querySelectorAll('.equip-crystal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = parseInt(btn.dataset.invIndex);
+            equipCrystal(idx);
+        });
+    });
+    document.querySelectorAll('.discard-crystal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const idx = parseInt(btn.dataset.invIndex);
+            if (confirm('确定丢弃这个晶体吗？')) discardCrystal(idx);
+        });
+    });
+    document.querySelectorAll('.unequip-crystal').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const slot = parseInt(btn.dataset.slot);
+            unequipCrystal(slot);
+        });
+    });
+}
+
+function formatCrystalEffects(effects) {
+    if (!effects || effects.length === 0) return "无效果";
+    return effects.map(e => {
+        let sign = e.value > 0 ? '+' : '';
+        let percent = (e.value * 100).toFixed(1);
+        if (e.type === 'happiness') return `幸福度 ${sign}${percent}%`;
+        if (e.type === 'prod') return `${e.target} 产量 ${sign}${percent}%`;
+        if (e.type === 'cons') return `${e.target} 消耗 ${sign}${percent}%`;
+        if (e.type === 'cap') return `${e.target} 上限 ${sign}${percent}%`;
+        return `${e.type} ${sign}${percent}%`;
+    }).join('<br>');
 }

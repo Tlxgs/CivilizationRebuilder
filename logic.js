@@ -114,6 +114,30 @@ function performAction(actionId) {
                 GameState.resources["科学"].amount + 1
             );
             break;
+        case "war":
+            const armsAmount = GameState.resources["军备"]?.amount || 0;
+            if (armsAmount < 100) {
+                alert("需要至少 100 军备才能发动战争！");
+                return false;
+            }
+            if (GameState.crystals.inventory.length >= 3) {
+                alert("晶体库存已满，无法获得新晶体！请先丢弃或装备一些晶体。");
+                return false;
+            }
+            // 计算失败概率：军备越少失败率越高，100军备时约70%，10万军备时约10%
+            let failChance = Math.max(0.1, 1 - 0.3 * Math.log10(armsAmount / 100 + 1));
+            let isFailed = Math.random() < failChance;
+            
+            if (isFailed) {
+                addEventLog(`战争失败！消耗了 ${formatNumber(armsAmount)} 军备，一无所获。`);
+            } else {
+                const crystal = generateCrystalFromWar(armsAmount);
+                GameState.crystals.inventory.push(crystal);
+                addEventLog(`战争胜利！获得晶体「${crystal.name}」，消耗 ${formatNumber(armsAmount)} 军备。`);
+            }
+            GameState.resources["军备"].amount = 0;
+            renderAll();
+            break;
         case "nuke_reset":
             const scienceCap = GameState.resources["科学"].cap;
             const relicGain = getRelicGain();
@@ -279,8 +303,7 @@ function endCurrentEvent() {
 }
 
 function triggerRandomEvent() {
-    if (GameState.activeRandomEvent) return false;
-    if (Math.random() > 0.01) return false;  // 1%概率
+    if (Math.random() > 0.002) return false;  // 0.2%概率
 
     const event = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
     GameState.activeRandomEvent = { ...event };
@@ -337,4 +360,137 @@ function renderLogPanel() {
                  </div>`;
     }
     container.innerHTML = html;
+}
+// 获取有产量加成的建筑（baseProduce 非空）
+function getBuildingsWithProduce() {
+    let targets = ['global'];
+    for (let b in GameState.buildings) {
+        const bd = GameState.buildings[b];
+        if (bd.visible && Object.keys(bd.baseProduce).length > 0) {
+            targets.push(b);
+        }
+    }
+    return targets;
+}
+
+// 获取有消耗加成的建筑（baseConsume 非空）
+function getBuildingsWithConsume() {
+    let targets = ['global'];
+    for (let b in GameState.buildings) {
+        const bd = GameState.buildings[b];
+        if (bd.visible && Object.keys(bd.baseConsume).length > 0) {
+            targets.push(b);
+        }
+    }
+    return targets;
+}
+
+// 获取有上限加成的建筑（capProvide 非空）
+function getBuildingsWithCap() {
+    let targets = ['global'];
+    for (let b in GameState.buildings) {
+        const bd = GameState.buildings[b];
+        if (bd.visible && Object.keys(bd.capProvide).length > 0) {
+            targets.push(b);
+        }
+    }
+    return targets;
+}
+function generateCrystalFromWar(armsAmount) {
+    // 品质因子：军备越高品质越高
+    let quality = Math.log10(armsAmount / 100 );  // 100军备→0, 10万→~0.5
+    
+    // 词条数量受品质影响
+    let numEffects = Math.floor(2 + quality*Math.random());
+    
+    let effects = [];
+    const effectTypes = ['prod', 'cons', 'cap', 'happiness'];
+    
+    for (let i = 0; i < numEffects; i++) {
+        let type = effectTypes[Math.floor(Math.random() * effectTypes.length)];
+        let target;
+        let availableTargets;
+        
+        switch (type) {
+            case 'happiness':
+                target = 'global';
+                break;
+            case 'prod':
+                availableTargets = getBuildingsWithProduce();
+                if (availableTargets.length === 0) target = 'global';
+                else target = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+                break;
+            case 'cons':
+                availableTargets = getBuildingsWithConsume();
+                if (availableTargets.length === 0) target = 'global';
+                else target = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+                break;
+            case 'cap':
+                availableTargets = getBuildingsWithCap();
+                if (availableTargets.length === 0) target = 'global';
+                else target = availableTargets[Math.floor(Math.random() * availableTargets.length)];
+                break;
+        }
+        
+        let baseValue = 0.01 + Math.random() * 0.1;
+        let finalValue = baseValue * (0.3 + quality * 0.7);  // 品质低时数值也低
+        
+        // 幸福度和上限加成适当降低效果（避免过于强力）
+        if (type === 'happiness') finalValue = finalValue * 0.5; 
+        if (type === 'cap') finalValue = finalValue * 0.3;  
+        
+        // 正面概率
+        let positiveChance = 0.4 + quality * 0.1;
+        let isPositive = Math.random() < positiveChance;
+        let value = isPositive ? finalValue : -finalValue;
+        
+        effects.push({ type, target, value });
+    }
+    
+    // 确保至少有一条词条
+    if (effects.length === 0) {
+        effects.push({ type: 'prod', target: 'global', value: 0.05 });
+    }
+    
+    const crystalName = generateCrystalName(effects);
+    return { id: Date.now() + Math.random(), name: crystalName, effects: effects };
+}
+
+function generateCrystalName(effects) {
+    const prefixes = ["闪耀", "暗影", "炽热", "冰霜", "虚空", "星辰", "混沌", "秩序", "勇猛", "智慧"];
+    const suffixes = ["之石", "结晶", "碎片", "核心", "精华", "徽记"];
+    return prefixes[Math.floor(Math.random() * prefixes.length)] + 
+           suffixes[Math.floor(Math.random() * suffixes.length)];
+}
+function equipCrystal(inventoryIndex) {
+    let crystal = GameState.crystals.inventory[inventoryIndex];
+    if (!crystal) return;
+    let emptySlot = GameState.crystals.equipped.findIndex(slot => slot === null);
+    if (emptySlot === -1) {
+        alert("装备槽已满，请先卸下一个晶体。");
+        return;
+    }
+    GameState.crystals.equipped[emptySlot] = crystal;
+    GameState.crystals.inventory.splice(inventoryIndex, 1);
+    computeProductionAndCaps();
+    renderAll();
+}
+
+function unequipCrystal(slotIndex) {
+    let crystal = GameState.crystals.equipped[slotIndex];
+    if (!crystal) return;
+    if (GameState.crystals.inventory.length >= 3) {
+        alert("库存已满，无法卸下。请先丢弃一个库存晶体。");
+        return;
+    }
+    GameState.crystals.equipped[slotIndex] = null;
+    GameState.crystals.inventory.push(crystal);
+    computeProductionAndCaps();
+    renderAll();
+}
+
+function discardCrystal(inventoryIndex) {
+    GameState.crystals.inventory.splice(inventoryIndex, 1);
+    computeProductionAndCaps();
+    renderAll();
 }

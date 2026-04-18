@@ -504,3 +504,42 @@ p {
     color: #2a7faa;
     margin-right: 0.5rem;
 }
+/* 晶体面板样式 */
+.crystal-slots {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+.crystal-slot {
+    flex: 1;
+    min-width: 200px;
+}
+.crystal-card {
+    background: #f9fcff;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.8rem;
+    padding: 0.8rem;
+    text-align: center;
+}
+.crystal-card.empty {
+    background: #f1f5f9;
+    color: #6c7a8a;
+    font-style: italic;
+}
+.crystal-name {
+    font-weight: bold;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+}
+.crystal-effects {
+    font-size: 0.8rem;
+    margin: 0.5rem 0;
+    color: #2d3f53;
+}
+.crystal-buttons {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: center;
+    margin-top: 0.5rem;
+}
