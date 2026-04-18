@@ -8,6 +8,7 @@ window.onload = () => {
     loadGame();
     bindEvents();
     GameLoop.start();
+    renderAll()
 };
 
 window.addEventListener('beforeunload', () => {
