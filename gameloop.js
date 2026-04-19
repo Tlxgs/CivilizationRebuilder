@@ -172,6 +172,7 @@ const GameLoop = (function() {
             
             // 更新 UI（资源栏）
             if (typeof renderResources === 'function') renderResources();
+            if (typeof updateBuyButtonsColor === 'function') updateBuyButtonsColor();
         }
     }
 
