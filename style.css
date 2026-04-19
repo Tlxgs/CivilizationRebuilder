@@ -70,14 +70,14 @@ h2 {
     font-size: 0.85rem;  
     color: #1e293b;
     border: 1px solid #e2e8f0;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-    transition: background 0.1s;
+    transition: none;
+    position: relative;
+    overflow: hidden;
 }
 .resource-item:hover {
-    background: #f1f5f9;
-    border-color: #cbd5e1;
+    background: #ffffff;
+    border-color: #e2e8f0; 
 }
-
 /* 行动面板 */
 .actions-panel {
     background: #f8fafc;
@@ -631,4 +631,29 @@ p {
     display: flex;
     justify-content: space-between;
     color: #6c7a8a;
+}
+/* 资源卡片进度条样式 */
+.resource-item {
+    position: relative;
+    overflow: hidden;
+}
+
+.resource-progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 0%;
+    height: 100%;
+    background: #b8d9ff;      /* 淡蓝色进度条 */
+    border-radius: inherit;    /* 与父容器圆角一致 */
+    z-index: 1;
+    transition: width 0.1s ease;
+}
+
+.resource-text {
+    position: relative;
+    z-index: 2;
+    text-align: center;
+    width: 100%;
+    display: block;
 }

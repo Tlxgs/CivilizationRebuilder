@@ -5,15 +5,18 @@ function getBuildingTooltip(buildingKey) {
     const cfg = BUILDINGS_CONFIG[buildingKey];
     if (!bd || !cfg) return '';
 
-    const priceStr = Object.entries(bd.price)
-        .map(([r, amt]) => `${r} ${formatNumber(amt)}`)
-        .join(', ');
+    // 价格显示（缺少资源变红）
+    const priceStr = Object.entries(bd.price).map(([r, amt]) => {
+        const hasEnough = (GameState.resources[r]?.amount || 0) >= amt;
+        const color = hasEnough ? '' : 'red';
+        return `<span style="color: ${color};">${r} ${formatNumber(amt)}</span>`;
+    }).join(', ');
 
     let html = `<strong>${buildingKey}</strong><br>${cfg.desc}<br>`;
     html += `数量: ${bd.count} | 激活: ${bd.active}<br>`;
     html += `价格: ${priceStr}<br><br>`;
 
-    // 获取经过所有加成的单建筑实际效果
+    // 当前效果（每座）
     const stats = ProductionEngine.getBuildingStats(buildingKey);
     if (stats) {
         html += `<strong>当前效果 (每座):</strong><br>`;
@@ -34,7 +37,7 @@ function getBuildingTooltip(buildingKey) {
         html += `<em>暂无详细数据</em><br>`;
     }
 
-    // 建筑间提供的加成
+    // 提供给其他建筑的加成
     if (cfg.modifiers && cfg.modifiers.length) {
         html += `<br><strong>提供给其他建筑的加成:</strong><br>`;
         for (let mod of cfg.modifiers) {

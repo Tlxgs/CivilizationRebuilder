@@ -2,58 +2,67 @@
 function renderResources() {
     const bar = document.getElementById('resource-bar');
     if (!bar) return;
-
-    const existingItems = new Map();
-    for (const child of bar.children) {
-        const resName = child.dataset.resource;
-        if (resName) existingItems.set(resName, child);
-    }
+    bar.innerHTML = '';  // 清空，完全重绘
 
     for (let r in GameState.resources) {
-        const d = GameState.resources[r];
-        if (!d.visible) continue;
+        const res = GameState.resources[r];
+        if (!res.visible) continue;
 
-        let capDisplay = (d.cap === Infinity) ? "∞" : formatNumber(d.cap);
-        const content = `${r}: ${formatNumber(d.amount)}/${capDisplay} (${d.production > 0 ? '+' : ''}${formatNumber(d.production)}/s)`;
+        const amount = res.amount;
+        const cap = res.cap;
+        const capDisplay = (cap === Infinity) ? "∞" : formatNumber(cap);
+        const production = res.production;
+        const prodText = (production > 0 ? '+' : '') + formatNumber(production);
+        const text = `${r}: ${formatNumber(amount)}/${capDisplay} (${prodText}/s)`;
 
-        let item = existingItems.get(r);
-        if (item) {
-            item.textContent = content;
-        } else {
-            item = document.createElement('div');
-            item.className = 'resource-item';
-            item.dataset.resource = r;
-            item.textContent = content;
-
-            item.addEventListener('mouseenter', () => {
-                const resName = item.dataset.resource;
-                const resData = GameState.resources[resName];
-                if (!resData) return;
-
-                let tooltipHtml = `<strong>${resName}</strong><br>`;
-                tooltipHtml += `当前: ${formatNumber(resData.amount)} / ${resData.cap === Infinity ? "∞" : formatNumber(resData.cap)}<br>`;
-                tooltipHtml += `净产量: ${resData.production > 0 ? '+' : ''}${formatNumber(resData.production)}/秒<br><br>`;
-                tooltipHtml += `<strong>各建筑贡献</strong><br>`;
-
-                const contributions = getResourceContributions(resName);
-                if (contributions.length === 0) {
-                    tooltipHtml += `无`;
-                } else {
-                    for (let contrib of contributions) {
-                        const sign = contrib.value > 0 ? '+' : '';
-                        tooltipHtml += `${contrib.building}: ${sign}${formatNumber(contrib.value)}/秒<br>`;
-                    }
-                }
-                showTooltip(item, tooltipHtml);
-            });
-
-            bar.appendChild(item);
+        // 计算进度百分比（上限无限时进度为0）
+        let percent = 0;
+        if (cap !== Infinity && cap > 0) {
+            percent = Math.min(100, (amount / cap) * 100);
         }
-        existingItems.delete(r);
-    }
 
-    for (const [resName, elem] of existingItems) {
-        elem.remove();
+        // 创建卡片容器
+        const item = document.createElement('div');
+        item.className = 'resource-item';
+        item.dataset.resource = r;
+
+        // 进度条元素
+        const progressDiv = document.createElement('div');
+        progressDiv.className = 'resource-progress';
+        progressDiv.style.width = `${percent}%`;
+
+        // 文本元素
+        const textDiv = document.createElement('div');
+        textDiv.className = 'resource-text';
+        textDiv.textContent = text;
+
+        item.appendChild(progressDiv);
+        item.appendChild(textDiv);
+
+        // tooltip 显示资源详细贡献
+        item.addEventListener('mouseenter', () => {
+            const resName = item.dataset.resource;
+            const resData = GameState.resources[resName];
+            if (!resData) return;
+
+            let tooltipHtml = `<strong>${resName}</strong><br>`;
+            tooltipHtml += `当前: ${formatNumber(resData.amount)} / ${resData.cap === Infinity ? "∞" : formatNumber(resData.cap)}<br>`;
+            tooltipHtml += `净产量: ${resData.production > 0 ? '+' : ''}${formatNumber(resData.production)}/秒<br><br>`;
+            tooltipHtml += `<strong>各建筑贡献</strong><br>`;
+
+            const contributions = getResourceContributions(resName);
+            if (contributions.length === 0) {
+                tooltipHtml += `无`;
+            } else {
+                for (let contrib of contributions) {
+                    const sign = contrib.value > 0 ? '+' : '';
+                    tooltipHtml += `${contrib.building}: ${sign}${formatNumber(contrib.value)}/秒<br>`;
+                }
+            }
+            showTooltip(item, tooltipHtml);
+        });
+
+        bar.appendChild(item);
     }
 }
 window.renderResources = renderResources;
