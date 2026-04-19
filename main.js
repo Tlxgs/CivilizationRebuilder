@@ -7,7 +7,6 @@ window.onload = () => {
     initGameData();
     loadGame();
     bindEvents();
-    bindBuildingDetailEvents();
     GameLoop.start();
     renderAll();
 };

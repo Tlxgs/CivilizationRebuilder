@@ -74,16 +74,11 @@ function onTechResearched(tech) {
     // 如果有需要特殊处理的科技效果，可在此添加
 }
 
-// 删除原来的 applyTechUnlocks 函数，或将其留空兼容
-function applyTechUnlocks(tech) {
-    // 此函数已弃用，保留空实现以防其他代码引用报错
-    refreshAllVisibility();
-}
+
 
 window.formatNumber = formatNumber;
 window.canAfford = canAfford;
 window.consumeResources = consumeResources;
 window.checkUnlockCondition = checkUnlockCondition;
 window.refreshAllVisibility = refreshAllVisibility;
-window.applyTechUnlocks = applyTechUnlocks;
 window.onTechResearched = onTechResearched;

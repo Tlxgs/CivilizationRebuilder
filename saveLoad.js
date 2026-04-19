@@ -239,7 +239,6 @@ function refreshGameStateFromSave(saveData) {
     updateBuildingPrices();
     updateUpgradePrices();
     computeProductionAndCaps();
-    ModifierSystem.clearCache();
     renderAll();
 }
 
