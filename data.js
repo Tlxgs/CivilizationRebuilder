@@ -13,39 +13,35 @@ let GameState = {
 
 function initGameData() {
     GameState.happiness = 100; 
-    GameState.resources = {};
     GameState.season = 0;
     GameState.seasonDayCounter = 0;   // 当前季节已过天数
+    GameState.resources = {};
     for (let rKey in RESOURCES_CONFIG) {
         const cfg = RESOURCES_CONFIG[rKey];
-        
-        // 运行时动态字段（初始值）
-        const dynamic = {
-            cap: cfg.baseCap,        // 初始上限等于基础上限
+        // 创建资源对象，包含运行时字段和配置字段的副本
+        GameState.resources[rKey] = {
             amount: 0,
             production: 0,
-            visible: false
+            visible: false,
+            baseCap: cfg.baseCap,    
+            cap: cfg.baseCap,        
         };
-        Object.setPrototypeOf(dynamic, cfg);
-        
-        GameState.resources[rKey] = dynamic;
+        for (let prop in cfg) {
+            if (!GameState.resources[rKey].hasOwnProperty(prop)) {
+                GameState.resources[rKey][prop] = cfg[prop];
+            }
+        }
     }
 
     GameState.buildings = {};
     for (let bKey in BUILDINGS_CONFIG) {
         const cfg = BUILDINGS_CONFIG[bKey];
-        
-        // 运行时动态字段
-        const dynamic = {
+        GameState.buildings[bKey] = {
             count: 0,
             active: 0,
             visible: false,
-            price: { ...cfg.basePrice }   // 初始价格
+            price: { ...cfg.basePrice }
         };
-        
-        Object.setPrototypeOf(dynamic, cfg);
-        
-        GameState.buildings[bKey] = dynamic;
     }
     GameState.techs = {};
     for (let techKey in TECHS_CONFIG) {
@@ -175,24 +171,13 @@ function initGameData() {
         bd.active = bd.active || 0;
         bd.visible = bd.visible || false;
     }
-    // 市场特殊标记
-    GameState.buildings["市场"].tradeEnabled = true;
+    GameState.happinessContributions = [];
     GameState.gameDays = 0;               // 总天数（0年1日 = 0）
-    GameState.activeRandomEvent = null;
-    GameState.activeEventEndDay = 0;
+    GameState.activeRandomEvents = [];
     GameState.eventLogs = [];              // 日志数组，每项 { dateStr, text }
+    GameState.happinessContributions = [];
         GameState.crystals = {
         equipped: [null, null, null], 
         inventory: []                   // 库存，最多3个
     };
 }
-// 随机事件定义
-const RANDOM_EVENTS = [
-    { id: "meteor_shower", name: "流星雨", desc: "流星雨激发了研究灵感", effects: { 科学: 2.0 }, durationDays: 365 },
-    { id: "iron_discovery", name: "发现铁矿", desc: "大型铁矿脉被发现了", effects: { 铁: 3.0 }, durationDays: 365 },
-    { id: "copper_discovery", name: "发现铜矿", desc: "富铜矿脉带来惊喜", effects: { 铜: 3.0 }, durationDays: 365 },
-    { id: "gold_rush", name: "淘金热", desc: "人们狂热地寻找黄金", effects: { 金: 2.5 }, durationDays: 365 },
-    { id: "solar_flare", name: "太阳耀斑", desc: "太阳活动增强，电力产量下降", effects: { 电力: 0.6 }, durationDays: 365 },
-    { id: "oil_discovery",name:"发现油田",desc:"发现了一片巨大油田",effects:{石油:3.0},durationDays:365}
-];
-

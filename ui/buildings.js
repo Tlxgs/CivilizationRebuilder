@@ -1,45 +1,54 @@
-// ui/buildings.js
-// ui/buildings.js - getBuildingTooltip 修改后（仅展示修改部分）
 
+// ui/buildings.js
 function getBuildingTooltip(buildingKey) {
     const bd = GameState.buildings[buildingKey];
-    const stats = getBuildingStats(buildingKey);
+    const cfg = BUILDINGS_CONFIG[buildingKey];
+    if (!bd || !cfg) return '';
+
     const priceStr = Object.entries(bd.price)
         .map(([r, amt]) => `${r} ${formatNumber(amt)}`)
         .join(', ');
-    let html = `<strong>${buildingKey}</strong><br>${bd.desc}<br>数量: ${bd.count} | 激活: ${bd.active}<br>价格: ${priceStr}<br><br>`;
-    
-    if (stats && stats.details) {
+
+    let html = `<strong>${buildingKey}</strong><br>${cfg.desc}<br>`;
+    html += `数量: ${bd.count} | 激活: ${bd.active}<br>`;
+    html += `价格: ${priceStr}<br><br>`;
+
+    // 获取经过所有加成的单建筑实际效果
+    const stats = ProductionEngine.getBuildingStats(buildingKey);
+    if (stats) {
+        html += `<strong>当前效果 (每座):</strong><br>`;
         for (let det of stats.details) {
             if (det.type === 'prod') {
-                html += `<strong>${det.resource}:</strong> +${formatNumber(det.perBuilding)}/秒<br>`;
+                html += `${det.resource}: +${formatNumber(det.perBuilding)}/秒<br>`;
             } else if (det.type === 'cons') {
-                html += `<strong>${det.resource}:</strong> -${formatNumber(det.perBuilding)}/秒<br>`;
+                html += `${det.resource}: -${formatNumber(det.perBuilding)}/秒<br>`;
             } else if (det.type === 'cap') {
-                html += `<strong>${det.resource}上限:</strong> +${formatNumber(det.perBuilding)}<br>`;
+                html += `${det.resource}上限: +${formatNumber(det.perBuilding)}<br>`;
             }
         }
+        if (stats.happinessPerBuilding !== 0) {
+            const sign = stats.happinessPerBuilding > 0 ? '+' : '';
+            html += `幸福度: ${sign}${stats.happinessPerBuilding.toFixed(2)}%<br>`;
+        }
+    } else {
+        html += `<em>暂无详细数据</em><br>`;
     }
-    
-    if (bd.modifiers && bd.modifiers.length > 0) {
-        html += `<br><strong>提供加成：</strong><br>`;
-        for (let mod of bd.modifiers) {
+
+    // 建筑间提供的加成
+    if (cfg.modifiers && cfg.modifiers.length) {
+        html += `<br><strong>提供给其他建筑的加成:</strong><br>`;
+        for (let mod of cfg.modifiers) {
             if (mod.prodFactor) {
                 html += `${mod.target} 产量 +${(mod.prodFactor * 100).toFixed(0)}%<br>`;
             }
             if (mod.consFactor) {
-                let sign = mod.consFactor > 0 ? '+' : '';
+                const sign = mod.consFactor > 0 ? '+' : '';
                 html += `${mod.target} 消耗 ${sign}${(mod.consFactor * 100).toFixed(0)}%<br>`;
             }
             if (mod.capFactor) {
                 html += `${mod.target} 上限 +${(mod.capFactor * 100).toFixed(0)}%<br>`;
             }
         }
-    }
-    if (stats && stats.happinessPerBuilding !== undefined && stats.happinessPerBuilding !== 0) {
-        const sign = stats.happinessPerBuilding > 0 ? '+' : '';
-        const percent = stats.happinessPerBuilding.toFixed(2);
-        html += `<br><strong>幸福度影响：</strong> ${sign}${percent}%<br>`;
     }
 
     return html;
@@ -66,14 +75,15 @@ function renderBuildingPanel() {
     for (let b in GameState.buildings) {
         const bd = GameState.buildings[b];
         if (!bd.visible) continue;
-        const type = bd.type || "其他";
+        const cfg = BUILDINGS_CONFIG[b];
+        const type = cfg ? cfg.type : "其他";  // 改为从配置获取类型
         if (categorizedBuildings[type]) {
             categorizedBuildings[type].push(b);
         } else {
             categorizedBuildings["其他"].push(b);
         }
     }
-    
+        
     let html = '';
     for (let cat of categories) {
         const buildings = categorizedBuildings[cat.key];

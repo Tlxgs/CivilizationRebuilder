@@ -47,8 +47,16 @@ function getSaveData() {
     const saveData = {
         version: "1.0",
         gameDays: GameState.gameDays,
-        activeEventId: GameState.activeRandomEvent ? GameState.activeRandomEvent.id : null,
-        activeEventEndDay: GameState.activeEventEndDay || 0,
+        activeRandomEvents: GameState.activeRandomEvents ? GameState.activeRandomEvents.map(ev => ({
+            id: ev.id,
+            name: ev.name,
+            desc: ev.desc,
+            effects: ev.effects,
+            durationDays: ev.durationDays,
+            endDay: ev.endDay,
+            baseProbability: ev.baseProbability,
+            prereqTech: ev.prereqTech
+        })) : [],
         eventLogs: GameState.eventLogs.slice(),
         resources: {}, buildings: {}, techs: {}, upgrades: {}, policies: {}, permanent: {}
     };
@@ -199,18 +207,15 @@ function refreshGameStateFromSave(saveData) {
         // 恢复日期、事件、日志
     if (saveData.gameDays !== undefined) GameState.gameDays = saveData.gameDays;
     if (saveData.eventLogs) GameState.eventLogs = saveData.eventLogs;
-    if (saveData.activeEventId) {
-        const eventDef = RANDOM_EVENTS.find(e => e.id === saveData.activeEventId);
-        if (eventDef) {
-            GameState.activeRandomEvent = { ...eventDef };
-            GameState.activeEventEndDay = saveData.activeEventEndDay;
-        } else {
-            GameState.activeRandomEvent = null;
-            GameState.activeEventEndDay = 0;
-        }
-    } else {
-        GameState.activeRandomEvent = null;
-        GameState.activeEventEndDay = 0;
+    if (saveData.activeRandomEvents) {
+        GameState.activeRandomEvents = saveData.activeRandomEvents.map(ev => {
+            if (ev.endDay === undefined && saveData.activeEventEndDay) {
+                ev.endDay = saveData.activeEventEndDay;
+            }
+            return ev;
+        });
+    }else {
+    GameState.activeRandomEvents = [];
     }
     if (saveData.crystals) {
         // 确保结构完整
@@ -219,7 +224,6 @@ function refreshGameStateFromSave(saveData) {
             inventory: saveData.crystals.inventory || []
         };
     } else {
-        // 旧存档没有晶体数据，确保使用初始化的空结构
         if (!GameState.crystals) {
             GameState.crystals = { equipped: [null, null, null], inventory: [] };
         }
@@ -272,7 +276,7 @@ function importGame(encryptedText) {
         }
         throw new Error('无效存档格式');
     } catch(e) {
-        alert('导入失败：存档文件损坏或密码错误');
+        alert('导入失败：存档文件损坏');
         return false;
     }
 }

@@ -107,8 +107,8 @@ function sellResource(resourceName) {
 // 日志
 function addEventLog(text) {
     const totalDays = GameState.gameDays;
-    const year = Math.floor(totalDays / 365);
-    const day = (totalDays % 365) + 1;
+    const year = Math.floor(totalDays / 360);
+    const day = (totalDays % 360) + 1;
     const dateStr = `${year}年${day}日`;
     GameState.eventLogs.unshift({ dateStr, text });
     if (GameState.eventLogs.length > 20) GameState.eventLogs.pop();
@@ -207,26 +207,29 @@ function discardCrystal(inventoryIndex) {
     computeProductionAndCaps();
     renderAll();
 }
-// 获取所有有产量产出的建筑（即 baseProduce 不为空）
 function getBuildingsWithProduce() {
     return Object.keys(GameState.buildings).filter(key => {
-        const b = GameState.buildings[key];
-        return b.baseProduce && Object.keys(b.baseProduce).length > 0;
+        const cfg = BUILDINGS_CONFIG[key];
+        if (!cfg) return false;
+        const produces = typeof cfg.produces === 'function' ? cfg.produces(GameState) : (cfg.produces || {});
+        return Object.keys(produces).length > 0;
     });
 }
 
-// 获取所有有消耗的建筑
 function getBuildingsWithConsume() {
     return Object.keys(GameState.buildings).filter(key => {
-        const b = GameState.buildings[key];
-        return b.baseConsume && Object.keys(b.baseConsume).length > 0;
+        const cfg = BUILDINGS_CONFIG[key];
+        if (!cfg) return false;
+        const consumes = typeof cfg.consumes === 'function' ? cfg.consumes(GameState) : (cfg.consumes || {});
+        return Object.keys(consumes).length > 0;
     });
 }
 
-// 获取所有提供上限的建筑
 function getBuildingsWithCap() {
     return Object.keys(GameState.buildings).filter(key => {
-        const b = GameState.buildings[key];
-        return b.capProvide && Object.keys(b.capProvide).length > 0;
+        const cfg = BUILDINGS_CONFIG[key];
+        if (!cfg) return false;
+        const caps = typeof cfg.caps === 'function' ? cfg.caps(GameState) : (cfg.caps || {});
+        return Object.keys(caps).length > 0;
     });
 }

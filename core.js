@@ -70,6 +70,7 @@ class GameEngine {
         }
         if (!consumeResources(p.price)) return false;
         p.researched = true;
+        ModifierSystem.clearCache()
         updateBuildingPrices();
         updateUpgradePrices();
         computeProductionAndCaps();

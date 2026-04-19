@@ -2,7 +2,7 @@
 const GameLoop = (function() {
     const TICK_INTERVAL = 0.2;      // 每次 tick 的秒数
     const TICKS_PER_DAY = 5;         // 每 5 tick = 1 天
-    const EVENT_TRIGGER_CHANCE = 0.002; // 每天触发随机事件概率
+    const EVENT_TRIGGER_BASE_CHANCE = 0.002;  // 每天尝试触发的基础概率
 
     let lastTimestamp = 0;
     let dayTickAccumulator = 0;
@@ -19,7 +19,6 @@ const GameLoop = (function() {
         }
     }
 
-    // 检查资源枯竭并停用消耗建筑
     function handleResourceDepletion() {
         let needRecompute = false;
         for (let r in GameState.resources) {
@@ -27,7 +26,13 @@ const GameLoop = (function() {
             if (res.amount <= 0.00001 && res.production < -0.00001) {
                 for (let bKey in GameState.buildings) {
                     const b = GameState.buildings[bKey];
-                    if (b.active > 0 && b.baseConsume && b.baseConsume[r] > 0) {
+                    if (b.active === 0) continue;
+                    const cfg = BUILDINGS_CONFIG[bKey];
+                    if (!cfg) continue;
+                    const consumes = typeof cfg.consumes === 'function' 
+                        ? cfg.consumes(GameState) 
+                        : (cfg.consumes || {});
+                    if (consumes[r] > 0) {
                         b.active = 0;
                         needRecompute = true;
                     }
@@ -39,7 +44,6 @@ const GameLoop = (function() {
             if (typeof renderAll === 'function') renderAll();
         }
     }
-
     // 单次资源更新 tick
     function tickResources(deltaSec) {
         // 重新计算产量和上限
@@ -61,18 +65,15 @@ const GameLoop = (function() {
         updateHeatDecay(deltaSec);
     }
 
-    // 天数推进
-    // gameloop.js 的 advanceDay 函数中添加
+    // 每天推进时的事件结束检查
     function advanceDay() {
         GameState.gameDays++;
         
-        // 更新日期显示
-        const year = Math.floor(GameState.gameDays / 360);  // 一年360天
+        const year = Math.floor(GameState.gameDays / 360);
         const day = (GameState.gameDays % 360) + 1;
         const dateElem = document.getElementById('current-date');
         if (dateElem) dateElem.innerText = `${year}年${day}日`;
 
-        // 计算并更新季节显示
         const dayOfYear = GameState.gameDays % 360;
         let seasonText = '';
         if (dayOfYear < 90) seasonText = '春';
@@ -82,38 +83,45 @@ const GameLoop = (function() {
         const seasonElem = document.getElementById('current-season');
         if (seasonElem) seasonElem.innerText = `(${seasonText})`;
 
-        // 检查随机事件是否结束
-        if (GameState.activeRandomEvent && GameState.gameDays >= GameState.activeEventEndDay) {
-            endCurrentEvent();
+        // 检查所有事件是否结束
+        if (GameState.activeRandomEvents && GameState.activeRandomEvents.length > 0) {
+            const beforeCount = GameState.activeRandomEvents.length;
+            GameState.activeRandomEvents = GameState.activeRandomEvents.filter(event => {
+                if (GameState.gameDays >= event.endDay) {
+                    addEventLog(`[事件结束] ${event.name} 效果已消失`);
+                    return false;
+                }
+                return true;
+            });
+            if (beforeCount !== GameState.activeRandomEvents.length) {
+                // 有事件结束，重新计算生产
+                ProductionEngine.computeProductionAndCaps();
+                if (typeof renderAll === 'function') renderAll();
+            }
         }
 
-        // 尝试触发新随机事件（如果没有激活事件）
-        if (!GameState.activeRandomEvent) {
-            tryTriggerRandomEvent();
-        }
+        // 尝试触发新事件（无论是否有激活事件，都可触发）
+        tryTriggerRandomEvent();
 
-        // 刷新日志面板
         if (typeof renderLogPanel === 'function') renderLogPanel();
     }
 
-    // 结束当前事件
-    function endCurrentEvent() {
-        if (!GameState.activeRandomEvent) return;
-        const event = GameState.activeRandomEvent;
-        addEventLog(`[事件结束] ${event.name} 效果已消失`);
-        GameState.activeRandomEvent = null;
-        ProductionEngine.computeProductionAndCaps();
-        if (typeof renderAll === 'function') renderAll();
-    }
-
-    // 尝试触发随机事件
+    // 尝试触发随机事件（修改为直接推入数组）
     function tryTriggerRandomEvent() {
-        if (Math.random() > EVENT_TRIGGER_CHANCE) return false;
+        if (Math.random() > EVENT_TRIGGER_BASE_CHANCE) return false;
 
-        const eventDef = RANDOM_EVENTS[Math.floor(Math.random() * RANDOM_EVENTS.length)];
+        const eventDef = selectRandomEvent(GameState);
+        if (!eventDef) return false;
+
         const event = { ...eventDef };
-        GameState.activeRandomEvent = event;
-        GameState.activeEventEndDay = GameState.gameDays + event.durationDays;
+        const duration = typeof eventDef.durationDays === 'function' 
+            ? eventDef.durationDays(GameState) 
+            : eventDef.durationDays;
+        event.endDay = GameState.gameDays + duration;
+        
+        // 直接推入数组，允许重叠
+        if (!GameState.activeRandomEvents) GameState.activeRandomEvents = [];
+        GameState.activeRandomEvents.push(event);
 
         let effectDesc = Object.entries(event.effects)
             .map(([res, mul]) => {
@@ -121,7 +129,7 @@ const GameLoop = (function() {
                 return mul > 1 ? `${res}+${percent.toFixed(0)}%` : `${res}-${percent.toFixed(0)}%`;
             })
             .join(', ');
-        addEventLog(`随机事件触发：${event.name}！${event.desc} (${effectDesc})，持续${event.durationDays}天`);
+        addEventLog(`随机事件触发：${event.name}！${event.desc} (${effectDesc})，持续${duration}天`);
 
         ProductionEngine.computeProductionAndCaps();
         if (typeof renderAll === 'function') renderAll();

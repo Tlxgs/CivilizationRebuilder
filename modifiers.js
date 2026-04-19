@@ -1,4 +1,6 @@
-// modifiers.js - 统一修改器系统（支持建筑自定义 calc 的幸福度贡献）
+// modifiers.js
+// 收集所有加成来源，计算倍率
+
 const ModifierSystem = (function() {
     let cachedModifiers = null;
     let cachedStateHash = '';
@@ -6,7 +8,9 @@ const ModifierSystem = (function() {
     function getStateHash(state) {
         let hash = '';
         hash += state.happiness || 0;
-        hash += state.activeRandomEvent?.id || '';
+        if (state.activeRandomEvents && state.activeRandomEvents.length) {
+            for (let ev of state.activeRandomEvents) hash += ev.id + '|' + ev.endDay;
+        }
         for (let t in state.techs) hash += (state.techs[t].researched ? '1' : '0');
         for (let u in state.upgrades) hash += (state.upgrades[u].level || 0);
         for (let p in state.policies) hash += (state.policies[p].activePolicy || '') + (state.policies[p].visible ? '1' : '0');
@@ -17,9 +21,7 @@ const ModifierSystem = (function() {
 
     function collectModifiers(state) {
         const hash = getStateHash(state);
-        if (cachedModifiers && cachedStateHash === hash) {
-            return cachedModifiers;
-        }
+        if (cachedModifiers && cachedStateHash === hash) return cachedModifiers;
 
         const modifiers = [];
         const relic = state.resources["遗物"]?.amount || 0;
@@ -31,6 +33,7 @@ const ModifierSystem = (function() {
         let capPerRelic = 0;
         let sciCapPerRelicLog = 0;
 
+        // 永恒升级效果
         for (let key in state.permanent) {
             const p = state.permanent[key];
             if (!p.researched) continue;
@@ -43,7 +46,7 @@ const ModifierSystem = (function() {
             if (eff.sciCapPerRelicLog) sciCapPerRelicLog += eff.sciCapPerRelicLog;
         }
 
-        // 科技
+        // 科技效果
         for (let t in state.techs) {
             const tech = state.techs[t];
             if (!tech.researched || !tech.effect) continue;
@@ -59,7 +62,7 @@ const ModifierSystem = (function() {
             }
         }
 
-        // 升级
+        // 升级效果
         for (let u in state.upgrades) {
             const up = state.upgrades[u];
             if (up.level > 0 && up.effect) {
@@ -76,7 +79,7 @@ const ModifierSystem = (function() {
             }
         }
 
-        // 政策
+        // 政策效果
         for (let p in state.policies) {
             const pol = state.policies[p];
             if (!pol.visible) continue;
@@ -108,11 +111,12 @@ const ModifierSystem = (function() {
             }
         }
 
-        // 建筑间加成
+        // 建筑间加成（modifiers 字段）
         for (let bKey in state.buildings) {
             const bld = state.buildings[bKey];
-            if (!bld.modifiers || bld.active === 0) continue;
-            for (let mod of bld.modifiers) {
+            const cfg = BUILDINGS_CONFIG[bKey];
+            if (!cfg || !cfg.modifiers || bld.active === 0) continue;
+            for (let mod of cfg.modifiers) {
                 modifiers.push({
                     source: 'building',
                     target: mod.target,
@@ -123,7 +127,7 @@ const ModifierSystem = (function() {
             }
         }
 
-        // 晶体
+        // 晶体效果
         for (let crystal of state.crystals.equipped) {
             if (!crystal) continue;
             for (let eff of crystal.effects) {
@@ -138,6 +142,18 @@ const ModifierSystem = (function() {
             }
         }
 
+        // 事件效果乘数
+        const eventMultipliers = {};
+        if (state.activeRandomEvents && state.activeRandomEvents.length > 0) {
+            for (let event of state.activeRandomEvents) {
+                if (event.effects) {
+                    for (let [res, mul] of Object.entries(event.effects)) {
+                        eventMultipliers[res] = (eventMultipliers[res] || 1) * mul;
+                    }
+                }
+            }
+        }
+
         cachedModifiers = {
             list: modifiers,
             costRatio,
@@ -146,7 +162,8 @@ const ModifierSystem = (function() {
             spaceProdAdd,
             capPerRelic,
             sciCapPerRelicLog,
-            relic
+            relic,
+            eventMultipliers
         };
         cachedStateHash = hash;
         return cachedModifiers;
@@ -167,14 +184,14 @@ const ModifierSystem = (function() {
             .reduce((sum, m) => sum + m.prod, 0);
         const crystalBonus = sumBySource('crystal');
 
-        let prodFactor = (1 + techBonus) * (1 + upgradeBonus) * (1 + policyBonus)
-                    * (1 + buildingBonus) * (1 + crystalBonus)
-                    * (1 + modData.globalProdAdd)
-                    * (1 + modData.globalSpeedAdd); 
+        let factor = (1 + techBonus) * (1 + upgradeBonus) * (1 + policyBonus)
+                   * (1 + buildingBonus) * (1 + crystalBonus)
+                   * (1 + modData.globalProdAdd)
+                   * (1 + modData.globalSpeedAdd);
         if (buildingType === '太空') {
-            prodFactor *= (1 + modData.spaceProdAdd);
+            factor *= (1 + modData.spaceProdAdd);
         }
-        return prodFactor;
+        return factor;
     }
 
     function calcConsMultiplier(modData, buildingId) {
@@ -223,50 +240,6 @@ const ModifierSystem = (function() {
         return baseMult;
     }
 
-    /**
-     * 计算总幸福度
-     *  - 遍历所有建筑
-     *  - 若建筑有自定义 calc，调用之，累加其返回的 happiness 字段
-     *  - 否则，累加 cfg.happinessEffect * active
-     *  - 再加上晶体的幸福度贡献
-     */
-    function calcHappiness(state, modData) {
-        let happiness = 100;
-
-        // 建筑幸福度
-        for (let bKey in state.buildings) {
-            const building = state.buildings[bKey];
-            if (building.active === 0) continue;
-            const cfg = BUILDINGS_CONFIG[bKey];
-            if (!cfg) continue;
-
-            if (typeof cfg.calc === 'function') {
-                // 为幸福度计算构造虚拟环境，不需要生产相关数据
-                const dummyModData = modData; // 或者传入 modData 供 calc 使用
-                const dummyHappinessFactor = 1; // 幸福度系数不应影响幸福度本身
-                const dummyEventMultipliers = {};
-                const effects = cfg.calc(state, bKey, building, cfg, dummyModData, dummyHappinessFactor, dummyEventMultipliers);
-                if (effects.happiness !== undefined) {
-                    happiness += effects.happiness;
-                }
-            } else if (cfg.happinessEffect) {
-                happiness += cfg.happinessEffect * building.active;
-            }
-        }
-
-        // 晶体幸福度
-        for (let crystal of state.crystals.equipped) {
-            if (!crystal) continue;
-            for (let eff of crystal.effects) {
-                if (eff.type === 'happiness') {
-                    happiness += eff.value * 100;
-                }
-            }
-        }
-
-        return Math.max(0, happiness);
-    }
-
     function calcCostMultiplier(modData) {
         return modData.costRatio;
     }
@@ -281,7 +254,6 @@ const ModifierSystem = (function() {
         calcProdMultiplier,
         calcConsMultiplier,
         calcCapMultiplier,
-        calcHappiness,
         calcCostMultiplier,
         clearCache
     };

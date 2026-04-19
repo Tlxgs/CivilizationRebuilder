@@ -57,14 +57,6 @@ const Formulas = (function() {
     }
 
     // ========== 幸福度相关 ==========
-    /**
-     * 计算单个博物馆提供的幸福度加成
-     * @param {number} relicAmount - 当前遗物数量
-     * @returns {number}
-     */
-    function calcMuseumHappinessBonus(relicAmount) {
-        return 0.1 * Math.log(Math.pow(2.72, 5) + relicAmount);
-    }
 
     /**
      * 计算幸福度对产量的影响系数
@@ -80,7 +72,7 @@ const Formulas = (function() {
      * 计算市场单次交易量（金等值）
      */
     function calcMarketTradeVolume(marketActive = 0, starMarketActive = 0) {
-        return marketActive * 10 + starMarketActive * 5000;
+        return marketActive * 50 + starMarketActive * 10000;
     }
 
     /**
@@ -181,7 +173,6 @@ const Formulas = (function() {
         calcRelicGainFromNuke,
         calcRelicGainFromVacuum,
         // 幸福度
-        calcMuseumHappinessBonus,
         calcHappinessFactor,
         // 贸易
         calcMarketTradeVolume,
