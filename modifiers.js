@@ -142,17 +142,23 @@ const ModifierSystem = (function() {
             }
         }
 
-        // 事件效果乘数
-        const eventMultipliers = {};
-        if (state.activeRandomEvents && state.activeRandomEvents.length > 0) {
-            for (let event of state.activeRandomEvents) {
-                if (event.effects) {
-                    for (let [res, mul] of Object.entries(event.effects)) {
-                        eventMultipliers[res] = (eventMultipliers[res] || 1) * mul;
-                    }
-                }
-            }
+        // ===== 新事件系统：收集建筑乘数并加入 modifiers =====
+        const eventMods = EventEffectHandler.collectEventModifiers(state.activeRandomEvents || []);
+        const buildingMults = eventMods.buildingMults;
+        
+        for (let building in buildingMults) {
+            const mults = buildingMults[building];
+            modifiers.push({
+                source: 'event',
+                target: building,
+                prod: (mults.prod || 1) - 1,      // 转换为增量
+                cons: (mults.cons || 1) - 1,
+                cap: (mults.cap || 1) - 1
+            });
         }
+
+        // 资源乘数仍使用单独对象（用于产量最终乘数）
+        const eventMultipliers = eventMods.resourceMults;
 
         cachedModifiers = {
             list: modifiers,
@@ -163,7 +169,8 @@ const ModifierSystem = (function() {
             capPerRelic,
             sciCapPerRelicLog,
             relic,
-            eventMultipliers
+            eventMultipliers,
+            eventHappinessMod: EventEffectHandler.getEventHappinessMod(state.activeRandomEvents || [])
         };
         cachedStateHash = hash;
         return cachedModifiers;
@@ -183,9 +190,10 @@ const ModifierSystem = (function() {
             .filter(m => m.source === 'building' && m.target === buildingId)
             .reduce((sum, m) => sum + m.prod, 0);
         const crystalBonus = sumBySource('crystal');
+        const eventBonus = sumBySource('event');
 
         let factor = (1 + techBonus) * (1 + upgradeBonus) * (1 + policyBonus)
-                   * (1 + buildingBonus) * (1 + crystalBonus)
+                   * (1 + buildingBonus) * (1 + crystalBonus) * (1 + eventBonus)
                    * (1 + modData.globalProdAdd)
                    * (1 + modData.globalSpeedAdd);
         if (buildingType === '太空') {
@@ -208,9 +216,10 @@ const ModifierSystem = (function() {
             .filter(m => m.source === 'building' && m.target === buildingId)
             .reduce((sum, m) => sum + m.cons, 0);
         const crystalBonus = sumBySource('crystal');
+        const eventBonus = sumBySource('event');
 
         return (1 + techBonus) * (1 + upgradeBonus) * (1 + policyBonus)
-               * (1 + buildingBonus) * (1 + crystalBonus)
+               * (1 + buildingBonus) * (1 + crystalBonus) * (1 + eventBonus)
                * (1 + modData.globalSpeedAdd);
     }
 
@@ -228,9 +237,10 @@ const ModifierSystem = (function() {
             .filter(m => m.source === 'building' && m.target === buildingId)
             .reduce((sum, m) => sum + m.cap, 0);
         const crystalBonus = sumBySource('crystal');
+        const eventBonus = sumBySource('event');
 
         let baseMult = (1 + techBonus) * (1 + upgradeBonus) * (1 + policyBonus)
-                     * (1 + buildingBonus) * (1 + crystalBonus);
+                     * (1 + buildingBonus) * (1 + crystalBonus) * (1 + eventBonus);
 
         if (resource === '科学') {
             baseMult *= (1 + Math.log(1 + modData.relic) * modData.sciCapPerRelicLog);

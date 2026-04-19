@@ -2,7 +2,7 @@
 const GameLoop = (function() {
     const TICK_INTERVAL = 0.2;      // 每次 tick 的秒数
     const TICKS_PER_DAY = 5;         // 每 5 tick = 1 天
-    const EVENT_TRIGGER_BASE_CHANCE = 0.002;  // 每天尝试触发的基础概率
+    const EVENT_TRIGGER_BASE_CHANCE = 0.01;  // 每天尝试触发的基础概率
 
     let lastTimestamp = 0;
     let dayTickAccumulator = 0;
@@ -58,7 +58,7 @@ const GameLoop = (function() {
             const prod = res.production;
             let newAmount = res.amount + prod * deltaSec;
             res.amount = Math.min(res.cap, Math.max(0, newAmount));
-            if (res.amount > 0.01) res.visible = true;
+            if (res.amount > 0.001) res.visible = true;
         }
 
         // 热度衰减
@@ -105,34 +105,46 @@ const GameLoop = (function() {
 
         if (typeof renderLogPanel === 'function') renderLogPanel();
     }
-
-    // 尝试触发随机事件（修改为直接推入数组）
     function tryTriggerRandomEvent() {
         if (Math.random() > EVENT_TRIGGER_BASE_CHANCE) return false;
 
         const eventDef = selectRandomEvent(GameState);
         if (!eventDef) return false;
 
-        const event = { ...eventDef };
-        const duration = typeof eventDef.durationDays === 'function' 
-            ? eventDef.durationDays(GameState) 
-            : eventDef.durationDays;
-        event.endDay = GameState.gameDays + duration;
+        const event = EventEffectHandler.createEventSnapshot(eventDef, GameState);
         
-        // 直接推入数组，允许重叠
         if (!GameState.activeRandomEvents) GameState.activeRandomEvents = [];
         GameState.activeRandomEvents.push(event);
 
-        let effectDesc = Object.entries(event.effects)
-            .map(([res, mul]) => {
-                const percent = Math.abs((mul - 1) * 100);
-                return mul > 1 ? `${res}+${percent.toFixed(0)}%` : `${res}-${percent.toFixed(0)}%`;
-            })
-            .join(', ');
-        addEventLog(`随机事件触发：${event.name}！${event.desc} (${effectDesc})，持续${duration}天`);
+        // 先应用立即效果，获取产生的日志
+        const immediateLogs = EventEffectHandler.applyImmediateEffects(event, GameState);
 
+        // 生成效果描述
+        let effectDesc = '';
+        for (let eff of event.effects) {
+            if (eff.type === 'resourceMultiplier') {
+                const percent = ((eff.multiplier - 1) * 100).toFixed(0);
+                effectDesc += `${eff.resource} ${eff.multiplier > 1 ? '+' : ''}${percent}% `;
+            } else if (eff.type === 'buildingMultiplier') {
+                const percent = ((eff.multiplier - 1) * 100).toFixed(0);
+                effectDesc += `${eff.building}${eff.field === 'prod' ? '产量' : eff.field} ${eff.multiplier > 1 ? '+' : ''}${percent}% `;
+            } else if (eff.type === 'happinessMod') {
+                effectDesc += `幸福度 ${eff.value > 0 ? '+' : ''}${eff.value}% `;
+            }
+        }
+        const duration = event.endDay - GameState.gameDays;
+        const mainLog = `随机事件触发：${event.name}！${event.desc}${effectDesc ? ' (' + effectDesc.trim() + ')' : ''}，持续${duration}天`;
+
+        // 先添加事件主日志（后添加的显示在上方）
+        addEventLog(mainLog);
+        // 然后添加立即效果日志（它们会显示在主日志下方）
+        for (let log of immediateLogs) {
+            addEventLog(log);
+        }
+
+        ModifierSystem.clearCache();
         ProductionEngine.computeProductionAndCaps();
-        if (typeof renderAll === 'function') renderAll();
+        renderAll();
         return true;
     }
 

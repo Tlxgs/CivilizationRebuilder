@@ -1,6 +1,6 @@
 // 聚合渲染总入口
 function renderAll() {
-    renderHappiness();       // 若未拆分可保留在 common 或独立文件
+    renderHappiness();
     renderResources();
     renderActionsPanel();
     renderBuildingPanel();

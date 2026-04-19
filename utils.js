@@ -1,5 +1,4 @@
-// utils.js - 精简后内容（仅保留 formatNumber, canAfford, consumeResources, applyTechUnlocks 等）
-
+// utils.js
 function formatNumber(n) {
     if (n === null || n === undefined || isNaN(n)) return "0";
     if (n === Infinity) return "∞";
@@ -25,26 +24,66 @@ function consumeResources(costMap) {
     return true;
 }
 
-function applyTechUnlocks(tech) {
-    if (tech.unlocks) {
-        tech.unlocks.forEach(b => {
-            if (GameState.buildings[b]) GameState.buildings[b].visible = true;
-        });
+// 检查解锁条件（支持多种类型条件）
+function checkUnlockCondition(condition, state) {
+    if (!condition) return true;  // 无条件则默认可见
+    
+    // 科技条件
+    if (condition.tech) {
+        return state.techs[condition.tech]?.researched || false;
     }
-    if (tech.unlocksPolicies) {
-        tech.unlocksPolicies.forEach(p => {
-            if (GameState.policies[p]) GameState.policies[p].visible = true;
-        });
+    // 可扩展：资源条件、建筑条件等
+    // if (condition.resource) { ... }
+    // if (condition.building) { ... }
+    
+    return false;
+}
+
+// utils.js（只更新 refreshAllVisibility 部分）
+function refreshAllVisibility() {
+    // 建筑
+    for (let bKey in GameState.buildings) {
+        const cfg = BUILDINGS_CONFIG[bKey];
+        if (cfg) {
+            GameState.buildings[bKey].visible = checkUnlockCondition(cfg.unlockCondition, GameState);
+        }
     }
-    if (tech.unlocksUpgrades) {
-        tech.unlocksUpgrades.forEach(u => {
-            if (GameState.upgrades[u]) GameState.upgrades[u].visible = true;
-        });
+    
+    // 升级
+    for (let uKey in GameState.upgrades) {
+        const up = GameState.upgrades[uKey];
+        if (up) {
+            up.visible = checkUnlockCondition(up.unlockCondition, GameState);
+        }
+    }
+    
+    // 政策
+    for (let pKey in GameState.policies) {
+        const pol = GameState.policies[pKey];
+        if (pol) {
+            pol.visible = checkUnlockCondition(pol.unlockCondition, GameState);
+        }
     }
 }
 
+// 研究科技后调用此函数（替代原来的 applyTechUnlocks）
+function onTechResearched(tech) {
+    // 科技研究完成后，只需刷新可见性即可
+    refreshAllVisibility();
+    
+    // 如果有需要特殊处理的科技效果，可在此添加
+}
+
+// 删除原来的 applyTechUnlocks 函数，或将其留空兼容
+function applyTechUnlocks(tech) {
+    // 此函数已弃用，保留空实现以防其他代码引用报错
+    refreshAllVisibility();
+}
 
 window.formatNumber = formatNumber;
 window.canAfford = canAfford;
 window.consumeResources = consumeResources;
+window.checkUnlockCondition = checkUnlockCondition;
+window.refreshAllVisibility = refreshAllVisibility;
 window.applyTechUnlocks = applyTechUnlocks;
+window.onTechResearched = onTechResearched;

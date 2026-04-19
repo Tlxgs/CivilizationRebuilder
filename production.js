@@ -63,47 +63,54 @@ const ProductionEngine = (function() {
         }
     }
 
+
+    const happinessFactor = state.happiness / 100;
+
+    const eventHappinessMod = modData.eventHappinessMod || 0;
+    if (eventHappinessMod !== 0) {
+        totalHappiness += eventHappinessMod;
+        happinessContributions.push({ source: '事件', value: eventHappinessMod });
+    }
     state.happiness = Math.max(0, totalHappiness);
     state.happinessContributions = happinessContributions;
-        const happinessFactor = state.happiness / 100;
 
-        // 重置资源产量和上限
-        for (let r in state.resources) {
-            state.resources[r].production = 0;
-            state.resources[r].cap = state.resources[r].baseCap;
+    // 重置资源产量和上限
+    for (let r in state.resources) {
+        state.resources[r].production = 0;
+        state.resources[r].cap = state.resources[r].baseCap;
+    }
+
+    const eventMultipliers = modData.eventMultipliers || {};
+
+    // 遍历所有激活建筑，累加产量、消耗、上限
+    for (let bKey in state.buildings) {
+        const bld = state.buildings[bKey];
+        if (bld.active === 0) continue;
+
+        const cfg = BUILDINGS_CONFIG[bKey];
+        if (!cfg) continue;
+
+        const active = bld.active;
+        const prodMult = ModifierSystem.calcProdMultiplier(modData, bKey, cfg.type);
+        const consMult = ModifierSystem.calcConsMultiplier(modData, bKey);
+
+        const baseProd = getBaseProduces(cfg, state);
+        for (let r in baseProd) {
+            const eventMul = eventMultipliers[r] || 1;
+            state.resources[r].production += baseProd[r] * active * prodMult * happinessFactor * eventMul;
         }
 
-        const eventMultipliers = modData.eventMultipliers || {};
-
-        // 遍历所有激活建筑，累加产量、消耗、上限
-        for (let bKey in state.buildings) {
-            const bld = state.buildings[bKey];
-            if (bld.active === 0) continue;
-
-            const cfg = BUILDINGS_CONFIG[bKey];
-            if (!cfg) continue;
-
-            const active = bld.active;
-            const prodMult = ModifierSystem.calcProdMultiplier(modData, bKey, cfg.type);
-            const consMult = ModifierSystem.calcConsMultiplier(modData, bKey);
-
-            const baseProd = getBaseProduces(cfg, state);
-            for (let r in baseProd) {
-                const eventMul = eventMultipliers[r] || 1;
-                state.resources[r].production += baseProd[r] * active * prodMult * happinessFactor * eventMul;
-            }
-
-            const baseCons = getBaseConsumes(cfg, state);
-            for (let r in baseCons) {
-                state.resources[r].production -= baseCons[r] * active * consMult;
-            }
-
-            const baseCap = getBaseCaps(cfg, state);
-            for (let r in baseCap) {
-                const capMult = ModifierSystem.calcCapMultiplier(modData, bKey, r);
-                state.resources[r].cap += baseCap[r] * active * capMult;
-            }
+        const baseCons = getBaseConsumes(cfg, state);
+        for (let r in baseCons) {
+            state.resources[r].production -= baseCons[r] * active * consMult;
         }
+
+        const baseCap = getBaseCaps(cfg, state);
+        for (let r in baseCap) {
+            const capMult = ModifierSystem.calcCapMultiplier(modData, bKey, r);
+            state.resources[r].cap += baseCap[r] * active * capMult;
+        }
+    }
     }
 
     // 获取单建筑统计数据（用于提示框）

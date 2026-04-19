@@ -1,0 +1,45 @@
+// config/permanentConfig.js
+const PERMANENT_CONFIG = {
+    "节约成本I": { price: {遗物: 10}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: null },
+    "节约成本II": { price: {遗物: 30}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本I"] },
+    "节约成本III": { price: {遗物: 100}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本II"] },
+    "节约成本IV": { price: {遗物: 200}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本III"] },
+    "节约成本V": { price: {遗物: 500}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本IV"] },
+    "节约成本VI": { price: {遗物: 1000, 暗能量: 10}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本V"] },
+    "节约成本VII": { price: {遗物: 1500, 暗能量: 20}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VI"] },
+    "节约成本VIII": { price: {遗物: 2000, 暗能量: 40}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VII"] },
+    "节约成本IX": { price: {遗物: 2500, 暗能量: 80}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本VIII"] },
+    "节约成本X": { price: {遗物: 3000, 暗能量: 160}, desc: "所有建筑成本增长率-5%（乘算）", effect: { costRatio: 0.95 }, prereq: ["节约成本IX"] },
+    
+    "高效生产I": { price: {遗物: 1}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: null },
+    "高效生产II": { price: {遗物: 5}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产I"] },
+    "高效生产III": { price: {遗物: 10}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产II"] },
+    "高效生产IV": { price: {遗物: 20}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产III"] },
+    "高效生产V": { price: {遗物: 30}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产IV"] },
+    "高效生产VI": { price: {遗物: 40}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产V"] },
+    "高效生产VII": { price: {遗物: 50}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VI"] },
+    "高效生产VIII": { price: {遗物: 60}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VII"] },
+    "高效生产IX": { price: {遗物: 80}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产VIII"] },
+    "高效生产X": { price: {遗物: 100}, desc: "所有建筑产量+5%（消耗不变）", effect: { globalProd: 0.05 }, prereq: ["高效生产IX"] },
+    
+    "高速生产I": { price: {遗物: 10}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: null },
+    "高速生产II": { price: {遗物: 20}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产I"] },
+    "高速生产III": { price: {遗物: 40}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产II"] },
+    "高速生产IV": { price: {遗物: 80}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产III"] },
+    "高速生产V": { price: {遗物: 160}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产IV"] },
+    "高速生产VI": { price: {遗物: 240}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产V"] },
+    "高速生产VII": { price: {遗物: 360}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VI"] },
+    "高速生产VIII": { price: {遗物: 480}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VII"] },
+    "高速生产IX": { price: {遗物: 600}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产VIII"] },
+    "高速生产X": { price: {遗物: 800}, desc: "所有建筑速度+10%（消耗同步增加）", effect: { globalSpeed: 0.10 }, prereq: ["高速生产IX"] },
+    
+    "空间压缩I": { price: {遗物: 5}, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: null },
+    "空间压缩II": { price: {遗物: 20}, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩I"] },
+    "空间压缩III": { price: {遗物: 100}, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩II"] },
+    "空间压缩IV": { price: {遗物: 200}, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩III"] },
+    "空间压缩V": { price: {遗物: 400}, desc: "每持有遗物提升储存建筑上限0.1%（科学除外）", effect: { capPerRelic: 0.001 }, prereq: ["空间压缩IV"] },
+    
+    "技术爆炸": { price: {遗物: 50}, desc: "根据遗物数量提升少量科学上限", effect: { sciCapPerRelicLog: 0.05 }, prereq: null },
+    "宇宙学": { price: {遗物: 50, 暗能量: 1}, desc: "研究宇宙的奥秘，提高太空建筑产量10%(消耗不变)", effect: { globalSpaceProd: 0.10 }, prereq: null },
+    "宇宙起源": { price: {遗物: 500, 暗能量: 100}, desc: "研究宇宙起源的学科，提高太空建筑产量20%(消耗不变)", effect: { globalSpaceProd: 0.20 }, prereq: null }
+};

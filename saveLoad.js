@@ -120,9 +120,9 @@ function saveGame() {
     const saveData = getSaveData();
     localStorage.setItem('civilizationRebuilder', JSON.stringify(saveData));
 }
-
+// saveLoad.js (只修改 refreshGameStateFromSave 函数)
 function refreshGameStateFromSave(saveData) {
-    // 1. 备份永恒升级状态（因为 initGameData 会重置它们）
+    // 1. 备份永恒升级状态
     const permBackup = {};
     if (saveData.permanent) {
         for (let perm in saveData.permanent) {
@@ -130,10 +130,10 @@ function refreshGameStateFromSave(saveData) {
         }
     }
 
-    // 2. 重新初始化所有静态数据（获得最新的建筑、科技、升级等定义）
+    // 2. 重新初始化所有静态数据
     initGameData();
 
-    // 3. 恢复永恒升级（必须在其他恢复之前，因为会影响价格计算）
+    // 3. 恢复永恒升级
     for (let perm in permBackup) {
         if (GameState.permanent[perm]) {
             GameState.permanent[perm].researched = permBackup[perm].researched;
@@ -148,7 +148,6 @@ function refreshGameStateFromSave(saveData) {
                 if (saved.amount !== undefined) GameState.resources[r].amount = saved.amount;
                 if (saved.heat !== undefined) GameState.resources[r].heat = saved.heat;
                 if (saved.visible !== undefined) GameState.resources[r].visible = saved.visible;
-                // 如果数量大于0但未标记可见，自动设为可见
                 if (GameState.resources[r].amount > 0) GameState.resources[r].visible = true;
             }
         }
@@ -161,7 +160,7 @@ function refreshGameStateFromSave(saveData) {
                 const saved = saveData.buildings[b];
                 if (saved.count !== undefined) GameState.buildings[b].count = saved.count;
                 if (saved.active !== undefined) GameState.buildings[b].active = saved.active;
-                if (saved.visible !== undefined) GameState.buildings[b].visible = saved.visible;
+                // 注意：visible 不再从存档恢复，而是由条件重新计算
             }
         }
     }
@@ -182,7 +181,7 @@ function refreshGameStateFromSave(saveData) {
             if (GameState.upgrades[u]) {
                 const saved = saveData.upgrades[u];
                 if (saved.level !== undefined) GameState.upgrades[u].level = saved.level;
-                if (saved.visible !== undefined) GameState.upgrades[u].visible = saved.visible;
+                // visible 由条件重新计算
             }
         }
     }
@@ -193,32 +192,39 @@ function refreshGameStateFromSave(saveData) {
             if (GameState.policies[p]) {
                 const saved = saveData.policies[p];
                 if (saved.activePolicy !== undefined) GameState.policies[p].activePolicy = saved.activePolicy;
-                if (saved.visible !== undefined) GameState.policies[p].visible = saved.visible;
+                // visible 由条件重新计算
             }
         }
     }
-    // 根据已研究的科技解锁建筑、政策、升级的可见性
-    for (let t in GameState.techs) {
-        const tech = GameState.techs[t];
-        if (tech.researched) {
-            applyTechUnlocks(tech);
-        }
-    }
-        // 恢复日期、事件、日志
+
+    // 9. 刷新所有可见性（根据当前科技状态）
+    refreshAllVisibility();
+
+    // 10. 恢复日期、事件、日志
     if (saveData.gameDays !== undefined) GameState.gameDays = saveData.gameDays;
     if (saveData.eventLogs) GameState.eventLogs = saveData.eventLogs;
     if (saveData.activeRandomEvents) {
         GameState.activeRandomEvents = saveData.activeRandomEvents.map(ev => {
-            if (ev.endDay === undefined && saveData.activeEventEndDay) {
-                ev.endDay = saveData.activeEventEndDay;
-            }
-            return ev;
+            return {
+                id: ev.id,
+                name: ev.name,
+                desc: ev.desc,
+                endDay: ev.endDay,
+                effects: ev.effects.map(eff => {
+                    return {
+                        type: eff.type,
+                        resource: eff.resource,
+                        building: eff.building,
+                        field: eff.field,
+                        amount: eff.amount,
+                        multiplier: eff.multiplier,
+                        value: eff.value
+                    };
+                })
+            };
         });
-    }else {
-    GameState.activeRandomEvents = [];
     }
     if (saveData.crystals) {
-        // 确保结构完整
         GameState.crystals = {
             equipped: saveData.crystals.equipped || [null, null, null],
             inventory: saveData.crystals.inventory || []
@@ -229,7 +235,7 @@ function refreshGameStateFromSave(saveData) {
         }
     }
 
-    // 9. 重新计算价格、生产、上限，并刷新界面
+    // 11. 重新计算价格、生产、上限，并刷新界面
     updateBuildingPrices();
     updateUpgradePrices();
     computeProductionAndCaps();

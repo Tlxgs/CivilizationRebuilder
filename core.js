@@ -1,7 +1,5 @@
-// core.js - 核心游戏逻辑（面向对象版本）
-
+// core.js
 class GameEngine {
-    // 购买建筑（支持批量）
     buyBuilding(key, quantity = 1) {
         const b = GameState.buildings[key];
         if (!b) return false;
@@ -20,13 +18,15 @@ class GameEngine {
         return successCount > 0;
     }
 
-    // 研究科技
     researchTech(key) {
         const t = GameState.techs[key];
         if (t.researched) return false;
         if (!consumeResources(t.price)) return false;
         t.researched = true;
-        applyTechUnlocks(t);
+        
+        // 刷新所有可见性
+        refreshAllVisibility();
+        
         updateBuildingPrices();
         updateUpgradePrices();
         computeProductionAndCaps();
@@ -34,7 +34,6 @@ class GameEngine {
         return true;
     }
 
-    // 购买升级
     buyUpgrade(key) {
         const up = GameState.upgrades[key];
         if (!up.visible) return false;
@@ -46,7 +45,6 @@ class GameEngine {
         return true;
     }
 
-    // 切换政策
     switchPolicy(policyName, optionValue) {
         const policy = GameState.policies[policyName];
         if (!policy) return false;
@@ -59,7 +57,6 @@ class GameEngine {
         return true;
     }
 
-    // 购买永恒升级
     buyPermanent(key) {
         const p = GameState.permanent[key];
         if (p.researched) return false;
@@ -70,7 +67,7 @@ class GameEngine {
         }
         if (!consumeResources(p.price)) return false;
         p.researched = true;
-        ModifierSystem.clearCache()
+        ModifierSystem.clearCache();
         updateBuildingPrices();
         updateUpgradePrices();
         computeProductionAndCaps();
@@ -78,7 +75,6 @@ class GameEngine {
         return true;
     }
 
-    // 执行行动（使用配置对象，易于扩展）
     performAction(actionId) {
         const handlers = {
             collect_wood: () => {
@@ -112,7 +108,7 @@ class GameEngine {
                     alert("晶体库存已满，无法获得新晶体！请先丢弃或装备一些晶体。");
                     return false;
                 }
-                let failChance = Math.max(0.1, 1 - 0.3 * Math.log10(armsAmount / 100 + 1));
+                let failChance = Formulas.calcWarFailChance(armsAmount);
                 let isFailed = Math.random() < failChance;
                 if (isFailed) {
                     addEventLog(`战争失败！消耗了 ${formatNumber(armsAmount)} 军备，一无所获。`);
@@ -146,5 +142,4 @@ class GameEngine {
     }
 }
 
-// 创建全局单例（保持与原 Core 对象兼容）
 const Core = new GameEngine();
