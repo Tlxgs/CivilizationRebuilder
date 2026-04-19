@@ -13,7 +13,7 @@ body {
 }
 
 .game-container {
-    max-width: 1600px;
+    max-width: 95%;
     margin: 0 auto;
     background: #ffffff;                /* 纯白容器 */
     border-radius: 1rem;
@@ -38,7 +38,7 @@ h2 {
 }
 
 .sidebar {
-    flex: 0 0 280px;
+    flex: 0 0 300px;
     display: flex;
     flex-direction: column;
     gap: 1.2rem;

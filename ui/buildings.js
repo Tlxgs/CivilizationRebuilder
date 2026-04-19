@@ -102,7 +102,7 @@ function renderBuildingPanel() {
     }
     
     if (html === '') {
-        html = '<p>暂无可用建筑</p>';
+        html = '<p>请先研究科技以解锁建筑</p>';
     }
     
     panel.innerHTML = html;

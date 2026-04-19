@@ -1,5 +1,5 @@
 // ==================== 加密相关 ====================
-const ENCRYPT_KEY = "CivilizationRebuilder2025";
+const ENCRYPT_KEY = "CivilizationRebuilder2026";
 
 function strToUtf8Bytes(str) {
     return new TextEncoder().encode(str);
