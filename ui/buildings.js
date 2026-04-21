@@ -56,6 +56,27 @@ function getBuildingTooltip(buildingKey) {
 
     return html;
 }
+function getAffordabilityStatus(building) {
+    const price = building.price;
+    let hasUnlimitedCapIssue = false;
+    let canAffordNow = true;
+    for (let res in price) {
+        const amount = GameState.resources[res]?.amount || 0;
+        const cap = GameState.resources[res]?.cap || 0;
+        const needed = price[res];
+        if (amount < needed) {
+            canAffordNow = false;
+            // 上限不足（且上限不是无限）
+            if (cap !== Infinity && cap < needed) {
+                hasUnlimitedCapIssue = true;
+            }
+        }
+    }
+    if (canAffordNow) return 'affordable'; // 黑色
+    if (hasUnlimitedCapIssue) return 'cap-exceeded'; // 红色
+    return 'insufficient'; // 灰色
+}
+
 function renderBuildingPanel() {
     const panel = document.getElementById('panel-building');
     
@@ -79,7 +100,7 @@ function renderBuildingPanel() {
         const bd = GameState.buildings[b];
         if (!bd.visible) continue;
         const cfg = BUILDINGS_CONFIG[b];
-        const type = cfg ? cfg.type : "其他";  // 改为从配置获取类型
+        const type = cfg ? cfg.type : "其他";
         if (categorizedBuildings[type]) {
             categorizedBuildings[type].push(b);
         } else {
@@ -98,17 +119,37 @@ function renderBuildingPanel() {
         
         for (let b of buildings) {
             const bd = GameState.buildings[b];
-            html += `<div class="building-card" data-building="${b}">
-                        <div class="building-card-info">
-                            <strong>${b}</strong>
-                            <small>${bd.active}/${bd.count}</small>
-                        </div>
-                        <div class="btn-group">
-                            <button class="btn-square buy-btn" data-building="${b}">买</button>
-                            <button class="btn-square plus-btn" data-building="${b}">+</button>
-                            <button class="btn-square minus-btn" data-building="${b}">-</button>
-                        </div>
-                    </div>`;
+            const cfg = BUILDINGS_CONFIG[b];
+            
+            const status = getAffordabilityStatus(bd);
+            let nameColorClass = '';
+            if (status === 'insufficient') nameColorClass = 'insufficient-name'; // 灰色
+            else if (status === 'cap-exceeded') nameColorClass = 'unaffordable-name'; // 红色
+            
+            html += `<div class="building-card" data-building="${b}">`;
+            
+            if (cfg.modes && cfg.modes.length > 1) {
+                const currentMode = cfg.modes[bd.mode || 0];
+                const modeName = currentMode ? currentMode.name : "未知";
+                html += `<button class="mode-gear-btn" data-building="${b}" title="当前模式：${modeName}。点击切换模式">⚙️</button>`;
+            }
+            
+            html += `<div class="building-card-info">
+                        <strong class="${nameColorClass}">${b}</strong>
+                        <small>${bd.active}/${bd.count}</small>`;
+            
+            if (cfg.modes && cfg.modes.length > 1) {
+                const currentMode = cfg.modes[bd.mode || 0];
+                const modeName = currentMode ? currentMode.name : "未知";
+                html += `<span class="mode-indicator"> | ${modeName}</span>`;
+            }
+            
+            html += `</div>
+                     <div class="btn-group">
+                         <button class="btn-square plus-btn" data-building="${b}">+</button>
+                         <button class="btn-square minus-btn" data-building="${b}">-</button>
+                     </div>
+                  </div>`;
         }
         
         html += `</div></div>`;
@@ -126,23 +167,5 @@ function renderBuildingPanel() {
             showTooltip(card, getBuildingTooltip(bName));
         });
     });
-        
-    updateBuyButtonsColor();
+    
 }
-
-function updateBuyButtonsColor() {
-    const buyBtns = document.querySelectorAll('.buy-btn');
-    for (let btn of buyBtns) {
-        const buildingKey = btn.dataset.building;
-        if (!buildingKey) continue;
-        const building = GameState.buildings[buildingKey];
-        if (!building) continue;
-        if (canAfford(building.price)) {
-            btn.style.color = '';
-        } else {
-            btn.style.color = 'red';
-        }
-    }
-}
-window.getBuildingTooltip = getBuildingTooltip;
-window.renderBuildingPanel = renderBuildingPanel;

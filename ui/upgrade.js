@@ -1,4 +1,24 @@
-// ui/upgrade.js
+function getUpgradeAffordabilityStatus(upgrade) {
+    const price = upgrade.price;
+    let hasUnlimitedCapIssue = false;
+    let canAffordNow = true;
+    for (let res in price) {
+        const amount = GameState.resources[res]?.amount || 0;
+        const cap = GameState.resources[res]?.cap || 0;
+        const needed = price[res];
+        if (amount < needed) {
+            canAffordNow = false;
+            if (cap !== Infinity && cap < needed) {
+                hasUnlimitedCapIssue = true;
+            }
+        }
+    }
+    if (canAffordNow) return 'affordable';
+    if (hasUnlimitedCapIssue) return 'cap-exceeded';
+    return 'insufficient';
+}
+
+// ========== 修改 renderUpgradePanel 函数中升级按钮的生成 ==========
 function renderUpgradePanel() {
     const panel = document.getElementById('panel-upgrade');
     let hasAny = false;
@@ -8,11 +28,13 @@ function renderUpgradePanel() {
         if (!up.visible) continue;
         hasAny = true;
         
-        // 检查是否买得起
-        const affordable = canAfford(up.price);
-        const btnStyle = affordable ? '' : 'style="color: red;"';
+        // ===== 修改开始 =====
+        const status = getUpgradeAffordabilityStatus(up);
+        let colorClass = '';
+        if (status === 'insufficient') colorClass = 'insufficient-name';
+        else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
         
-        html += `<button class="card-btn upgrade-btn" data-upgrade="${u}" ${btnStyle}><b>${u} Lv.${up.level}</b></button>`;
+        html += `<button class="card-btn upgrade-btn ${colorClass}" data-upgrade="${u}"><b>${u} Lv.${up.level}</b></button>`;
     }
     if (!hasAny) {
         panel.innerHTML = '<p>暂无可用升级</p>';

@@ -1,4 +1,23 @@
 // ui/permanent.js
+function getPermanentAffordabilityStatus(perm) {
+    const price = perm.price;
+    let hasUnlimitedCapIssue = false;
+    let canAffordNow = true;
+    for (let res in price) {
+        const amount = GameState.resources[res]?.amount || 0;
+        const cap = GameState.resources[res]?.cap || 0;
+        const needed = price[res];
+        if (amount < needed) {
+            canAffordNow = false;
+            if (cap !== Infinity && cap < needed) {
+                hasUnlimitedCapIssue = true;
+            }
+        }
+    }
+    if (canAffordNow) return 'affordable';
+    if (hasUnlimitedCapIssue) return 'cap-exceeded';
+    return 'insufficient';
+}
 function renderPermanentPanel() {
     const panel = document.getElementById('panel-permanent');
     const relicAmount = GameState.resources["遗物"]?.amount || 0;
@@ -34,11 +53,14 @@ function renderPermanentPanel() {
     let html = '<div class="grid-list">';
     for (let p of notResearched) {
         const perm = GameState.permanent[p];
-        // 检查是否买得起
-        const affordable = canAfford(perm.price);
-        const btnStyle = affordable ? '' : 'style="color: red;"';
         
-        html += `<button class="card-btn perm-btn" data-permanent="${p}" ${btnStyle}><b>${p}</b></button>`;
+        // ===== 修改开始 =====
+        const status = getPermanentAffordabilityStatus(perm);
+        let colorClass = '';
+        if (status === 'insufficient') colorClass = 'insufficient-name';
+        else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
+        
+        html += `<button class="card-btn perm-btn ${colorClass}" data-permanent="${p}"><b>${p}</b></button>`;
     }
     html += '</div>';
     

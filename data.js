@@ -36,13 +36,13 @@ function initGameData() {
     GameState.buildings = {};
     for (let bKey in BUILDINGS_CONFIG) {
         const cfg = BUILDINGS_CONFIG[bKey];
-        // 初始 count = 0，调用 cost 函数得到初始价格
         const initialPrice = cfg.cost(GameState, 0);
         GameState.buildings[bKey] = {
             count: 0,
             active: 0,
             visible: false,
-            price: { ...initialPrice }   // 深拷贝价格对象
+            price: { ...initialPrice },
+            mode: (cfg.modes && cfg.modes.length > 0) ? 0 : undefined   // 新增
         };
     }
 

@@ -2,30 +2,43 @@
 
 const ProductionEngine = (function() {
 
-    function getBaseProduces(cfg, state) {
-        if (!cfg.produces) return {};
-        if (typeof cfg.produces === 'function') return cfg.produces(state);
-        return cfg.produces;
+    // production.js
+    function getBaseProduces(cfg, building, state) {
+        const modeCfg = getActiveModeConfig(cfg, building);
+        if (!modeCfg.produces) return {};
+        if (typeof modeCfg.produces === 'function') return modeCfg.produces(state);
+        return modeCfg.produces;
     }
 
-    function getBaseConsumes(cfg, state) {
-        if (!cfg.consumes) return {};
-        if (typeof cfg.consumes === 'function') return cfg.consumes(state);
-        return cfg.consumes;
+    function getBaseConsumes(cfg, building, state) {
+        const modeCfg = getActiveModeConfig(cfg, building);
+        if (!modeCfg.consumes) return {};
+        if (typeof modeCfg.consumes === 'function') return modeCfg.consumes(state);
+        return modeCfg.consumes;
     }
 
-    function getBaseCaps(cfg, state) {
-        if (!cfg.caps) return {};
-        if (typeof cfg.caps === 'function') return cfg.caps(state);
-        return cfg.caps;
+    function getBaseCaps(cfg, building, state) {
+        const modeCfg = getActiveModeConfig(cfg, building);
+        if (!modeCfg.caps) return {};
+        if (typeof modeCfg.caps === 'function') return modeCfg.caps(state);
+        return modeCfg.caps;
     }
 
-    function getBaseHappiness(cfg, state) {
-        if (cfg.happiness === undefined) return 0;
-        if (typeof cfg.happiness === 'function') return cfg.happiness(state);
-        return cfg.happiness;
+    function getBaseHappiness(cfg, building, state) {
+        const modeCfg = getActiveModeConfig(cfg, building);
+        if (modeCfg.happiness === undefined) return 0;
+        if (typeof modeCfg.happiness === 'function') return modeCfg.happiness(state);
+        return modeCfg.happiness;
     }
 
+    // 辅助函数：合并建筑配置与当前模式配置
+    function getActiveModeConfig(cfg, building) {
+        if (!cfg.modes || !building || building.mode === undefined) return cfg;
+        const mode = cfg.modes[building.mode];
+        if (!mode) return cfg;
+        // 合并模式配置到基础配置（模式字段优先级更高）
+        return { ...cfg, ...mode };
+    }
     function refreshEffects() {
         EffectsManager.refreshAllEffects(GameState);
     }
@@ -42,7 +55,7 @@ const ProductionEngine = (function() {
             if (bld.active === 0) continue;
             const cfg = BUILDINGS_CONFIG[bKey];
             if (!cfg) continue;
-            const baseHappy = getBaseHappiness(cfg, state);
+            const baseHappy = getBaseHappiness(cfg, bld,state);
             if (baseHappy !== 0) {
                 const contrib = baseHappy * bld.active;
                 totalHappiness += contrib;
@@ -95,20 +108,20 @@ const ProductionEngine = (function() {
                 if (perm.effect.sciCapPerRelicLog) sciCapPerRelicLog += perm.effect.sciCapPerRelicLog;
             }
 
-            const baseProd = getBaseProduces(cfg, state);
+            const baseProd = getBaseProduces(cfg, bld,state);
             for (let r in baseProd) {
                 const eventMult = EffectsManager.getResourceMultiplier(r);
                 const val = baseProd[r] * active * prodMult * happinessFactor * eventMult;
                 state.resources[r].production += val;
             }
 
-            const baseCons = getBaseConsumes(cfg, state);
+            const baseCons = getBaseConsumes(cfg, bld,state);
             for (let r in baseCons) {
                 const val = baseCons[r] * active * consMult;
                 state.resources[r].production -= val;
             }
 
-            const baseCap = getBaseCaps(cfg, state);
+            const baseCap = getBaseCaps(cfg, bld,state);
             for (let r in baseCap) {
                 let resourceCapMult = capMult;
                 if (r === '科学') {
@@ -140,10 +153,10 @@ const ProductionEngine = (function() {
         consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
         let capMult = EffectsManager.getBuildingCapMultiplier(buildingKey);
 
-        const baseProd = getBaseProduces(cfg, state);
-        const baseCons = getBaseConsumes(cfg, state);
-        const baseCap = getBaseCaps(cfg, state);
-        const baseHappiness = getBaseHappiness(cfg, state);
+        const baseProd = getBaseProduces(cfg, building,state);
+        const baseCons = getBaseConsumes(cfg, building,state);
+        const baseCap = getBaseCaps(cfg, building,state);
+        const baseHappiness = getBaseHappiness(cfg,building, state);
 
         const relic = state.resources["遗物"]?.amount || 0;
         let capPerRelic = 0, sciCapPerRelicLog = 0;

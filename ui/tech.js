@@ -1,4 +1,24 @@
-// ui/tech.js
+function getTechAffordabilityStatus(tech) {
+    const price = tech.price;
+    let hasUnlimitedCapIssue = false;
+    let canAffordNow = true;
+    for (let res in price) {
+        const amount = GameState.resources[res]?.amount || 0;
+        const cap = GameState.resources[res]?.cap || 0;
+        const needed = price[res];
+        if (amount < needed) {
+            canAffordNow = false;
+            if (cap !== Infinity && cap < needed) {
+                hasUnlimitedCapIssue = true;
+            }
+        }
+    }
+    if (canAffordNow) return 'affordable';
+    if (hasUnlimitedCapIssue) return 'cap-exceeded';
+    return 'insufficient';
+}
+
+// ========== 修改 renderTechPanel 函数中未研究科技的按钮生成部分 ==========
 function renderTechPanel() {
     const panel = document.getElementById('panel-tech');
     let html = '<div class="grid-list">';
@@ -15,11 +35,14 @@ function renderTechPanel() {
         if (!canResearch) continue;
         hasUnresearched = true;
         
-        // 检查是否买得起
-        const affordable = canAfford(tech.price);
-        const btnStyle = affordable ? '' : 'style="color: red;"';
+        // ===== 修改开始 =====
+        const status = getTechAffordabilityStatus(tech);
+        let colorClass = '';
+        if (status === 'insufficient') colorClass = 'insufficient-name';
+        else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
         
-        html += `<button class="card-btn tech-btn" data-tech="${t}" ${btnStyle}><b>${t}</b></button>`;
+        html += `<button class="card-btn tech-btn ${colorClass}" data-tech="${t}"><b>${t}</b></button>`;
+        // ===== 修改结束 =====
     }
     if (!hasUnresearched) html = '<p>暂无可用科技</p>';
     else html += '</div>';

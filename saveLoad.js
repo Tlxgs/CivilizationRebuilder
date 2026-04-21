@@ -76,7 +76,8 @@ function getSaveData() {
         saveData.buildings[b] = {
             count: bld.count,
             active: bld.active,
-            visible: bld.visible
+            visible: bld.visible,
+            mode: bld.mode      // 新增
         };
     }
 
@@ -160,7 +161,7 @@ function refreshGameStateFromSave(saveData) {
                 const saved = saveData.buildings[b];
                 if (saved.count !== undefined) GameState.buildings[b].count = saved.count;
                 if (saved.active !== undefined) GameState.buildings[b].active = saved.active;
-                // 注意：visible 不再从存档恢复，而是由条件重新计算
+                if (saved.mode !== undefined) GameState.buildings[b].mode = saved.mode;
             }
         }
     }

@@ -1,5 +1,4 @@
-// eventEffects.js (精简版)
-
+// eventEffects.js
 const EventEffectHandler = (function() {
 
     function resolveValue(value, state) {

@@ -555,8 +555,8 @@ p {
     top: 0;
     width: 0%;
     height: 100%;
-    background: #b8d9ff;      /* 淡蓝色进度条 */
-    border-radius: inherit;    /* 与父容器圆角一致 */
+    background: #b8d9ff; 
+    border-radius: inherit;
     z-index: 1;
     transition: width 0.1s ease;
 }
@@ -567,4 +567,91 @@ p {
     text-align: center;
     width: 100%;
     display: block;
+}
+/* 在 style.css 末尾或合适位置添加 */
+.building-card {
+    position: relative; /* 确保齿轮绝对定位相对于卡片 */
+}
+
+.mode-gear-btn {
+    position: absolute;
+    top: 4px;
+    left: 4px;
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: opacity 0.2s, background 0.2s;
+    z-index: 5;
+}
+.mode-gear-btn:hover {
+    opacity: 1;
+    background: rgba(0,0,0,0.05);
+}
+
+.mode-indicator {
+    font-size: 0.75rem;
+    color: #2a7faa;
+    margin-left: 4px;
+}
+/* 买不起时建筑名称变红 */
+.unaffordable-name {
+    color: #c52828 !important;
+}
+
+/* 建筑卡片交互 */
+.building-card {
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+}
+.building-card:active {
+    background: #eef3f8;
+}
+
+/* 在原有样式基础上添加/修改 */
+
+/* 买不起但上限够：灰色 */
+.insufficient-name {
+    color: #6c757d !important; /* 灰色 */
+}
+
+/* 上限不够：红色 */
+.unaffordable-name {
+    color: #c52828 !important;
+}
+
+/* 齿轮按钮位置调整（更靠左上角） */
+.mode-gear-btn {
+    position: absolute;
+    top: 0px;        /* 原来可能是4px，现在调为0或2px */
+    left: 0px;
+    background: transparent;
+    border: none;
+    font-size: 1rem;
+    cursor: pointer;
+    opacity: 0.6;
+    padding: 0;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: opacity 0.2s, background 0.2s;
+    z-index: 5;
+}
+
+/* 模式指示文字样式 */
+.mode-indicator {
+    font-size: 0.75rem;
+    color: #2a7faa;
+    margin-left: 4px;
 }

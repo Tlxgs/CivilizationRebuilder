@@ -34,57 +34,95 @@ function bindEvents() {
             renderAll();
         });
     });
-
     document.addEventListener('click', e => {
-        const btn = e.target.closest('button');
-        if (!btn) return;
-        
-        if (btn.dataset.action) {
-            Core.performAction(btn.dataset.action);
+        // 1. 优先处理模式切换齿轮按钮
+        const gearBtn = e.target.closest('.mode-gear-btn');
+        if (gearBtn) {
+            const buildingKey = gearBtn.dataset.building;
+            if (buildingKey) {
+                Core.switchBuildingMode(buildingKey);
+            }
             return;
         }
-        
-        if (btn.classList.contains('buy-btn')) {
-            const bKey = btn.dataset.building;
-            Core.buyBuilding(bKey, shiftPressed ? 10 : 1);
-        } else if (btn.classList.contains('plus-btn')) {
-            const bKey = btn.dataset.building;
-            const bd = GameState.buildings[bKey];
-            const max = shiftPressed ? 10 : 1;
-            const inc = Math.min(max, bd.count - bd.active);
-            if (inc > 0) { 
-                bd.active += inc; 
-                updateBuildingPrices();
-                updateUpgradePrices();
-                computeProductionAndCaps();
-                renderAll(); 
+
+        // 2. 处理所有按钮点击（包括 + / - 按钮）
+        const btn = e.target.closest('button');
+        if (btn) {
+            // 处理操作按钮
+            if (btn.dataset.action) {
+                Core.performAction(btn.dataset.action);
+                return;
             }
-        } else if (btn.classList.contains('minus-btn')) {
-            const bKey = btn.dataset.building;
-            const bd = GameState.buildings[bKey];
-            const max = shiftPressed ? 10 : 1;
-            const dec = Math.min(max, bd.active);
-            if (dec > 0) { 
-                bd.active -= dec; 
-                updateBuildingPrices();
-                updateUpgradePrices();
-                computeProductionAndCaps();
-                renderAll(); 
+            // 处理建筑加减按钮
+            if (btn.classList.contains('plus-btn')) {
+                const bKey = btn.dataset.building;
+                const bd = GameState.buildings[bKey];
+                const max = shiftPressed ? 10 : 1;
+                const inc = Math.min(max, bd.count - bd.active);
+                if (inc > 0) { 
+                    bd.active += inc; 
+                    updateBuildingPrices();
+                    updateUpgradePrices();
+                    computeProductionAndCaps();
+                    renderAll(); 
+                }
+                return;
             }
-        } else if (btn.classList.contains('tech-btn')) {
-            Core.researchTech(btn.dataset.tech);
-        } else if (btn.classList.contains('upgrade-btn')) {
-            Core.buyUpgrade(btn.dataset.upgrade);
-        } else if (btn.classList.contains('perm-btn')) {
-            Core.buyPermanent(btn.dataset.permanent);
-        } else if (btn.id === 'hard-reset') {
-            if (confirm("确定硬重置？所有数据将丢失！")) hardReset();
-        } else if (btn.id === 'manual-save') {
-            saveGame();
-        } else if (btn.id === 'export-save') {
-            exportGame();
-        } else if (btn.id === 'import-save') {
-            document.getElementById('import-modal').style.display = 'flex';
+            if (btn.classList.contains('minus-btn')) {
+                const bKey = btn.dataset.building;
+                const bd = GameState.buildings[bKey];
+                const max = shiftPressed ? 10 : 1;
+                const dec = Math.min(max, bd.active);
+                if (dec > 0) { 
+                    bd.active -= dec; 
+                    updateBuildingPrices();
+                    updateUpgradePrices();
+                    computeProductionAndCaps();
+                    renderAll(); 
+                }
+                return;
+            }
+            // 其他按钮（如科技、升级等）通过 data-* 属性处理
+            if (btn.classList.contains('tech-btn')) {
+                Core.researchTech(btn.dataset.tech);
+                return;
+            }
+            if (btn.classList.contains('upgrade-btn')) {
+                Core.buyUpgrade(btn.dataset.upgrade);
+                return;
+            }
+            if (btn.classList.contains('perm-btn')) {
+                Core.buyPermanent(btn.dataset.permanent);
+                return;
+            }
+            // 重置面板中的按钮通过 id 处理
+            if (btn.id === 'hard-reset') {
+                if (confirm("确定硬重置？所有数据将丢失！")) hardReset();
+                return;
+            }
+            if (btn.id === 'manual-save') {
+                saveGame();
+                return;
+            }
+            if (btn.id === 'export-save') {
+                exportGame();
+                return;
+            }
+            if (btn.id === 'import-save') {
+                document.getElementById('import-modal').style.display = 'flex';
+                return;
+            }
+            return;
+        }
+
+        const card = e.target.closest('.building-card');
+        if (card) {
+            const buildingKey = card.dataset.building;
+            if (buildingKey) {
+                const quantity = shiftPressed ? 10 : 1;
+                Core.buyBuilding(buildingKey, quantity);
+            }
+            return;
         }
     });
     // 政策 radio 切换

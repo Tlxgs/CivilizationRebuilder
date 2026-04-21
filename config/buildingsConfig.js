@@ -11,9 +11,7 @@ function standardCost(baseCostMap, growthRate, count, costMultiplier = 1.0) {
     return price;
 }
 
-// 获取全局成本倍率（来自永恒升级等）
 function getGlobalCostMultiplier(state) {
-    // 从 EffectsManager 获取，若未加载则返回 1
     return 1 + (window.EffectsManager?.getAdditiveValue?.('global.cost') || 0);
 }
 
@@ -285,8 +283,24 @@ BUILDINGS_CONFIG = {
         type: "电力",
         unlockCondition: { tech: "核裂变" },
         cost: (state, count) => standardCost({金属板: 100, 铀: 30}, 1.15, count, getGlobalCostMultiplier(state)),
-        produces: {电力: 1.0}, consumes: {核燃料: 0.04}, caps: {铀: 50},
-        desc: "核能发电"
+        caps: {铀: 50},
+        desc: "核能发电，可切换燃料模式",
+        modes: [
+            {
+                id: "nuclear_fuel",
+                name: "核燃料模式",
+                produces: {电力: 1.0},
+                consumes: {核燃料: 0.04},
+                desc: "使用核燃料，高效发电"
+            },
+            {
+                id: "uranium_fuel",
+                name: "铀燃料模式",
+                produces: {电力: 0.5},
+                consumes: {铀: 0.2},
+                desc: "直接使用铀，效率较低但省去核燃料加工"
+            }
+        ]
     },
     "粒子加速器": {
         type: "科学",

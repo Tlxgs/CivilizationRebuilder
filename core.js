@@ -1,5 +1,17 @@
 // core.js
 class GameEngine {
+    switchBuildingMode(buildingKey) {
+        const bld = GameState.buildings[buildingKey];
+        const cfg = BUILDINGS_CONFIG[buildingKey];
+        if (!cfg.modes || cfg.modes.length <= 1) return false;
+        bld.mode = ((bld.mode || 0) + 1) % cfg.modes.length;
+        ProductionEngine.computeProductionAndCaps();
+        updateBuildingPrices();
+        updateUpgradePrices();
+        renderAll();
+        addEventLog(`${buildingKey} 切换至 ${cfg.modes[bld.mode].name}`);
+        return true;
+    }
     buyBuilding(key, quantity = 1) {
         const b = GameState.buildings[key];
         if (!b) return false;

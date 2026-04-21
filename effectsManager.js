@@ -1,5 +1,4 @@
 // effectsManager.js
-// 统一效果管理器，取代原有的 ModifierSystem 及分散效果逻辑
 
 const EffectsManager = (function() {
     const effects = {};

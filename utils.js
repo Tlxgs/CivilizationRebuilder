@@ -27,15 +27,9 @@ function consumeResources(costMap) {
 // 检查解锁条件（支持多种类型条件）
 function checkUnlockCondition(condition, state) {
     if (!condition) return true;  // 无条件则默认可见
-    
-    // 科技条件
     if (condition.tech) {
         return state.techs[condition.tech]?.researched || false;
     }
-    // 可扩展：资源条件、建筑条件等
-    // if (condition.resource) { ... }
-    // if (condition.building) { ... }
-    
     return false;
 }
 
@@ -66,12 +60,9 @@ function refreshAllVisibility() {
     }
 }
 
-// 研究科技后调用此函数（替代原来的 applyTechUnlocks）
 function onTechResearched(tech) {
     // 科技研究完成后，只需刷新可见性即可
     refreshAllVisibility();
-    
-    // 如果有需要特殊处理的科技效果，可在此添加
 }
 
 
