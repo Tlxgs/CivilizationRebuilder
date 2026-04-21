@@ -289,15 +289,15 @@ BUILDINGS_CONFIG = {
             {
                 id: "nuclear_fuel",
                 name: "核燃料模式",
-                produces: {电力: 1.0},
-                consumes: {核燃料: 0.04},
+                produces: {电力: 0.4},
+                consumes: {核燃料: 0.01},
                 desc: "使用核燃料，高效发电"
             },
             {
                 id: "uranium_fuel",
                 name: "铀燃料模式",
                 produces: {电力: 0.5},
-                consumes: {铀: 0.2},
+                consumes: {铀: 0.3},
                 desc: "直接使用铀，效率较低但省去核燃料加工"
             }
         ]
