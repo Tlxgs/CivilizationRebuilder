@@ -34,7 +34,6 @@ const ProductionEngine = (function() {
         const state = GameState;
         refreshEffects();
 
-        // 1. 计算幸福度
         let totalHappiness = 100;
         const happinessContributions = [];
 
@@ -62,13 +61,11 @@ const ProductionEngine = (function() {
 
         const happinessFactor = state.happiness / 100;
 
-        // 2. 重置资源产量和上限
         for (let r in state.resources) {
             state.resources[r].production = 0;
             state.resources[r].cap = state.resources[r].baseCap;
         }
 
-        // 3. 遍历所有激活建筑
         for (let bKey in state.buildings) {
             const bld = state.buildings[bKey];
             if (bld.active === 0) continue;
@@ -80,9 +77,8 @@ const ProductionEngine = (function() {
 
             let prodMult = EffectsManager.getBuildingProdMultiplier(bKey);
             let consMult = EffectsManager.getBuildingConsMultiplier(bKey);
-            let capMult = EffectsManager.getBuildingCapMultiplier(bKey); // 建筑通用上限倍率
+            let capMult = EffectsManager.getBuildingCapMultiplier(bKey);
 
-            // 全局倍率
             prodMult *= (1 + EffectsManager.getAdditiveValue('global.prod'));
             prodMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
             consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
@@ -90,7 +86,6 @@ const ProductionEngine = (function() {
                 prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
             }
 
-            // 动态遗物对上限的影响（基于资源）
             const relic = state.resources["遗物"]?.amount || 0;
             let capPerRelic = 0, sciCapPerRelicLog = 0;
             for (let permId in state.permanent) {
@@ -100,7 +95,6 @@ const ProductionEngine = (function() {
                 if (perm.effect.sciCapPerRelicLog) sciCapPerRelicLog += perm.effect.sciCapPerRelicLog;
             }
 
-            // 产量
             const baseProd = getBaseProduces(cfg, state);
             for (let r in baseProd) {
                 const eventMult = EffectsManager.getResourceMultiplier(r);
@@ -108,18 +102,15 @@ const ProductionEngine = (function() {
                 state.resources[r].production += val;
             }
 
-            // 消耗
             const baseCons = getBaseConsumes(cfg, state);
             for (let r in baseCons) {
                 const val = baseCons[r] * active * consMult;
                 state.resources[r].production -= val;
             }
 
-            // 上限
             const baseCap = getBaseCaps(cfg, state);
             for (let r in baseCap) {
-                let resourceCapMult = capMult; // 基础建筑上限倍率
-                // 额外应用遗物动态倍率
+                let resourceCapMult = capMult;
                 if (r === '科学') {
                     resourceCapMult *= (1 + Math.log(1 + relic) * sciCapPerRelicLog);
                 } else {
@@ -191,25 +182,23 @@ const ProductionEngine = (function() {
             happinessTotal: baseHappiness * building.active
         };
     }
-
     function updateBuildingPrices() {
-        const costMult = 1 + EffectsManager.getAdditiveValue('global.cost');
         for (let b in GameState.buildings) {
             const bld = GameState.buildings[b];
             const cfg = BUILDINGS_CONFIG[b];
             if (!cfg) continue;
-            bld.price = Formulas.calcBuildingPrice(cfg.basePrice, cfg.costGrowth, bld.count, costMult);
+            bld.price = cfg.cost(GameState, bld.count);
         }
     }
 
     function updateUpgradePrices() {
-        const costMult = 1 + EffectsManager.getAdditiveValue('global.cost');
         for (let u in GameState.upgrades) {
             const up = GameState.upgrades[u];
-            up.price = Formulas.calcUpgradePrice(up.basePrice, up.growth, up.level, costMult);
+            const cfg = UPGRADES_CONFIG[u];
+            if (!cfg) continue;
+            up.price = cfg.cost(GameState, up.level);
         }
     }
-
     function getResourceContributions(resourceName) {
         const contributions = [];
         refreshEffects();

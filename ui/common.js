@@ -35,7 +35,6 @@ function bindEvents() {
         });
     });
 
-    // 全局点击事件（委托）
     document.addEventListener('click', e => {
         const btn = e.target.closest('button');
         if (!btn) return;
@@ -53,13 +52,25 @@ function bindEvents() {
             const bd = GameState.buildings[bKey];
             const max = shiftPressed ? 10 : 1;
             const inc = Math.min(max, bd.count - bd.active);
-            if (inc > 0) { bd.active += inc; renderAll(); }
+            if (inc > 0) { 
+                bd.active += inc; 
+                updateBuildingPrices();
+                updateUpgradePrices();
+                computeProductionAndCaps();
+                renderAll(); 
+            }
         } else if (btn.classList.contains('minus-btn')) {
             const bKey = btn.dataset.building;
             const bd = GameState.buildings[bKey];
             const max = shiftPressed ? 10 : 1;
             const dec = Math.min(max, bd.active);
-            if (dec > 0) { bd.active -= dec; renderAll(); }
+            if (dec > 0) { 
+                bd.active -= dec; 
+                updateBuildingPrices();
+                updateUpgradePrices();
+                computeProductionAndCaps();
+                renderAll(); 
+            }
         } else if (btn.classList.contains('tech-btn')) {
             Core.researchTech(btn.dataset.tech);
         } else if (btn.classList.contains('upgrade-btn')) {
@@ -76,7 +87,6 @@ function bindEvents() {
             document.getElementById('import-modal').style.display = 'flex';
         }
     });
-
     // 政策 radio 切换
     document.addEventListener('change', e => {
         if (e.target.type === 'radio') {

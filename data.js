@@ -36,11 +36,13 @@ function initGameData() {
     GameState.buildings = {};
     for (let bKey in BUILDINGS_CONFIG) {
         const cfg = BUILDINGS_CONFIG[bKey];
+        // 初始 count = 0，调用 cost 函数得到初始价格
+        const initialPrice = cfg.cost(GameState, 0);
         GameState.buildings[bKey] = {
             count: 0,
             active: 0,
             visible: false,
-            price: { ...cfg.basePrice }
+            price: { ...initialPrice }   // 深拷贝价格对象
         };
     }
 
@@ -56,28 +58,26 @@ function initGameData() {
             researched: config.researched || false
         };
     }
-
     // 初始化升级（从配置读取）
     GameState.upgrades = {};
     for (let uKey in UPGRADES_CONFIG) {
         const cfg = UPGRADES_CONFIG[uKey];
+        const initialPrice = cfg.cost(GameState, 0);
         GameState.upgrades[uKey] = {
             unlockCondition: cfg.unlockCondition ? { ...cfg.unlockCondition } : null,
-            basePrice: { ...cfg.basePrice },
-            price: { ...cfg.basePrice },
-            growth: cfg.growth,
+            price: { ...initialPrice },        // 深拷贝价格
             effect: cfg.effect ? { ...cfg.effect } : null,
             level: cfg.level || 0,
             visible: false,
-            desc: cfg.desc
+            desc: cfg.desc,
+            costFunc: cfg.cost
         };
     }
 
-    // 初始化政策（从配置读取）
+    // 初始化政策
     GameState.policies = {};
     for (let pKey in POLICIES_CONFIG) {
         const cfg = POLICIES_CONFIG[pKey];
-        // 深拷贝 options
         const optionsCopy = {};
         for (let optKey in cfg.options) {
             optionsCopy[optKey] = {
@@ -95,7 +95,7 @@ function initGameData() {
         };
     }
 
-    // 初始化永恒升级（从配置读取）
+    // 初始化永恒升级
     GameState.permanent = {};
     for (let permKey in PERMANENT_CONFIG) {
         const cfg = PERMANENT_CONFIG[permKey];
@@ -108,10 +108,8 @@ function initGameData() {
         };
     }
 
-    // 刷新可见性
     refreshAllVisibility();
 
-    // 辅助字段
     for (let b in GameState.buildings) {
         let bd = GameState.buildings[b];
         bd.count = bd.count || 0;

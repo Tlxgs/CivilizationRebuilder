@@ -1,39 +1,5 @@
 // formulas.js - 所有游戏计算公式的集中定义
 const Formulas = (function() {
-    // ========== 建筑与升级价格 ==========
-    /**
-     * 计算建筑购买价格
-     * @param {Object} basePrice - 基础价格对象 {资源: 数量}
-     * @param {number} baseGrowth - 基础增长率（如 1.15）
-     * @param {number} count - 当前建筑数量
-     * @param {number} costMultiplier - 成本乘数（来自永恒升级，默认1）
-     * @returns {Object} 实际价格对象
-     */
-    function calcBuildingPrice(basePrice, baseGrowth, count, costMultiplier = 1.0) {
-        const effectiveGrowth = 1 + (baseGrowth - 1) * costMultiplier;
-        const price = {};
-        for (let r in basePrice) {
-            price[r] = Math.floor(basePrice[r] * Math.pow(effectiveGrowth, count));
-        }
-        return price;
-    }
-
-    /**
-     * 计算升级价格
-     * @param {Object} basePrice - 基础价格
-     * @param {number} baseGrowth - 基础增长率
-     * @param {number} level - 当前等级
-     * @param {number} costMultiplier - 成本乘数
-     * @returns {Object} 实际价格
-     */
-    function calcUpgradePrice(basePrice, baseGrowth, level, costMultiplier = 1.0) {
-        const effectiveGrowth = 1 + (baseGrowth - 1) * costMultiplier;
-        const price = {};
-        for (let r in basePrice) {
-            price[r] = Math.floor(basePrice[r] * Math.pow(effectiveGrowth, level));
-        }
-        return price;
-    }
 
     // ========== 重置收益 ==========
     /**
@@ -166,9 +132,6 @@ const Formulas = (function() {
 
     // 公开 API
     return {
-        // 价格
-        calcBuildingPrice,
-        calcUpgradePrice,
         // 重置收益
         calcRelicGainFromNuke,
         calcRelicGainFromVacuum,

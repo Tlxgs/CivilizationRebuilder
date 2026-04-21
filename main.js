@@ -15,7 +15,7 @@ window.addEventListener('beforeunload', () => {
     GameLoop.stop();
 });
 
-const CHEAT_SEQUENCE = ['t', 'l', 'x', 'g', 's','b','e','s','t'];
+const CHEAT_SEQUENCE = ['t', 'l', 'x', 'g', 's'];
 let sequenceIndex = 0;
 
 window.addEventListener('keydown', (e) => {

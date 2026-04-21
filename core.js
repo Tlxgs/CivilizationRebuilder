@@ -11,7 +11,8 @@ class GameEngine {
             successCount++;
         }
         if (successCount > 0) {
-            updateBuildingPrices();
+            updateBuildingPrices();   // 重新计算建筑价格
+            updateUpgradePrices();    // 升级价格可能受建筑数量影响（如月球工厂）
             computeProductionAndCaps();
             renderAll();
         }
@@ -24,9 +25,7 @@ class GameEngine {
         if (!consumeResources(t.price)) return false;
         t.researched = true;
         
-        // 刷新所有可见性
         refreshAllVisibility();
-        
         updateBuildingPrices();
         updateUpgradePrices();
         computeProductionAndCaps();
@@ -39,7 +38,7 @@ class GameEngine {
         if (!up.visible) return false;
         if (!consumeResources(up.price)) return false;
         up.level++;
-        updateUpgradePrices();
+        updateUpgradePrices();   // 自身价格已更新
         computeProductionAndCaps();
         renderAll();
         return true;
