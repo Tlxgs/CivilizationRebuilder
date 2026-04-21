@@ -66,6 +66,7 @@ class GameEngine {
         }
         if (!consumeResources(p.price)) return false;
         p.researched = true;
+        ProductionEngine.refreshEffects()
         updateBuildingPrices();
         updateUpgradePrices();
         computeProductionAndCaps();

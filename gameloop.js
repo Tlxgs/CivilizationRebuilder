@@ -148,7 +148,8 @@ const GameLoop = (function() {
         return true;
     }
 
-    // 主循环
+    const MAX_DELTA_SEC = 1.0; 
+
     function loop(now) {
         animationFrame = requestAnimationFrame(loop);
 
@@ -158,6 +159,10 @@ const GameLoop = (function() {
         }
 
         let deltaSec = (now - lastTimestamp) / 1000;
+        if (deltaSec > MAX_DELTA_SEC) {
+            deltaSec = MAX_DELTA_SEC;
+        }
+
         if (deltaSec >= TICK_INTERVAL) {
             const ticks = Math.floor(deltaSec / TICK_INTERVAL);
             for (let i = 0; i < ticks; i++) {
@@ -170,7 +175,6 @@ const GameLoop = (function() {
             }
             lastTimestamp = now - ((deltaSec % TICK_INTERVAL) * 1000);
             
-            // 更新 UI（资源栏）
             if (typeof renderResources === 'function') renderResources();
             if (typeof updateBuyButtonsColor === 'function') updateBuyButtonsColor();
         }

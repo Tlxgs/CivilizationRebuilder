@@ -235,7 +235,7 @@ function refreshGameStateFromSave(saveData) {
         }
     }
 
-    // 11. 重新计算价格、生产、上限，并刷新界面
+    ProductionEngine.refreshEffects();
     updateBuildingPrices();
     updateUpgradePrices();
     computeProductionAndCaps();
