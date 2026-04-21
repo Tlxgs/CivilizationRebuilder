@@ -1,6 +1,9 @@
 const ChangelogData = {
     version: "v0.2",
     logs: [
+        { version: "v0.2.3", date: "2026-04-21", changes: [
+            "增加了一些花哨且无用的新科技和新建筑",
+        ]},
         { version: "v0.2.2", date: "2026-04-19", changes: [
             "增加了幸福度详情显示",
             "平衡性调整，游戏整体进度更快了",

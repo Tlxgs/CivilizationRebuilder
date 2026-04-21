@@ -181,6 +181,14 @@ BUILDINGS_CONFIG = {
         caps: {金属板: 50},
         desc: "生产金属板"
     },
+    "金属回收厂": {
+        type: "工厂",
+        unlockCondition: { tech: "金属回收" },
+        happiness:-0.2,
+        basePrice: {建材: 50,金属板: 100},costGrowth: 1.10,
+        produces: {钢: 0.2,铁:0.5,铜:1,铝:0.2}, consumes: {电力: 0.3, 金属板: 0.2},
+        desc: "将金属板重新回收成金属(铁元素是哪里来的？没有人知道)"
+    },
     "塑料厂": {
         type: "工厂",
         unlockCondition: { tech: "石油加工" },
@@ -381,7 +389,7 @@ BUILDINGS_CONFIG = {
             const darkEnergy = state.resources["暗能量"]?.amount || 0;
             return 0.2 * Math.log(Math.pow(2.718, 5) + darkEnergy);
         },
-        desc: "使用暗能量表演魔术，提高幸福度。"
+        desc: "使用暗能量表演魔术，提高幸福度。提高的量与当前拥有的暗能量相关。"
     },
     "戴森球": {
         type: "太空",
