@@ -15,6 +15,40 @@ function getGlobalCostMultiplier(state) {
 }
 
 BUILDINGS_CONFIG = {
+    "帐篷": {
+        type: "住房",
+        unlockCondition: { tech: "搭建帐篷" },  // 可调整前置
+        cost: (state, count) => standardCost({木头: 5}, 1.1, count, getGlobalCostMultiplier(state)),
+        produces: {},
+        consumes: {},
+        caps: {},
+        populationProvided: 2,
+        populationRequired: 0,
+        desc: "简陋的帐篷，提供少量居住空间"
+    },
+    "小屋": {
+        type: "住房",
+        unlockCondition: { tech: "初级建筑学" },
+        cost: (state, count) => standardCost({ 石头: 100,建材:10}, 1.15, count, getGlobalCostMultiplier(state)),
+        produces: {},
+        consumes: {},
+        caps: {},
+        populationProvided: 5,
+        populationRequired: 0,
+        desc: "舒适的小屋，提供较多人口容量"
+    },
+    "公寓楼": {
+        type: "住房",
+        unlockCondition: { tech: "大宗存储技术" },
+        cost: (state, count) => standardCost({金属板: 200, 钢: 150}, 1.05, count, getGlobalCostMultiplier(state)),
+        produces: {},
+        consumes: {电力: 0.1},
+        caps: {},
+        happiness:0.1,
+        populationProvided: 2,
+        populationRequired: 0,
+        desc: "高层公寓，非常豪华，消耗电力，但是...只能住2个人?"
+    },
     "伐木场": {
         type: "生产",
         unlockCondition: { tech: "伐木技术" },
@@ -34,13 +68,14 @@ BUILDINGS_CONFIG = {
         unlockCondition: { tech: "基础储存技术" },
         cost: (state, count) => standardCost({木头: 50, 石头: 50}, 1.15, count, getGlobalCostMultiplier(state)),
         produces: {}, consumes: {}, caps: {木头: 100, 石头: 100},
+        populationRequired:0,
         desc: "提高木头和石头的储存上限"
     },
     "集装箱": {
         type: "存储",
         unlockCondition: { tech: "进阶存储技术" },
         cost: (state, count) => standardCost({铁: 40, 铜: 20}, 1.2, count, getGlobalCostMultiplier(state)),
-        produces: {}, consumes: {},
+        produces: {}, consumes: {},populationRequired:0,
         caps: {木头:500, 石头:500, 煤:200, 铜:200, 铁:200, 钢:200, 铝:200},
         desc: "储存更多资源"
     },
@@ -48,7 +83,7 @@ BUILDINGS_CONFIG = {
         type: "存储",
         unlockCondition: { tech: "大宗存储技术" },
         cost: (state, count) => standardCost({金属板: 80, 钢: 80}, 1.2, count, getGlobalCostMultiplier(state)),
-        produces: {}, consumes: {电力: 0.2},
+        produces: {}, consumes: {电力: 0.2},populationRequired:0,
         caps: {木头:5000, 石头:5000, 煤:1000, 铜:1000, 铁:1000, 钢:500, 铝:400, 金:400, 建材:400, 塑料:400, 金属板:400},
         desc: "消耗电力，大幅提升多种资源上限"
     },
@@ -268,7 +303,7 @@ BUILDINGS_CONFIG = {
         type: "电力",
         unlockCondition: { tech: "储能技术" },
         cost: (state, count) => standardCost({铜: 300, 铁: 300}, 1.3, count, getGlobalCostMultiplier(state)),
-        caps: {电力: 50},
+        caps: {电力: 50},populationRequired:0,
         desc: "储存电力"
     },
     "铀矿": {

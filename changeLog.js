@@ -1,6 +1,9 @@
 const ChangelogData = {
     version: "v0.2",
     logs: [
+        { version: "v0.3.0", date: "2026-04-22", changes: [
+            "增加了人口机制！幸运的是人们不需要消耗任何食物，至少目前如此。",
+        ]},
         { version: "v0.2.4", date: "2026-04-22", changes: [
             "修改了UI风格，改动了一些建筑效果",
             "平衡性调整，建筑变得更强但是更贵"

@@ -13,6 +13,7 @@ function renderAll() {
     renderChangelogPanel();
     renderLogPanel();
     renderCrystalPanel();
+    renderPopulationInfo(); 
     updateTabsVisibility();
 }
 function renderHappiness() {

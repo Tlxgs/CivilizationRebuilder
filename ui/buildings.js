@@ -18,8 +18,19 @@ function getBuildingTooltip(buildingKey) {
 
     // 当前效果（每座）
     const stats = ProductionEngine.getBuildingStats(buildingKey);
+    html += `<strong>当前效果 (每座):<br></strong>`;
+    if (cfg.populationProvided !== undefined && cfg.populationProvided !== 0) {
+    html += `提供人口: +${cfg.populationProvided}<br>`;
+    }
+    if (cfg.populationRequired !== undefined && cfg.populationRequired !== 0) {
+        html += `占用人口: ${cfg.populationRequired}<br>`;
+    }
+    if (cfg.populationRequired == undefined){
+        html += `占用人口: ${1}<br>`;
+    }
     if (stats) {
-        html += `<strong>当前效果 (每座):</strong><br>`;
+        
+        
         for (let det of stats.details) {
             if (det.type === 'prod') {
                 html += `${det.resource}: +${formatNumber(det.perBuilding)}/秒<br>`;
@@ -81,6 +92,7 @@ function renderBuildingPanel() {
     const panel = document.getElementById('panel-building');
     
     const categories = [
+        { key: "住房", label: "住房建筑" },
         { key: "生产", label: "生产建筑" },
         { key: "工厂", label: "工厂建筑" },
         { key: "电力", label: "电力建筑" },

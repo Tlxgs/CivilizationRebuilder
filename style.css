@@ -655,3 +655,12 @@ p {
     color: #2a7faa;
     margin-left: 4px;
 }
+.population-info {
+    background: #f8fafc;
+    border-radius: 1rem;
+    padding: 0.2rem;
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 0.2rem;
+    border: 1px solid #dee2e6;
+}

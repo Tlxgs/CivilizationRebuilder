@@ -36,7 +36,8 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
 function nukeReset() {
     const relicGain = Formulas.calcRelicGainFromNuke(
         GameState.resources["科学"].cap,
-        GameState.buildings["粒子加速器"]?.count || 0
+        GameState.buildings["粒子加速器"]?.count || 0,
+        GameState.population.capacity 
     );
     if (confirm(`发射核弹！\n将执行软重置，并获得 ${relicGain} 遗物。\n确定吗？`)) {
         softReset(relicGain, 0);
@@ -47,7 +48,8 @@ function nukeReset() {
 function vacuumDecayReset() {
     const extraRelic = Formulas.calcRelicGainFromVacuum(
         GameState.resources["科学"].cap,
-        GameState.buildings["粒子加速器"]?.count || 0
+        GameState.buildings["粒子加速器"]?.count || 0,
+        GameState.population.capacity 
     );
     const darkMatterCount = GameState.buildings["暗物质研究所"]?.count || 0;
     if (confirm(`执行真空衰变！\n获得遗物：${extraRelic}\n获得暗能量：${darkMatterCount}\n确定吗？`)) {

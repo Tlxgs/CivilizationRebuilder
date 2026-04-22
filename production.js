@@ -73,6 +73,79 @@ const ProductionEngine = (function() {
         state.happinessContributions = happinessContributions;
 
         const happinessFactor = state.happiness / 100;
+        let totalCapacity = 0;
+        let totalRequired = 0;
+
+        // 累加所有激活建筑的人口贡献和占用
+        for (let bKey in state.buildings) {
+            const bld = state.buildings[bKey];
+            if (bld.active === 0) continue;
+            totalCapacity += (bld.populationProvided || 0) * bld.active;
+            totalRequired += (bld.populationRequired || 0) * bld.active;
+        }
+
+        state.population.capacity = totalCapacity;
+        state.population.used = totalRequired;
+
+        // 如果占用超过容量，顺序关闭建筑直到满足
+        if (totalRequired > totalCapacity) {
+            // 收集所有需要人口的建筑（populationRequired > 0 且 active > 0）
+            const getActiveBuildings = () => {
+                const list = [];
+                for (let bKey in state.buildings) {
+                    const bld = state.buildings[bKey];
+                    if (bld.active > 0 && (bld.populationRequired || 0) > 0) {
+                        list.push({ key: bKey, bld, req: bld.populationRequired });
+                    }
+                }
+                // 按建筑名称排序，保证关闭顺序确定性（可改为按优先级排序）
+                list.sort((a, b) => a.key.localeCompare(b.key));
+                return list;
+            };
+
+            let closedLog = []; // 记录关闭日志（合并输出）
+            let iterations = 0;
+            const maxIterations = 1000; // 防止无限循环
+
+            while (totalRequired > totalCapacity && iterations < maxIterations) {
+                const buildings = getActiveBuildings();
+                if (buildings.length === 0) break; // 没有可关闭的建筑了（理论上不会）
+
+                // 选择第一个建筑关闭1个单位
+                const target = buildings[0];
+                const closeCount = 1; // 每次关闭1个
+                const reqPer = target.req;
+                target.bld.active -= closeCount;
+                totalRequired -= reqPer * closeCount;
+                closedLog.push(`${target.key} -1`);
+                iterations++;
+            }
+
+            if (closedLog.length > 0) {
+                // 合并日志，避免刷屏
+                const unique = {};
+                for (let log of closedLog) {
+                    const [name, delta] = log.split(' ');
+                    unique[name] = (unique[name] || 0) + parseInt(delta);
+                }
+                const parts = [];
+                for (let name in unique) {
+                    parts.push(`${name} ${unique[name]}`);
+                }
+            }
+
+            // 重新计算最终的人口数据（确保一致）
+            totalRequired = 0;
+            totalCapacity = 0;
+            for (let bKey in state.buildings) {
+                const bld = state.buildings[bKey];
+                if (bld.active === 0) continue;
+                totalCapacity += (bld.populationProvided || 0) * bld.active;
+                totalRequired += (bld.populationRequired || 0) * bld.active;
+            }
+            state.population.capacity = totalCapacity;
+            state.population.used = totalRequired;
+        }
 
         for (let r in state.resources) {
             state.resources[r].production = 0;

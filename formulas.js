@@ -6,22 +6,27 @@ const Formulas = (function() {
      * 计算核弹重置获得的遗物数量
      * @param {number} scienceCap - 当前科学上限
      * @param {number} acceleratorCount - 粒子加速器数量（包括未激活）
+     * @param {number} populationCap - 当前人口容量（新增）
      * @returns {number}
      */
-    function calcRelicGainFromNuke(scienceCap, acceleratorCount = 0) {
+    function calcRelicGainFromNuke(scienceCap, acceleratorCount = 0, populationCap = 0) {
         if (scienceCap <= 0) return 0;
         const baseGain = Math.floor(Math.pow(Math.log(scienceCap + 1), 2));
         const multiplier = 1 + acceleratorCount * 0.02;
-        return Math.floor(baseGain * multiplier);
+        // 新增：人口上限贡献，每10人口增加1遗物（向下取整）
+        const populationBonus = Math.floor(populationCap / 10);
+        return Math.floor(baseGain * multiplier) + populationBonus;
     }
 
     /**
      * 计算真空衰变获得的额外遗物（核弹的两倍）
+     * @param {number} scienceCap - 当前科学上限
+     * @param {number} acceleratorCount - 粒子加速器数量
+     * @param {number} populationCap - 当前人口容量
      */
-    function calcRelicGainFromVacuum(scienceCap, acceleratorCount = 0) {
-        return calcRelicGainFromNuke(scienceCap, acceleratorCount) * 2;
+    function calcRelicGainFromVacuum(scienceCap, acceleratorCount = 0, populationCap = 0) {
+        return calcRelicGainFromNuke(scienceCap, acceleratorCount, populationCap) * 2;
     }
-
     // ========== 幸福度相关 ==========
 
     /**
