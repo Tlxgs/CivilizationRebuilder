@@ -454,7 +454,7 @@ BUILDINGS_CONFIG = {
         type: "军事",
         unlockCondition: { tech: "军事理论" },
         cost: (state, count) => standardCost({铁: 1000, 铜: 800}, 1.3, count, getGlobalCostMultiplier(state)),
-        produces: {军备: 0.2}, consumes: {铁: 0.5, 铜: 0.3, 政策点:0.1}, caps: {军备:10},
+        produces: {军备: 0.2}, consumes: {铁: 0.5, 铜: 0.3, 政策点:0.1}, caps: {军备:20},
         desc: "训练士兵，生产军备。"
     },
     "军工厂": {

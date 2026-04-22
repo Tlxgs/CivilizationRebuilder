@@ -175,8 +175,9 @@ const GameLoop = (function() {
             }
             lastTimestamp = now - ((deltaSec % TICK_INTERVAL) * 1000);
             
-            if (typeof renderResources === 'function') renderResources();
-            if (typeof updateBuyButtonsColor === 'function') updateBuyButtonsColor();
+            if (typeof refreshAllDynamicColors === 'function') {
+                refreshAllDynamicColors();
+            }
         }
     }
 

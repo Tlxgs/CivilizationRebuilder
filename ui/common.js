@@ -150,7 +150,106 @@ function bindEvents() {
         renderAll();
     });
 }
+// 全局刷新动态颜色（每 tick 调用）
+function refreshAllDynamicColors() {
+    // 1. 刷新建筑卡片上的名称颜色
+    document.querySelectorAll('.building-card').forEach(card => {
+        const buildingKey = card.dataset.building;
+        if (!buildingKey) return;
+        const bld = GameState.buildings[buildingKey];
+        if (!bld) return;
+        const price = bld.price;
+        const status = getBuildingAffordabilityStatus(price);
+        const nameStrong = card.querySelector('.building-card-info strong');
+        if (nameStrong) {
+            nameStrong.classList.remove('insufficient-name', 'unaffordable-name');
+            if (status === 'insufficient') nameStrong.classList.add('insufficient-name');
+            else if (status === 'cap-exceeded') nameStrong.classList.add('unaffordable-name');
+        }
+    });
 
+    // 2. 刷新科技按钮
+    document.querySelectorAll('.tech-btn:not(.researched-item)').forEach(btn => {
+        const techKey = btn.dataset.tech;
+        if (!techKey) return;
+        const tech = GameState.techs[techKey];
+        if (!tech || tech.researched) return;
+        const status = getTechAffordabilityStatus(tech);
+        btn.classList.remove('insufficient-name', 'unaffordable-name');
+        if (status === 'insufficient') btn.classList.add('insufficient-name');
+        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
+    });
+
+    // 3. 刷新升级按钮
+    document.querySelectorAll('.upgrade-btn').forEach(btn => {
+        const upKey = btn.dataset.upgrade;
+        if (!upKey) return;
+        const up = GameState.upgrades[upKey];
+        if (!up) return;
+        const status = getUpgradeAffordabilityStatus(up);
+        btn.classList.remove('insufficient-name', 'unaffordable-name');
+        if (status === 'insufficient') btn.classList.add('insufficient-name');
+        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
+    });
+
+    // 4. 刷新永恒升级按钮
+    document.querySelectorAll('.perm-btn').forEach(btn => {
+        const permKey = btn.dataset.permanent;
+        if (!permKey) return;
+        const perm = GameState.permanent[permKey];
+        if (!perm || perm.researched) return;
+        const status = getPermanentAffordabilityStatus(perm);
+        btn.classList.remove('insufficient-name', 'unaffordable-name');
+        if (status === 'insufficient') btn.classList.add('insufficient-name');
+        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
+    });
+
+    // 5. 刷新资源数值和进度条（轻量）
+    refreshResourceBars();
+}
+
+// 辅助：判断建筑价格是否买得起（基于价格对象）
+function getBuildingAffordabilityStatus(price) {
+    let capExceeded = false;
+    let canAfford = true;
+    for (let res in price) {
+        const amount = GameState.resources[res]?.amount || 0;
+        const cap = GameState.resources[res]?.cap || 0;
+        const needed = price[res];
+        if (amount < needed) {
+            canAfford = false;
+            if (cap !== Infinity && cap < needed) capExceeded = true;
+        }
+    }
+    if (canAfford) return 'affordable';
+    if (capExceeded) return 'cap-exceeded';
+    return 'insufficient';
+}
+
+// 轻量级更新资源条（不重建 DOM）
+function refreshResourceBars() {
+    for (let r in GameState.resources) {
+        const res = GameState.resources[r];
+        if (!res.visible) continue;
+        const item = document.querySelector(`.resource-item[data-resource="${r}"]`);
+        if (!item) continue;
+        const amount = res.amount;
+        const cap = res.cap;
+        const capDisplay = cap === Infinity ? '∞' : formatNumber(cap);
+        const prod = res.production;
+        const prodText = (prod > 0 ? '+' : '') + formatNumber(prod);
+        const text = `${r}: ${formatNumber(amount)}/${capDisplay} (${prodText}/s)`;
+        const textDiv = item.querySelector('.resource-text');
+        if (textDiv) textDiv.textContent = text;
+        let percent = 0;
+        if (cap !== Infinity && cap > 0) percent = Math.min(100, (amount / cap) * 100);
+        const progressDiv = item.querySelector('.resource-progress');
+        if (progressDiv) progressDiv.style.width = `${percent}%`;
+    }
+}
+
+// 确保这些函数全局可用
+window.refreshAllDynamicColors = refreshAllDynamicColors;
 window.bindEvents = bindEvents;
 window.showTooltip = showTooltip;
 // shiftPressed 作为全局变量可直接访问，无需挂载
