@@ -3,6 +3,7 @@ const ChangelogData = {
     logs: [
         { version: "v0.2.4", date: "2026-04-22", changes: [
             "修改了UI风格，改动了一些建筑效果",
+            "平衡性调整，建筑变得更强但是更贵"
         ]},
         { version: "v0.2.3", date: "2026-04-21", changes: [
             "增加了一些花哨且无用的新科技和新建筑",

@@ -1,9 +1,8 @@
 // config/eventsConfig.js
 
 const EVENTS_CONFIG = {
-    // 基础示例：流星雨 - 固定乘数，随机持续时间
-    "meteor_shower": {
-        id: "meteor_shower",
+    "流星雨": {
+        id: "流星雨",
         name: "流星雨",
         desc: "流星雨激发了研究灵感",
         durationDays: (state) => 30 + Math.floor(Math.random() * 40),  // 30~69天
@@ -13,10 +12,8 @@ const EVENTS_CONFIG = {
             { type: "resourceMultiplier", resource: "科学", multiplier: 2.0 }
         ]
     },
-
-    // 铁陨石：立即获得资源，数量基于铁上限随机
-    "iron_meteor": {
-        id: "iron_meteor",
+    "铁陨石坠落": {
+        id: "铁陨石坠落",
         name: "铁陨石坠落",
         desc: "一颗富含铁的陨石坠落在附近",
         durationDays: 1,
@@ -41,9 +38,27 @@ const EVENTS_CONFIG = {
             }
         ]
     },
+    "打雷": {
+        id: "打雷",
+        name: "打雷",
+        desc: "天上打雷了，将你的电池充满了电",
+        durationDays: (state) => 1,
+        baseProbability: 1,
+        prereqTech: "电磁感应",
+        effects: [
+            { 
+                type: "addResource", 
+                resource:"电力",
+                amount:(state) =>{
+                    const cap =state.resource["电力"]?.cap ||100;
+                    return Math.floor(cap*0.5+200);
+                }
+            }
+        ]
+    },
 
-    "solar_eclipse": {
-        id: "solar_eclipse",
+    "日食": {
+        id: "日食",
         name: "日食",
         desc: "太阳被遮蔽，太阳能板效率大减",
         durationDays: (state) => 15 + Math.floor(Math.random() * 25),  // 15~39天
@@ -59,8 +74,8 @@ const EVENTS_CONFIG = {
         ]
     },
 
-    "worker_strike": {
-        id: "worker_strike",
+    "工人罢工": {
+        id: "工人罢工",
         name: "工人罢工",
         desc: "工人们不满工作条件，生产效率下降",
         durationDays: (state) => 10 + Math.floor(Math.random() * 20),  // 10~29天
@@ -76,8 +91,8 @@ const EVENTS_CONFIG = {
         ]
     },
 
-    "gold_rush": {
-        id: "gold_rush",
+    "淘金热": {
+        id: "淘金热",
         name: "淘金热",
         desc: "人们狂热地寻找黄金",
         durationDays: (state) => 40 + Math.floor(Math.random() * 30),  // 40~69天
@@ -88,8 +103,8 @@ const EVENTS_CONFIG = {
         ]
     },
 
-    "solar_flare": {
-        id: "solar_flare",
+    "太阳耀斑": {
+        id: "太阳耀斑",
         name: "太阳耀斑",
         desc: "太阳活动增强，电力产量下降",
         durationDays: (state) => 20 + Math.floor(Math.random() * 40),  // 20~59天
@@ -104,8 +119,8 @@ const EVENTS_CONFIG = {
         ]
     },
 
-    "oil_discovery": {
-        id: "oil_discovery",
+    "发现油田": {
+        id: "发现油田",
         name: "发现油田",
         desc: "发现了一片巨大油田",
         durationDays: (state) => 60 + Math.floor(Math.random() * 40),  // 60~99天
@@ -124,8 +139,8 @@ const EVENTS_CONFIG = {
         ]
     },
 
-    "ancient_relic": {
-        id: "ancient_relic",
+    "古代遗物": {
+        id: "古代遗物",
         name: "古代遗物",
         desc: "挖掘出一个古代遗物，科学家们兴奋不已",
         durationDays: 1,
@@ -148,8 +163,8 @@ const EVENTS_CONFIG = {
         ]
     },
 
-    "tech_breakthrough": {
-        id: "tech_breakthrough",
+    "技术突破": {
+        id: "技术突破",
         name: "技术突破",
         desc: "科学家取得了重大突破",
         durationDays: (state) => 20 + Math.floor(Math.random() * 30),

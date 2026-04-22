@@ -18,7 +18,6 @@ function getGlobalCostMultiplier(state) {
 const UPGRADES_CONFIG = {
     "伐木场优化": { 
         unlockCondition: { tech: "林业工程" },
-        // 原 basePrice: {木头:1500, 科学:300}, growth: 1.05
         cost: (state, level) => standardUpgradeCost(
             {木头:1500, 科学:300}, 1.05, level, getGlobalCostMultiplier(state)
         ),

@@ -1,6 +1,5 @@
 // config/buildingsConfig.js
 
-// 辅助函数：标准价格增长公式（用于大多数建筑）
 function standardCost(baseCostMap, growthRate, count, costMultiplier = 1.0) {
     // 价格 = base * (growth ^ count)，再应用全局成本倍率
     const effectiveGrowth = 1 + (growthRate - 1) * costMultiplier;
@@ -320,7 +319,6 @@ BUILDINGS_CONFIG = {
             { target: "月球铜矿", prodFactor: 0.03 },
             { target: "月球钛矿", prodFactor: 0.03 }
         ]
-        // 降低月球基地价格的效果在月球基地的 cost 函数中实现
     },
     "月球基地": {
         type: "太空",
