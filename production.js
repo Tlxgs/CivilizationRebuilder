@@ -71,82 +71,9 @@ const ProductionEngine = (function() {
 
         state.happiness = Math.max(0, totalHappiness);
         state.happinessContributions = happinessContributions;
-
+        processLocalResources(state);
         const happinessFactor = state.happiness / 100;
-        let totalCapacity = 0;
-        let totalRequired = 0;
-
-        // 累加所有激活建筑的人口贡献和占用
-        for (let bKey in state.buildings) {
-            const bld = state.buildings[bKey];
-            if (bld.active === 0) continue;
-            totalCapacity += (bld.populationProvided || 0) * bld.active;
-            totalRequired += (bld.populationRequired || 0) * bld.active;
-        }
-
-        state.population.capacity = totalCapacity;
-        state.population.used = totalRequired;
-
-        // 如果占用超过容量，顺序关闭建筑直到满足
-        if (totalRequired > totalCapacity) {
-            // 收集所有需要人口的建筑（populationRequired > 0 且 active > 0）
-            const getActiveBuildings = () => {
-                const list = [];
-                for (let bKey in state.buildings) {
-                    const bld = state.buildings[bKey];
-                    if (bld.active > 0 && (bld.populationRequired || 0) > 0) {
-                        list.push({ key: bKey, bld, req: bld.populationRequired });
-                    }
-                }
-                // 按建筑名称排序，保证关闭顺序确定性（可改为按优先级排序）
-                list.sort((a, b) => a.key.localeCompare(b.key));
-                return list;
-            };
-
-            let closedLog = []; // 记录关闭日志（合并输出）
-            let iterations = 0;
-            const maxIterations = 1000; // 防止无限循环
-
-            while (totalRequired > totalCapacity && iterations < maxIterations) {
-                const buildings = getActiveBuildings();
-                if (buildings.length === 0) break; // 没有可关闭的建筑了（理论上不会）
-
-                // 选择第一个建筑关闭1个单位
-                const target = buildings[0];
-                const closeCount = 1; // 每次关闭1个
-                const reqPer = target.req;
-                target.bld.active -= closeCount;
-                totalRequired -= reqPer * closeCount;
-                closedLog.push(`${target.key} -1`);
-                iterations++;
-            }
-
-            if (closedLog.length > 0) {
-                // 合并日志，避免刷屏
-                const unique = {};
-                for (let log of closedLog) {
-                    const [name, delta] = log.split(' ');
-                    unique[name] = (unique[name] || 0) + parseInt(delta);
-                }
-                const parts = [];
-                for (let name in unique) {
-                    parts.push(`${name} ${unique[name]}`);
-                }
-            }
-
-            // 重新计算最终的人口数据（确保一致）
-            totalRequired = 0;
-            totalCapacity = 0;
-            for (let bKey in state.buildings) {
-                const bld = state.buildings[bKey];
-                if (bld.active === 0) continue;
-                totalCapacity += (bld.populationProvided || 0) * bld.active;
-                totalRequired += (bld.populationRequired || 0) * bld.active;
-            }
-            state.population.capacity = totalCapacity;
-            state.population.used = totalRequired;
-        }
-
+        
         for (let r in state.resources) {
             state.resources[r].production = 0;
             state.resources[r].cap = state.resources[r].baseCap;
@@ -168,7 +95,7 @@ const ProductionEngine = (function() {
             prodMult *= (1 + EffectsManager.getAdditiveValue('global.prod'));
             prodMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
             consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
-            if (cfg.type === '太空') {
+            if (cfg.class === 'space') {
                 prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
             }
 
@@ -299,7 +226,7 @@ const ProductionEngine = (function() {
             let prodMult = EffectsManager.getBuildingProdMultiplier(b);
             prodMult *= (1 + EffectsManager.getAdditiveValue('global.prod'));
             prodMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
-            if (cfg.type === '太空') {
+            if (cfg.class === 'space') {
                 prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
             }
             let consMult = EffectsManager.getBuildingConsMultiplier(b);
@@ -331,6 +258,89 @@ const ProductionEngine = (function() {
             sciCapRatio: 1
         };
     }
+        function processLocalResources(state) {
+        // 清除旧值
+        for (let key in state.localResources) {
+            state.localResources[key].capacity = 0;
+            state.localResources[key].used = 0;
+        }
+
+        // 累加所有激活建筑的提供量与需求量
+        for (let bKey in state.buildings) {
+            const bld = state.buildings[bKey];
+            if (bld.active === 0) continue;
+            const cfg = BUILDINGS_CONFIG[bKey];
+            if (!cfg) continue;
+            const provides = cfg.providesLocal || {};
+            const requires = cfg.requiresLocal || {};
+            for (let lrKey in provides) {
+                if (state.localResources[lrKey] !== undefined) {
+                    state.localResources[lrKey].capacity += (provides[lrKey] || 0) * bld.active;
+                }
+            }
+            for (let lrKey in requires) {
+                if (state.localResources[lrKey] !== undefined) {
+                    state.localResources[lrKey].used += (requires[lrKey] || 0) * bld.active;
+                }
+            }
+        }
+
+        // 处理供需不平衡（类似原人口关闭逻辑）
+        let changed = true;
+        let maxIter = 200;
+        while (changed && maxIter-- > 0) {
+            changed = false;
+            // 遍历每个局域资源
+            for (let lrKey in LOCAL_RESOURCES_CONFIG) {
+                const lr = state.localResources[lrKey];
+                if (!lr || lr.used <= lr.capacity) continue;
+
+                const config = LOCAL_RESOURCES_CONFIG[lrKey];
+                // 获取该资源涉及的激活建筑（有需求的）
+                const candidates = [];
+                for (let bKey in state.buildings) {
+                    const bld = state.buildings[bKey];
+                    if (bld.active === 0) continue;
+                    const cfg = BUILDINGS_CONFIG[bKey];
+                    if (!cfg) continue;
+                    if (config.buildingFilter && !config.buildingFilter(bKey, cfg, bld)) continue;
+                    const req = (cfg.requiresLocal && cfg.requiresLocal[lrKey]) || 0;
+                    if (req > 0) candidates.push({ key: bKey, bld, reqPer: req });
+                }
+                if (candidates.length === 0) continue;
+
+                // 按名称排序（可配置优先级）
+                candidates.sort((a, b) => a.key.localeCompare(b.key));
+
+                // 关闭建筑直到满足
+                while (lr.used - lr.capacity > 1e-5 && candidates.length > 0) {
+                    const target = candidates[0];
+                    const closeCount = 1;
+                    target.bld.active -= closeCount;
+                    if (target.bld.active < 0) target.bld.active = 0;
+                    // 更新该建筑对所有局域资源的贡献
+                    const bCfg = BUILDINGS_CONFIG[target.key];
+                    const provides = bCfg.providesLocal || {};
+                    const requires = bCfg.requiresLocal || {};
+                    for (let lrKey2 in provides) {
+                        if (state.localResources[lrKey2]) state.localResources[lrKey2].capacity -= (provides[lrKey2] || 0) * closeCount;
+                    }
+                    for (let lrKey2 in requires) {
+                        if (state.localResources[lrKey2]) state.localResources[lrKey2].used -= (requires[lrKey2] || 0) * closeCount;
+                    }
+                    // 如果该建筑激活归零，移出候选
+                    if (target.bld.active === 0) candidates.shift();
+                    changed = true;
+                }
+                // 跳出内层循环后继续检查其他局域资源
+            }
+        }
+        // 确保无负值
+        for (let bKey in state.buildings) {
+            if (state.buildings[bKey].active < 0) state.buildings[bKey].active = 0;
+        }
+    }
+
 
     return {
         computeProductionAndCaps,

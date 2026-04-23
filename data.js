@@ -13,11 +13,6 @@ function initGameData() {
     GameState.happiness = 100;
     GameState.season = 0;
     GameState.seasonDayCounter = 0;
-    GameState.population = {
-        capacity: 0,   // 总人口容量（由提供人口的建筑激活后累加）
-        used: 0        // 已占用人口（所有建筑的 required * active 之和）
-    };
-    // 初始化资源
     GameState.resources = {};
     for (let rKey in RESOURCES_CONFIG) {
         const cfg = RESOURCES_CONFIG[rKey];
@@ -34,7 +29,13 @@ function initGameData() {
             }
         }
     }
-
+    GameState.localResources = {};
+    for (let lrKey in LOCAL_RESOURCES_CONFIG) {
+        GameState.localResources[lrKey] = {
+            capacity: 0,
+            used: 0
+        };
+    }
     // 初始化建筑
     GameState.buildings = {};
     for (let bKey in BUILDINGS_CONFIG) {
@@ -45,9 +46,9 @@ function initGameData() {
             active: 0,
             visible: false,
             price: { ...initialPrice },
-            mode: (cfg.modes && cfg.modes.length > 0) ? 0 : undefined ,
-            populationRequired: (cfg.populationRequired !== undefined) ? cfg.populationRequired : 1,  // 默认占用1人口
-            populationProvided: cfg.populationProvided || 0
+            mode: (cfg.modes && cfg.modes.length > 0) ? 0 : undefined,
+            providesLocal: cfg.providesLocal || {},
+            requiresLocal: cfg.requiresLocal || {},
         };
     }
 

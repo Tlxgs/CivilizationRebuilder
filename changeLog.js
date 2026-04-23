@@ -1,6 +1,9 @@
 const ChangelogData = {
     version: "v0.2",
     logs: [
+        { version: "v0.4.0", date: "2026-04-23", changes: [
+            "改变了太空相关宜居度机制，现在它们和游戏《Evolve》是 类似的。",
+        ]},
         { version: "v0.3.0", date: "2026-04-22", changes: [
             "增加了人口机制！幸运的是人们不需要消耗任何食物，至少目前如此。",
         ]},
