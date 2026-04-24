@@ -2,7 +2,7 @@
 
 const ProductionEngine = (function() {
 
-    // production.js
+    // ========== 获取建筑基础数据（已处理模式切换） ==========
     function getBaseProduces(cfg, building, state) {
         const modeCfg = getActiveModeConfig(cfg, building);
         if (!modeCfg.produces) return {};
@@ -31,109 +31,232 @@ const ProductionEngine = (function() {
         return modeCfg.happiness;
     }
 
-    // 辅助函数：合并建筑配置与当前模式配置
     function getActiveModeConfig(cfg, building) {
         if (!cfg.modes || !building || building.mode === undefined) return cfg;
         const mode = cfg.modes[building.mode];
         if (!mode) return cfg;
-        // 合并模式配置到基础配置（模式字段优先级更高）
         return { ...cfg, ...mode };
     }
+
     function refreshEffects() {
         EffectsManager.refreshAllEffects(GameState);
     }
 
+    // ========== 核心：计算产量和上限（迭代效率因子，连续降效） ==========
     function computeProductionAndCaps() {
         const state = GameState;
         refreshEffects();
 
-        let totalHappiness = 100;
-        const happinessContributions = [];
+        // 幸福度只用于提升产量，不参与降低建筑效率
+        const happinessFactor = Math.max(0, state.happiness) / 100;
 
+        // 第一步：收集所有激活建筑的“理论值”（未经效率缩放，但已经乘了全局加成和幸福度）
+        const bldRaw = {};
         for (let bKey in state.buildings) {
             const bld = state.buildings[bKey];
             if (bld.active === 0) continue;
             const cfg = BUILDINGS_CONFIG[bKey];
             if (!cfg) continue;
-            const baseHappy = getBaseHappiness(cfg, bld,state);
-            if (baseHappy !== 0) {
-                const contrib = baseHappy * bld.active;
-                totalHappiness += contrib;
-                happinessContributions.push({ source: bKey, value: contrib });
+
+            // 基础乘数
+            let prodMult = EffectsManager.getBuildingProdMultiplier(bKey);
+            prodMult *= (1 + EffectsManager.getAdditiveValue('global.prod'));
+            prodMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
+            if (cfg.class === 'space') {
+                prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
+            }
+            // 幸福度加在产量上
+            prodMult *= happinessFactor;
+
+            let consMult = EffectsManager.getBuildingConsMultiplier(bKey);
+            consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
+
+            let capMult = EffectsManager.getBuildingCapMultiplier(bKey);
+
+            const baseProd = getBaseProduces(cfg, bld, state);
+            const baseCons = getBaseConsumes(cfg, bld, state);
+            const baseCap  = getBaseCaps(cfg, bld, state);
+            const baseHappy = getBaseHappiness(cfg, bld, state);
+
+            const scaledProd = {};
+            for (let r in baseProd) {
+                const eventMult = EffectsManager.getResourceMultiplier(r);
+                scaledProd[r] = baseProd[r] * prodMult * eventMult;
+            }
+            const scaledCons = {};
+            for (let r in baseCons) {
+                scaledCons[r] = baseCons[r] * consMult;
+            }
+            const scaledCap = {};
+            for (let r in baseCap) {
+                scaledCap[r] = baseCap[r] * capMult;
+            }
+
+            bldRaw[bKey] = {
+                active: bld.active,
+                produces: scaledProd,
+                consumes: scaledCons,
+                caps: scaledCap,
+                providesLocal: cfg.providesLocal || {},
+                requiresLocal: cfg.requiresLocal || {},
+                happiness: baseHappy,   // 每座幸福度贡献，不受效率影响
+                capMult: capMult,
+            };
+        }
+
+        // 第二步：迭代求解效率因子（受全局/局域资源短缺限制）
+        const ITERATIONS = 3;
+        let efficiency = {};
+        for (let bKey in bldRaw) {
+            efficiency[bKey] = 1.0; // 初始不降效
+        }
+
+        for (let iter = 0; iter < ITERATIONS; iter++) {
+            // 计算全局资源总供给与总消耗（基于当前效率）
+            let totalProd = {}, totalCons = {};
+            for (let bKey in bldRaw) {
+                const raw = bldRaw[bKey];
+                const e = efficiency[bKey] * raw.active;
+                for (let r in raw.produces) {
+                    totalProd[r] = (totalProd[r] || 0) + raw.produces[r] * e;
+                }
+                for (let r in raw.consumes) {
+                    totalCons[r] = (totalCons[r] || 0) + raw.consumes[r] * e;
+                }
+            }
+
+            // 全局资源充足率
+            const dt = 0.2; // 与 TICK_INTERVAL 一致
+            let R_global = {};
+            for (let r in totalCons) {
+                const stock = state.resources[r]?.amount || 0;
+                const prod = totalProd[r] || 0;
+                const cons = totalCons[r] || 0;
+                if (cons < 1e-9) {
+                    R_global[r] = 1.0;
+                } else {
+                    const available = stock + prod * dt;
+                    const needed = cons * dt;
+                    R_global[r] = Math.min(1.0, available / needed);
+                }
+            }
+
+            // 局域资源充足率
+            let localCap = {}, localUsed = {};
+            for (let bKey in bldRaw) {
+                const raw = bldRaw[bKey];
+                const e = efficiency[bKey] * raw.active;
+                for (let lr in raw.providesLocal) {
+                    localCap[lr] = (localCap[lr] || 0) + raw.providesLocal[lr] * e;
+                }
+                for (let lr in raw.requiresLocal) {
+                    localUsed[lr] = (localUsed[lr] || 0) + raw.requiresLocal[lr] * e;
+                }
+            }
+            let R_local = {};
+            for (let lr in LOCAL_RESOURCES_CONFIG) {
+                const cap = localCap[lr] || 0;
+                const used = localUsed[lr] || 0;
+                if (used < 1e-9) {
+                    R_local[lr] = 1.0;
+                } else {
+                    R_local[lr] = Math.min(1.0, cap / used);
+                }
+            }
+
+            // 更新效率：取所有消耗资源/局域需求充足率的最小值
+            for (let bKey in bldRaw) {
+                let minR = 1.0;
+                const raw = bldRaw[bKey];
+                for (let r in raw.consumes) {
+                    const R = R_global[r] !== undefined ? R_global[r] : 1.0;
+                    if (R < minR) minR = R;
+                }
+                for (let lr in raw.requiresLocal) {
+                    const R = R_local[lr] !== undefined ? R_local[lr] : 1.0;
+                    if (R < minR) minR = R;
+                }
+                efficiency[bKey] = minR;
             }
         }
 
-        const eventHappiness = EffectsManager.getAdditiveValue('global.happiness');
-        totalHappiness += eventHappiness;
-        if (eventHappiness !== 0) {
-            happinessContributions.push({ source: '事件/晶体', value: eventHappiness });
-        }
-
-        state.happiness = Math.max(0, totalHappiness);
-        state.happinessContributions = happinessContributions;
-        processLocalResources(state);
-        const happinessFactor = state.happiness / 100;
-        
+        // 第三步：将结果写入 GameState
+        // 清零资源产量/上限
         for (let r in state.resources) {
             state.resources[r].production = 0;
             state.resources[r].cap = state.resources[r].baseCap;
         }
 
-        for (let bKey in state.buildings) {
-            const bld = state.buildings[bKey];
-            if (bld.active === 0) continue;
+        // 清零局域资源
+        for (let lr in state.localResources) {
+            state.localResources[lr].capacity = 0;
+            state.localResources[lr].used = 0;
+        }
 
-            const cfg = BUILDINGS_CONFIG[bKey];
-            if (!cfg) continue;
+        // 幸福度计算（不受效率影响）
+        let totalHappiness = 100;
+        const happinessContributions = [];
+        for (let bKey in bldRaw) {
+            const raw = bldRaw[bKey];
+            const contrib = raw.happiness * raw.active;
+            if (contrib !== 0) {
+                totalHappiness += contrib;
+                happinessContributions.push({ source: bKey, value: contrib });
+            }
+        }
+        const eventHappiness = EffectsManager.getAdditiveValue('global.happiness');
+        totalHappiness += eventHappiness;
+        if (eventHappiness !== 0) {
+            happinessContributions.push({ source: '事件/晶体', value: eventHappiness });
+        }
+        state.happiness = Math.max(0, totalHappiness);
+        state.happinessContributions = happinessContributions;
 
-            const active = bld.active;
+        // 遗物/永久升级相关（用于上限计算）
+        const relic = state.resources["遗物"]?.amount || 0;
+        let capPerRelic = 0, sciCapPerRelicLog = 0;
+        for (let permId in state.permanent) {
+            const perm = state.permanent[permId];
+            if (!perm.researched || !perm.effect) continue;
+            if (perm.effect.capPerRelic) capPerRelic += perm.effect.capPerRelic;
+            if (perm.effect.sciCapPerRelicLog) sciCapPerRelicLog += perm.effect.sciCapPerRelicLog;
+        }
 
-            let prodMult = EffectsManager.getBuildingProdMultiplier(bKey);
-            let consMult = EffectsManager.getBuildingConsMultiplier(bKey);
-            let capMult = EffectsManager.getBuildingCapMultiplier(bKey);
+        // 累加建筑贡献（产量、消耗、上限、局域资源）
+        for (let bKey in bldRaw) {
+            const raw = bldRaw[bKey];
+            const effActive = efficiency[bKey] * raw.active;
 
-            prodMult *= (1 + EffectsManager.getAdditiveValue('global.prod'));
-            prodMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
-            consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
-            if (cfg.class === 'space') {
-                prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
+            // 资源产量/消耗
+            for (let r in raw.produces) {
+                state.resources[r].production += raw.produces[r] * effActive;
+            }
+            for (let r in raw.consumes) {
+                state.resources[r].production -= raw.consumes[r] * effActive;
             }
 
-            const relic = state.resources["遗物"]?.amount || 0;
-            let capPerRelic = 0, sciCapPerRelicLog = 0;
-            for (let permId in state.permanent) {
-                const perm = state.permanent[permId];
-                if (!perm.researched || !perm.effect) continue;
-                if (perm.effect.capPerRelic) capPerRelic += perm.effect.capPerRelic;
-                if (perm.effect.sciCapPerRelicLog) sciCapPerRelicLog += perm.effect.sciCapPerRelicLog;
-            }
-
-            const baseProd = getBaseProduces(cfg, bld,state);
-            for (let r in baseProd) {
-                const eventMult = EffectsManager.getResourceMultiplier(r);
-                const val = baseProd[r] * active * prodMult * happinessFactor * eventMult;
-                state.resources[r].production += val;
-            }
-
-            const baseCons = getBaseConsumes(cfg, bld,state);
-            for (let r in baseCons) {
-                const val = baseCons[r] * active * consMult;
-                state.resources[r].production -= val;
-            }
-
-            const baseCap = getBaseCaps(cfg, bld,state);
-            for (let r in baseCap) {
-                let resourceCapMult = capMult;
+            // 上限（不受效率影响）
+            for (let r in raw.caps) {
+                let resourceCapMult = raw.capMult || 1;
                 if (r === '科学') {
                     resourceCapMult *= (1 + Math.log(1 + relic) * sciCapPerRelicLog);
                 } else {
                     resourceCapMult *= (1 + relic * capPerRelic);
                 }
-                state.resources[r].cap += baseCap[r] * active * resourceCapMult;
+                state.resources[r].cap += raw.caps[r] * raw.active * resourceCapMult;
+            }
+
+            // 局域资源（提供量和需求量都按效率缩放）
+            for (let lr in raw.providesLocal) {
+                state.localResources[lr].capacity += raw.providesLocal[lr] * effActive;
+            }
+            for (let lr in raw.requiresLocal) {
+                state.localResources[lr].used += raw.requiresLocal[lr] * effActive;
             }
         }
     }
 
+    // ========== 建筑详细统计（用于 tooltip） ==========
     function getBuildingStats(buildingKey) {
         const state = GameState;
         const building = state.buildings[buildingKey];
@@ -146,17 +269,19 @@ const ProductionEngine = (function() {
         let prodMult = EffectsManager.getBuildingProdMultiplier(buildingKey);
         prodMult *= (1 + EffectsManager.getAdditiveValue('global.prod'));
         prodMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
-        if (cfg.type === '太空') {
+        if (cfg.class === 'space') {
             prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
         }
+        prodMult *= happinessFactor;
+
         let consMult = EffectsManager.getBuildingConsMultiplier(buildingKey);
         consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
         let capMult = EffectsManager.getBuildingCapMultiplier(buildingKey);
 
-        const baseProd = getBaseProduces(cfg, building,state);
-        const baseCons = getBaseConsumes(cfg, building,state);
-        const baseCap = getBaseCaps(cfg, building,state);
-        const baseHappiness = getBaseHappiness(cfg,building, state);
+        const baseProd = getBaseProduces(cfg, building, state);
+        const baseCons = getBaseConsumes(cfg, building, state);
+        const baseCap  = getBaseCaps(cfg, building, state);
+        const baseHappy = getBaseHappiness(cfg, building, state);
 
         const relic = state.resources["遗物"]?.amount || 0;
         let capPerRelic = 0, sciCapPerRelicLog = 0;
@@ -170,12 +295,12 @@ const ProductionEngine = (function() {
         const details = [];
         for (let r in baseProd) {
             const eventMult = EffectsManager.getResourceMultiplier(r);
-            const per = baseProd[r] * prodMult * happinessFactor * eventMult;
-            details.push({ resource: r, type: 'prod', perBuilding: per, total: per * building.active });
+            const val = baseProd[r] * prodMult * eventMult;
+            details.push({ resource: r, type: 'prod', perBuilding: val, total: val * building.active });
         }
         for (let r in baseCons) {
-            const per = baseCons[r] * consMult;
-            details.push({ resource: r, type: 'cons', perBuilding: per, total: per * building.active });
+            const val = baseCons[r] * consMult;
+            details.push({ resource: r, type: 'cons', perBuilding: val, total: val * building.active });
         }
         for (let r in baseCap) {
             let resourceCapMult = capMult;
@@ -184,17 +309,19 @@ const ProductionEngine = (function() {
             } else {
                 resourceCapMult *= (1 + relic * capPerRelic);
             }
-            const per = baseCap[r] * resourceCapMult;
-            details.push({ resource: r, type: 'cap', perBuilding: per, total: per * building.active });
+            const val = baseCap[r] * resourceCapMult;
+            details.push({ resource: r, type: 'cap', perBuilding: val, total: val * building.active });
         }
 
         return {
             details,
             activeCount: building.active,
-            happinessPerBuilding: baseHappiness,
-            happinessTotal: baseHappiness * building.active
+            happinessPerBuilding: baseHappy,
+            happinessTotal: baseHappy * building.active
         };
     }
+
+    // ========== 价格更新 ==========
     function updateBuildingPrices() {
         for (let b in GameState.buildings) {
             const bld = GameState.buildings[b];
@@ -212,6 +339,7 @@ const ProductionEngine = (function() {
             up.price = cfg.cost(GameState, up.level);
         }
     }
+
     function getResourceContributions(resourceName) {
         const contributions = [];
         refreshEffects();
@@ -229,6 +357,8 @@ const ProductionEngine = (function() {
             if (cfg.class === 'space') {
                 prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
             }
+            prodMult *= happinessFactor;
+
             let consMult = EffectsManager.getBuildingConsMultiplier(b);
             consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
 
@@ -237,7 +367,7 @@ const ProductionEngine = (function() {
 
             if (baseProd[resourceName]) {
                 const eventMult = EffectsManager.getResourceMultiplier(resourceName);
-                const val = baseProd[resourceName] * bld.active * prodMult * happinessFactor * eventMult;
+                const val = baseProd[resourceName] * bld.active * prodMult * eventMult;
                 contributions.push({ building: b, value: val });
             }
             if (baseCons[resourceName]) {
@@ -258,89 +388,6 @@ const ProductionEngine = (function() {
             sciCapRatio: 1
         };
     }
-        function processLocalResources(state) {
-        // 清除旧值
-        for (let key in state.localResources) {
-            state.localResources[key].capacity = 0;
-            state.localResources[key].used = 0;
-        }
-
-        // 累加所有激活建筑的提供量与需求量
-        for (let bKey in state.buildings) {
-            const bld = state.buildings[bKey];
-            if (bld.active === 0) continue;
-            const cfg = BUILDINGS_CONFIG[bKey];
-            if (!cfg) continue;
-            const provides = cfg.providesLocal || {};
-            const requires = cfg.requiresLocal || {};
-            for (let lrKey in provides) {
-                if (state.localResources[lrKey] !== undefined) {
-                    state.localResources[lrKey].capacity += (provides[lrKey] || 0) * bld.active;
-                }
-            }
-            for (let lrKey in requires) {
-                if (state.localResources[lrKey] !== undefined) {
-                    state.localResources[lrKey].used += (requires[lrKey] || 0) * bld.active;
-                }
-            }
-        }
-
-        // 处理供需不平衡（类似原人口关闭逻辑）
-        let changed = true;
-        let maxIter = 200;
-        while (changed && maxIter-- > 0) {
-            changed = false;
-            // 遍历每个局域资源
-            for (let lrKey in LOCAL_RESOURCES_CONFIG) {
-                const lr = state.localResources[lrKey];
-                if (!lr || lr.used <= lr.capacity) continue;
-
-                const config = LOCAL_RESOURCES_CONFIG[lrKey];
-                // 获取该资源涉及的激活建筑（有需求的）
-                const candidates = [];
-                for (let bKey in state.buildings) {
-                    const bld = state.buildings[bKey];
-                    if (bld.active === 0) continue;
-                    const cfg = BUILDINGS_CONFIG[bKey];
-                    if (!cfg) continue;
-                    if (config.buildingFilter && !config.buildingFilter(bKey, cfg, bld)) continue;
-                    const req = (cfg.requiresLocal && cfg.requiresLocal[lrKey]) || 0;
-                    if (req > 0) candidates.push({ key: bKey, bld, reqPer: req });
-                }
-                if (candidates.length === 0) continue;
-
-                // 按名称排序（可配置优先级）
-                candidates.sort((a, b) => a.key.localeCompare(b.key));
-
-                // 关闭建筑直到满足
-                while (lr.used - lr.capacity > 1e-5 && candidates.length > 0) {
-                    const target = candidates[0];
-                    const closeCount = 1;
-                    target.bld.active -= closeCount;
-                    if (target.bld.active < 0) target.bld.active = 0;
-                    // 更新该建筑对所有局域资源的贡献
-                    const bCfg = BUILDINGS_CONFIG[target.key];
-                    const provides = bCfg.providesLocal || {};
-                    const requires = bCfg.requiresLocal || {};
-                    for (let lrKey2 in provides) {
-                        if (state.localResources[lrKey2]) state.localResources[lrKey2].capacity -= (provides[lrKey2] || 0) * closeCount;
-                    }
-                    for (let lrKey2 in requires) {
-                        if (state.localResources[lrKey2]) state.localResources[lrKey2].used -= (requires[lrKey2] || 0) * closeCount;
-                    }
-                    // 如果该建筑激活归零，移出候选
-                    if (target.bld.active === 0) candidates.shift();
-                    changed = true;
-                }
-                // 跳出内层循环后继续检查其他局域资源
-            }
-        }
-        // 确保无负值
-        for (let bKey in state.buildings) {
-            if (state.buildings[bKey].active < 0) state.buildings[bKey].active = 0;
-        }
-    }
-
 
     return {
         computeProductionAndCaps,

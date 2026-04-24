@@ -18,6 +18,7 @@ function getPermanentAffordabilityStatus(perm) {
     if (hasUnlimitedCapIssue) return 'cap-exceeded';
     return 'insufficient';
 }
+
 function renderPermanentPanel() {
     const panel = document.getElementById('panel-permanent');
     const relicAmount = GameState.resources["遗物"]?.amount || 0;
@@ -53,21 +54,23 @@ function renderPermanentPanel() {
     let html = '<div class="grid-list">';
     for (let p of notResearched) {
         const perm = GameState.permanent[p];
-        
-        // ===== 修改开始 =====
         const status = getPermanentAffordabilityStatus(perm);
         let colorClass = '';
         if (status === 'insufficient') colorClass = 'insufficient-name';
         else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
         
-        html += `<button class="card-btn perm-btn ${colorClass}" data-permanent="${p}"><b>${p}</b></button>`;
+        // 显示趣味名称，data-permanent 仍保存 key 用于购买
+        const displayName = perm.name || p;
+        html += `<button class="card-btn perm-btn ${colorClass}" data-permanent="${p}"><b>${displayName}</b></button>`;
     }
     html += '</div>';
     
     if (researched.length) {
         html += '<h3>已研究永恒升级</h3><div class="grid-list">';
         for (let p of researched) {
-            html += `<span class="card-btn researched-item" data-permanent="${p}">${p}</span>`;
+            const perm = GameState.permanent[p];
+            const displayName = perm.name || p;
+            html += `<span class="card-btn researched-item" data-permanent="${p}">${displayName}</span>`;
         }
         html += '</div>';
     }
@@ -79,9 +82,11 @@ function renderPermanentPanel() {
 
     // tooltip 绑定
     document.querySelectorAll('.perm-btn, .researched-item[data-permanent]').forEach(el => {
-        const permName = el.dataset.permanent;
-        const perm = GameState.permanent[permName];
+        const permNameKey = el.dataset.permanent;
+        const perm = GameState.permanent[permNameKey];
         if (!perm) return;
+        
+        const displayName = perm.name || permNameKey;
         
         // 价格字符串（带颜色标记）
         let priceHtml = Object.entries(perm.price).map(([r, amt]) => {
@@ -90,9 +95,10 @@ function renderPermanentPanel() {
             return `<span style="color: ${color};">${r} ${formatNumber(amt)}</span>`;
         }).join(', ');
         
-        let text = `<strong>${permName}</strong><br>${perm.desc}<br>消耗: ${priceHtml}`;
+        let text = `<strong>${displayName}</strong><br>${perm.desc}<br>消耗: ${priceHtml}`;
         if (perm.researched) text += '<br>✓ 已获得';
         el.addEventListener('mouseenter', () => showTooltip(el, text));
     });
 }
+
 window.renderPermanentPanel = renderPermanentPanel;

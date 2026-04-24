@@ -22,7 +22,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {}, caps: {},
         providesLocal: { population: 2 },
         requiresLocal: {},
-        desc: "简陋的帐篷，提供 2 人口容量"
+        desc: "几根木棍撑起的兽皮帐篷，能为2个人遮风挡雨。"
     },
     "小屋": {
         class: "ground", type: "住房",
@@ -31,7 +31,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {}, caps: {},
         providesLocal: { population: 5 },
         requiresLocal: {},
-        desc: "舒适的小屋，提供 5 人口容量"
+        desc: "石头地基、木梁和茅草屋顶，舒适的小屋可容纳5人。"
     },
     "公寓楼": {
         class: "ground", type: "住房",
@@ -41,7 +41,7 @@ BUILDINGS_CONFIG = {
         happiness: 0.1,
         providesLocal: { population: 2 },
         requiresLocal: {},
-        desc: "高层公寓，豪华但消耗电力，提供 2 人口容量"
+        desc: "高层公寓，豪华但消耗电力，只能提供 2 人口容量，真是太奢侈了！"
     },
 
     // ========== 地面 - 生产 ==========
@@ -53,7 +53,7 @@ BUILDINGS_CONFIG = {
         consumes: {}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产木材"
+        desc: "锯木机和运输带，将原木快速加工成标准木材。需要1名工人。"
     },
     "采石场": {
         class: "ground", type: "生产",
@@ -63,27 +63,27 @@ BUILDINGS_CONFIG = {
         consumes: {}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "开采石头"
+        desc: "露天矿坑，用爆破和机械破碎采集石料。需要1名工人。"
     },
     "煤矿": {
         class: "ground", type: "生产",
         unlockCondition: { tech: "煤矿生产" },
         cost: (s, c) => standardCost({石头: 100}, 1.20, c, getGlobalCostMultiplier(s)),
         produces: {煤: 0.2},
-        consumes: {}, caps: {},
+        consumes: {}, caps: {煤:50},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产少量煤"
+        desc: "矿井和传送带，产出煤炭并暂时储存。需要1名矿工。"
     },
-    "大型煤矿": {
+    "大型矿点": {
         class: "ground", type: "生产",
         unlockCondition: { tech: "矿物学" },
         cost: (s, c) => standardCost({建材: 20, 木头: 200}, 1.3, c, getGlobalCostMultiplier(s)),
-        produces: {}, consumes: {电力: 0.4}, caps: {煤:100},
+        produces: {}, consumes: {电力: 0.4}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "提供煤储存，使煤矿产量+15%",
-        modifiers: [{ target: "煤矿", prodFactor: 0.15 }]
+        desc: "大型露天综合采矿基地，消耗电力来提高邻近煤矿、金矿和铀矿的产量。",
+        modifiers: [{ target: "煤矿", prodFactor: 0.15 },{target:"金矿",prodFactor:0.05},{target:"铀矿",prodFactor:0.05}]
     },
     "工具加工站": {
         class: "ground", type: "生产",
@@ -92,7 +92,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {电力: 0.5}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "制造工具提高伐木场/采石场产量",
+        desc: "高精度数控机床，为伐木场和采石场制造耐磨刀具，提升二者效率。",
         modifiers: [{ target: "伐木场", prodFactor: 0.05 }, { target: "采石场", prodFactor: 0.05 }]
     },
     "金矿": {
@@ -103,7 +103,7 @@ BUILDINGS_CONFIG = {
         consumes: {}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产少量金"
+        desc: "淘洗砂金或开采脉金，产出微量黄金。需要1名淘金者。"
     },
     "油田": {
         class: "ground", type: "生产",
@@ -112,7 +112,7 @@ BUILDINGS_CONFIG = {
         produces: {石油: 0.6}, consumes: {电力: 0.8}, caps: {石油: 40},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "开采石油"
+        desc: "抽油机和分离罐，开采地下石油并暂存。需要1名操作员，消耗电力。"
     },
     "铀矿": {
         class: "ground", type: "生产",
@@ -121,7 +121,7 @@ BUILDINGS_CONFIG = {
         produces: {铀: 0.3}, consumes: {}, caps: {铀: 50},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "开采铀"
+        desc: "地下开采铀矿石，经简单破碎后得到铀。"
     },
 
     // ========== 地面 - 工厂 ==========
@@ -133,7 +133,7 @@ BUILDINGS_CONFIG = {
         happiness: -0.2,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "消耗煤和石头，生产铜"
+        desc: "鼓风炉将铜精矿熔炼成粗铜，消耗煤和石头，产出铜。由于工厂的污染严重，会降低幸福度。"
     },
     "铁冶炼厂": {
         class: "ground", type: "工厂",
@@ -143,7 +143,7 @@ BUILDINGS_CONFIG = {
         happiness: -0.2,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "消耗煤和石头，生产铁"
+        desc: "高炉流程，用焦炭还原铁矿石，产出铁。"
     },
     "建材工厂": {
         class: "ground", type: "工厂",
@@ -153,7 +153,7 @@ BUILDINGS_CONFIG = {
         happiness: -0.4,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产建材"
+        desc: "将木头、石头和铁加工成标准建筑模块（建材），消耗电力和大量原料。"
     },
     "炼钢厂": {
         class: "ground", type: "工厂",
@@ -163,7 +163,7 @@ BUILDINGS_CONFIG = {
         happiness: -0.4,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "将铁冶炼成钢"
+        desc: "转炉或电弧炉将生铁炼成钢，消耗煤和铁。"
     },
     "电解铝厂": {
         class: "ground", type: "工厂",
@@ -173,7 +173,7 @@ BUILDINGS_CONFIG = {
         happiness: -0.4,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产铝"
+        desc: "熔盐电解槽，将氧化铝还原为金属铝，耗电巨大。"
     },
     "金属加工厂": {
         class: "ground", type: "工厂",
@@ -183,7 +183,7 @@ BUILDINGS_CONFIG = {
         happiness: -0.4,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产金属板"
+        desc: "冲压、铸造、切削，将铜和铝加工成金属板。"
     },
     "金属回收厂": {
         class: "ground", type: "工厂",
@@ -193,37 +193,37 @@ BUILDINGS_CONFIG = {
         happiness: -0.4,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "将金属板回收成金属"
+        desc: "熔炼废金属板，重新得到钢、铁、铜、铝。"
     },
     "塑料厂": {
         class: "ground", type: "工厂",
         unlockCondition: { tech: "石油加工" },
         cost: (s, c) => standardCost({金属板: 30, 建材: 30}, 1.20, c, getGlobalCostMultiplier(s)),
         produces: {塑料: 0.3}, consumes: {电力: 0.5, 石油: 0.8}, caps: {塑料: 100},
-        happiness: -0.4,
+        happiness: -0.6,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产塑料"
+        desc: "聚合反应釜，将石油转化为塑料颗粒，污染十分严重。"
     },
     "碳纤维厂": {
         class: "ground", type: "工厂",
         unlockCondition: { tech: "碳纤维材料" },
         cost: (s, c) => standardCost({金属板: 200, 塑料: 100}, 1.15, c, getGlobalCostMultiplier(s)),
         produces: {碳纤维: 0.3}, consumes: {电力: 1.2, 煤: 0.5}, caps: {碳纤维: 100},
-        happiness: -0.4,
+        happiness: -0.2,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产碳纤维"
+        desc: "高温碳化炉，把塑料纤维转化为高强度碳纤维。"
     },
     "核燃料工厂": {
         class: "ground", type: "工厂",
         unlockCondition: { tech: "核燃料" },
         cost: (s, c) => standardCost({金属板: 150, 铁: 400}, 1.15, c, getGlobalCostMultiplier(s)),
         produces: {核燃料: 0.3}, consumes: {电力: 1.5, 铀: 0.4}, caps: {核燃料: 100},
-        happiness: -0.4,
+        happiness: -0.2,
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产核燃料"
+        desc: "将铀矿石转化为二氧化铀芯块，装入锆管制成核燃料。"
     },
 
     // ========== 地面 - 电力 ==========
@@ -234,7 +234,7 @@ BUILDINGS_CONFIG = {
         produces: {电力: 0.6}, consumes: {煤: 0.5}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "消耗煤，产生电力"
+        desc: "燃煤锅炉推动活塞曲柄，带动发电机。产出电力，消耗煤。"
     },
     "石油发电厂": {
         class: "ground", type: "电力",
@@ -243,7 +243,7 @@ BUILDINGS_CONFIG = {
         produces: {电力:0.5}, consumes: {石油:0.2}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "使用石油发电"
+        desc: "内燃机，燃烧石油发电。"
     },
     "太阳能板": {
         class: "ground", type: "电力",
@@ -258,8 +258,8 @@ BUILDINGS_CONFIG = {
         },
         consumes: {}, caps: {},
         providesLocal: {},
-        requiresLocal: { population: 1 },
-        desc: "清洁电力，夏季产量翻倍，冬季减半"
+        requiresLocal: { },
+        desc: "多晶硅光伏阵列，发电量随季节变化：夏季翻倍，冬季减半。不需要人力维护。"
     },
     "电池": {
         class: "ground", type: "电力",
@@ -268,7 +268,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {}, caps: {电力: 50},
         providesLocal: {},
         requiresLocal: {},
-        desc: "储存电力（不需要人口）"
+        desc: "铅酸蓄电池组，储存多余电力，以备电网波动时使用。"
     },
     "裂变反应堆": {
         class: "ground", type: "电力",
@@ -277,7 +277,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {}, caps: {铀: 100},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "核能发电，可切换燃料模式",
+        desc: "压水堆，可使用核燃料或铀。",
         modes: [
             { id: "nuclear_fuel", name: "核燃料模式", produces: {电力: 0.5}, consumes: {核燃料: 0.01} },
             { id: "uranium_fuel", name: "铀燃料模式", produces: {电力: 0.8}, consumes: {铀: 0.4} }
@@ -292,7 +292,7 @@ BUILDINGS_CONFIG = {
         produces: {科学: 0.10}, consumes: {}, caps: {科学: 10},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "生产科学，增加科学上限"
+        desc: "藏书室和阅读区，缓慢产生科学知识，同时增加科学上限。"
     },
     "大学": {
         class: "ground", type: "科学",
@@ -301,7 +301,7 @@ BUILDINGS_CONFIG = {
         produces: {科学: 0.15}, consumes: {电力: 0.15}, caps: {科学: 40},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "消耗电力，生产科学"
+        desc: "教室和实验室，需要电力。"
     },
     "博物馆": {
         class: "ground", type: "科学",
@@ -311,7 +311,7 @@ BUILDINGS_CONFIG = {
         happiness: (state) => 0.1 * Math.log(Math.pow(Math.E, 5) + (state.resources["遗物"]?.amount || 0)),
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "研究遗物，生产科学和金"
+        desc: "陈列远古遗物，同时产出科学和金。幸福感加成随遗物持有数量增长。"
     },
     "科学院": {
         class: "ground", type: "科学",
@@ -320,7 +320,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {电力: 0.5}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "使大学科学产出/上限+10%",
+        desc: "先进仪器和智库，提升相邻大学10%的科学产出与上限。",
         modifiers: [{ target: "大学", prodFactor: 0.1, capFactor: 0.1 }]
     },
     "粒子加速器": {
@@ -330,7 +330,7 @@ BUILDINGS_CONFIG = {
         produces: {科学:0.2}, consumes: {电力:0.6}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "产出科学，每个（无论激活）增加2%遗物获取"
+        desc: "环形对撞机，产出科学，且每座（无论是否激活）提升2%遗物获取概率。"
     },
 
     // ========== 地面 - 存储 ==========
@@ -341,7 +341,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {}, caps: {木头: 100, 石头: 100},
         providesLocal: {},
         requiresLocal: {},
-        desc: "提高木头和石头储存上限（不占人口）"
+        desc: "木结构棚库，增加木头和石头储存上限。"
     },
     "集装箱": {
         class: "ground", type: "存储",
@@ -350,7 +350,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {}, caps: {木头:500, 石头:500, 煤:200, 铜:200, 铁:200, 钢:200, 铝:200},
         providesLocal: {},
         requiresLocal: {},
-        desc: "储存更多资源（不占人口）"
+        desc: "钢制标准箱堆场，大幅提高多种资源的上限。"
     },
     "大型仓库": {
         class: "ground", type: "存储",
@@ -359,7 +359,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {电力: 0.2}, caps: {木头:5000, 石头:5000, 煤:1000, 铜:1000, 铁:1000, 钢:500, 铝:400, 金:400, 建材:400, 塑料:400, 金属板:400,碳纤维:200},
         providesLocal: {},
         requiresLocal: {},
-        desc: "消耗电力，大幅提升上限（不占人口）"
+        desc: "自动化立体仓库，耗电运行，极度提升几乎所有资源的上限。"
     },
 
     // ========== 地面 - 军事 ==========
@@ -370,7 +370,7 @@ BUILDINGS_CONFIG = {
         produces: {军备: 0.2}, consumes: {铁: 0.5, 铜: 0.3, 政策点:0.1}, caps: {军备:20},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "训练士兵，生产军备"
+        desc: "训练场和武器库，消耗铁和铜生产军备，同时消耗政策点维持纪律。"
     },
     "军工厂": {
         class: "ground", type: "军事",
@@ -380,7 +380,7 @@ BUILDINGS_CONFIG = {
         providesLocal: {},
         requiresLocal: { population: 1 },
         modifiers: [{ target: "军营", prodFactor: 0.05, capFactor: 0.05 }],
-        desc: "提高军营效率"
+        desc: "弹药生产线，提升军营的效率和容量。"
     },
 
     // ========== 地面 - 其他 ==========
@@ -391,8 +391,8 @@ BUILDINGS_CONFIG = {
         produces: {政策点: 0.1}, consumes: {科学: 0.4}, caps: {政策点: 50},
         happiness: 0.5,
         providesLocal: {},
-        requiresLocal: {},
-        desc: "消耗科学，生产政策点（不占人口）"
+        requiresLocal: {population:1},
+        desc: "办公大楼，消耗科学产生政策点（用于切换政策）"
     },
     "市场": {
         class: "ground", type: "其他",
@@ -401,23 +401,31 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {}, caps: {金:100},
         providesLocal: {},
         requiresLocal: {},
-        desc: "提升单次交易数量"
+        desc: "交易集市，扩大单次买卖的数量上限。"
     },
-
+    "发射井": {
+        class: "ground", type: "其他",
+        unlockCondition: { tech: "火箭动力学" },
+        cost: (s, c) => standardCost({建材: 200,金属板:200, 核燃料: 20}, 1.2, c, getGlobalCostMultiplier(s)),
+        produces: {}, consumes: {核燃料:0.02}, caps: {},
+        providesLocal: {space_habitat:1},
+        requiresLocal: {},
+        desc: "火箭发射设施，定期消耗核燃料将载荷送入轨道，提供1点太空承载。"
+    },
     // ========== 太空==========
-        "轨道电梯": {
+    "轨道电梯": {
         class: "space", type: "近地轨道",
         unlockCondition: { tech: "轨道电梯" },
-        cost: (s, c) => standardCost({碳纤维: 5000, 钛: 3000, 金属板: 8000}, 1.15, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({碳纤维: 5000, 钛: 3000, 金属板: 8000}, 1.2, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.8}, caps: {},
-        providesLocal: {},
+        providesLocal: {space_habitat:1},
         requiresLocal: { population: 1 },
         modifiers: [
             { target: "月球铁矿", prodFactor: 0.03 },
             { target: "月球铜矿", prodFactor: 0.03 },
             { target: "月球钛矿", prodFactor: 0.03 }
         ],
-        desc:"改善地月交通，进而提高月球矿物运送回地球的效率"
+        desc:"从地面延伸至地球同步轨道的碳纳米管缆绳，大幅提高月球矿物产出，同时每个轨道电梯降低月球基地价格1%。"
     },
     "月球基地": {
         class: "space", type: "月球",
@@ -435,9 +443,9 @@ BUILDINGS_CONFIG = {
         },
         produces: {}, consumes: {电力: 2.0},
         caps: {铀:500, 钛:500, 碳纤维:500, 核燃料:200},
-        providesLocal: { space_habitat: 1.0,moon_habitat:1 },
-        requiresLocal: { population: 1 },
-        desc: "月球殖民，提供太空宜居度"
+        providesLocal: { moon_habitat:1 },
+        requiresLocal: { space_habitat:1,population: 1 },
+        desc: "密闭穹顶和生命维持系统，提供1点月球宜居度，价格随轨道电梯数量降低。"
     },
     "月球铁矿": {
         class: "space", type: "月球",
@@ -445,8 +453,8 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({钢: 50, 碳纤维: 150}, 1.20, c, getGlobalCostMultiplier(s)),
         produces: {铁: 1.5}, consumes: {电力: 1.0}, caps: {铁:100},
         providesLocal: {},
-        requiresLocal: { space_habitat: 1.0, moon_habitat: 0.5, population: 1 },
-        desc: "月球铁矿，需要氧气和宜居度"
+        requiresLocal: {  moon_habitat: 0.5, population: 1 },
+        desc: "月壤中的富铁玄武岩，经电磁分离得到铁。"
     },
     "月球铜矿": {
         class: "space", type: "月球",
@@ -454,8 +462,8 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({铝: 50, 碳纤维: 150}, 1.20, c, getGlobalCostMultiplier(s)),
         produces: {铜: 2.0}, consumes: {电力: 0.8}, caps: {铜:100},
         providesLocal: {},
-        requiresLocal: { space_habitat: 1.0, moon_habitat: 0.5, population: 1 },
-        desc: "月球铜矿"
+        requiresLocal: {  moon_habitat: 0.5, population: 1 },
+        desc: "月球高地的铜矿脉，产出铜。"
     },
     "月球钛矿": {
         class: "space", type: "月球",
@@ -463,8 +471,8 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({金属板: 100, 碳纤维: 250}, 1.2, c, getGlobalCostMultiplier(s)),
         produces: {钛: 0.5}, consumes: {电力: 1.2}, caps: {钛: 100},
         providesLocal: {},
-        requiresLocal: { space_habitat: 1.5, moon_habitat: 0.7, population: 1 },
-        desc:"月球钛矿"
+        requiresLocal: { moon_habitat: 0.7, population: 1 },
+        desc:"从月海钛铁矿中提取钛。"
     },
     "月球研究所": {
         class: "space", type: "月球",
@@ -472,8 +480,8 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({钛: 250, 钢: 400}, 1.25, c, getGlobalCostMultiplier(s)),
         produces: {科学: 0.1}, consumes: {电力: 1.0}, caps: {科学: 200},
         providesLocal: {},
-        requiresLocal: { space_habitat: 1.0, moon_habitat: 0.3, population: 1 },
-        desc:"月球研究所"
+        requiresLocal: { moon_habitat: 0.3, population: 1 },
+        desc:"低重力实验室，产出科学。"
     },
     "月球工厂": {
         class: "space", type: "月球",
@@ -491,38 +499,40 @@ BUILDINGS_CONFIG = {
             { target: "碳纤维厂", prodFactor: 0.05 },
             { target: "核燃料工厂", prodFactor: 0.05 }
         ],
-        desc:"月球工厂"
+        desc:"利用月球真空环境精炼材料，提升地面多种工厂产量。"
     },
 
-    "气态行星基地": {
-        class: "space", type: "气态行星",
-        unlockCondition: { tech: "探索气态行星" },
+    "木星基地": {
+        class: "space", type: "木星",
+        unlockCondition: { tech: "探索木星" },
         cost: (s, c) => standardCost({钛: 10000, 塑料: 5000}, 1.15, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.8},
         caps: {氚:300, 核燃料:300},
-        providesLocal: { space_habitat: 0.3,gas_habitat:1 },
-        requiresLocal: { population: 1 },
+        providesLocal: { gas_habitat:1 },
+        requiresLocal: { space_habitat:1,population: 1 },
         modifiers: [
             { target: "氚提取站", prodFactor: 0.03 },
             { target: "氚燃料厂", prodFactor: 0.03 }
         ],
-        desc:"首先在气态行星上建立固体地基，为其他建筑打下基础"
+        desc:"漂浮在木星上空的浮空城，提供1点木星宜居度。"
     },
     "氚提取站": {
-        class: "space", type: "气态行星",
+        class: "space", type: "木星",
         unlockCondition: { tech: "氚提取" },
         cost: (s, c) => standardCost({建材: 20000, 金属板: 10000}, 1.15, c, getGlobalCostMultiplier(s)),
         produces: {氚: 0.2}, consumes: {电力: 0.6}, caps: {氚: 100},
         providesLocal: {},
-        requiresLocal: { space_habitat: 0.5, gas_habitat: 1.0, population: 1 },
+        requiresLocal: { gas_habitat: 1.0, population: 1 },
+        desc:"从大气深处捕获氚同位素。"
     },
     "氚燃料厂": {
-        class: "space", type: "气态行星",
+        class: "space", type: "木星",
         unlockCondition: { tech: "氚处理" },
         cost: (s, c) => standardCost({钛: 10000, 碳纤维: 20000}, 1.12, c, getGlobalCostMultiplier(s)),
         produces: {核燃料: 0.4}, consumes: {氚: 0.1, 电力: 0.3}, caps: {核燃料: 100},
         providesLocal: {},
-        requiresLocal: { space_habitat: 0.8, gas_habitat: 1.0, population: 1 },
+        requiresLocal: {  gas_habitat: 1.0, population: 1 },
+        desc: "将氚与锂反应生成氦和大量核燃料"
     },
 
     "聚变反应堆": {
@@ -532,7 +542,7 @@ BUILDINGS_CONFIG = {
         produces: {电力: 3}, consumes: {核燃料: 0.50}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc:"利用聚变反应产生大量电力"
+        desc:"托卡马克装置，用核燃料实现可控聚变，产生海量电力。"
     },
     "太空剧院": {
         class: "space", type: "近地轨道",
@@ -542,7 +552,7 @@ BUILDINGS_CONFIG = {
         happiness: (state) => 0.2 * Math.log(Math.pow(2.718, 5) + (state.resources["暗能量"]?.amount || 0)),
         providesLocal: {},
         requiresLocal: { space_habitat: 0.5, population: 1 },
-        desc:"用暗能量表演神奇的魔术"
+        desc:"利用暗能量制造全息幻象，愉悦殖民者。幸福感加成随暗能量持有数量增长。"
     },
     "戴森球": {
         class: "space", type: "太阳",
@@ -551,7 +561,7 @@ BUILDINGS_CONFIG = {
         produces: {电力:1.5}, consumes: {}, caps: {},
         providesLocal: {},
         requiresLocal: {},
-        desc:"围绕太阳建造一个球，最大限度利用太阳能。"
+        desc:"包裹恒星的能源收集壳，提供持续的巨大电力。"
     },
     "星际交易站": {
         class: "space", type: "近地轨道",
@@ -560,7 +570,7 @@ BUILDINGS_CONFIG = {
         produces: {}, consumes: {电力:0.1}, caps: {金:1000},
         providesLocal: {},
         requiresLocal: {population:1},
-        desc:"极大提高单次交易数量"
+        desc:"停泊外星商船的码头，极大扩展市场单次交易量。"
     },
 
     "暗物质研究所": {
@@ -569,6 +579,6 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({钛:5000, 碳纤维:500, 科学:500}, 1.15, c, getGlobalCostMultiplier(s)),
         produces: {电力:0.2, 科学:0.2}, consumes: {},
         requiresLocal: { population: 1 },
-        desc:"研究从暗物质中凭空汲取能量，这可能是永动机？"
+        desc:"探测并转化暗能量为电力和科学，堪称‘永动机’。"
     },
 };

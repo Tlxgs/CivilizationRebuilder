@@ -9,7 +9,7 @@ const LOCAL_RESOURCES_CONFIG = {
     },
     space_habitat: {
         id: 'space_habitat',
-        name: '太空宜居度',
+        name: '太空承载',
         buildingFilter: (bKey, cfg) => cfg.class === 'space',
         provideKey: 'providesLocal',
         requireKey: 'requiresLocal',
@@ -25,11 +25,11 @@ const LOCAL_RESOURCES_CONFIG = {
     },
     gas_habitat: {
         id: 'gas_habitat',
-        name: '气态行星宜居度',
-        buildingFilter: (bKey, cfg) => cfg.type === '气态行星',
+        name: '木星宜居度',
+        buildingFilter: (bKey, cfg) => cfg.type === '木星',
         provideKey: 'providesLocal',
         requireKey: 'requiresLocal',
-        displayLocation: '气态行星',
+        displayLocation: '木星',
     },
 };
 window.LOCAL_RESOURCES_CONFIG = LOCAL_RESOURCES_CONFIG;

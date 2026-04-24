@@ -106,6 +106,7 @@ function initGameData() {
     for (let permKey in PERMANENT_CONFIG) {
         const cfg = PERMANENT_CONFIG[permKey];
         GameState.permanent[permKey] = {
+            name: cfg.name || permKey,   
             price: { ...cfg.price },
             desc: cfg.desc,
             effect: cfg.effect ? { ...cfg.effect } : null,

@@ -99,16 +99,14 @@ function renderLocalResourceValue(lrKey) {
     const lr = GameState.localResources[lrKey];
     const cfg = LOCAL_RESOURCES_CONFIG[lrKey];
     if (!lr || !cfg) return '';
-    
-    // 四舍五入保留 1 位小数
-    const usedDisplay = (Math.round(lr.used * 10) / 10).toFixed(1);
-    const capDisplay = (Math.round(lr.capacity * 10) / 10).toFixed(1);
-    
-    // 浮点容差判断
+
+    const usedDisplay = formatLocalNumber(lr.used);
+    const capDisplay  = formatLocalNumber(lr.capacity);
+
     const isOver = (lr.used - lr.capacity) > 1e-6;
     const isEqual = Math.abs(lr.used - lr.capacity) <= 1e-6;
     const color = isOver ? '#c52828' : (isEqual ? '#e6a017' : '#2d3f53');
-    
+
     return `<span style="background:#f0f4ff; padding:2px 8px; border-radius:4px; color:${color}; font-weight:500; margin-left:8px; font-size:0.9rem;">
         ${cfg.name}: ${usedDisplay} / ${capDisplay}
     </span>`;
