@@ -119,21 +119,6 @@ const Formulas = (function() {
         return Math.max(0.1, 1 - 0.3 * Math.log10(armsAmount / 100 + 1));
     }
 
-    // ========== 杂项 ==========
-    /**
-     * 资源产量贡献值（用于显示，实际计算由 modifiers 系统处理）
-     */
-    function calcBuildingProduction(resource, baseValue, activeCount, prodFactor, happinessFactor, eventMultiplier = 1.0) {
-        return baseValue * activeCount * prodFactor * happinessFactor * eventMultiplier;
-    }
-
-    function calcBuildingConsumption(resource, baseValue, activeCount, consFactor) {
-        return baseValue * activeCount * consFactor;
-    }
-
-    function calcBuildingCapProvide(resource, baseValue, activeCount, capFactor) {
-        return baseValue * activeCount * capFactor;
-    }
 
     // 公开 API
     return {
@@ -154,10 +139,7 @@ const Formulas = (function() {
         calcCrystalEffectBaseValue,
         calcCrystalPositiveChance,
         calcWarFailChance,
-        // 生产计算辅助
-        calcBuildingProduction,
-        calcBuildingConsumption,
-        calcBuildingCapProvide
+
     };
 })();
 

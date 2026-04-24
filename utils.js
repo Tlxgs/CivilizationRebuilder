@@ -65,7 +65,12 @@ function onTechResearched(tech) {
     refreshAllVisibility();
 }
 
-
+function formatLocalNumber(n) {
+    if (typeof n !== 'number') return '0';
+    const fixed = n.toFixed(1);
+    return fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed;
+}
+window.formatLocalNumber = formatLocalNumber;
 
 window.formatNumber = formatNumber;
 window.canAfford = canAfford;

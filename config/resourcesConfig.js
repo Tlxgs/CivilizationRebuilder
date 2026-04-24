@@ -19,7 +19,6 @@ const RESOURCES_CONFIG = {
     "铀":         { baseCap: 50,  value: 15,  heat: 1 },
     "氚":         { baseCap: 50 },
     "核燃料":     { baseCap: 50,  value: 20,  heat: 1 },
-    "太空宜居度": { baseCap: 50 },
     "军备":       { baseCap: 100 },
     "遗物":       { baseCap: 1000000 },
     "暗能量":     { baseCap: 1000000 },
