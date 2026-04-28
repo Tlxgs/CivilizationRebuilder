@@ -254,10 +254,16 @@ function loadGame() {
     }
 }
 
-function exportGame() {
+// ==================== 新增：获取导出文本 ====================
+function getGameExportText() {
     const saveData = getSaveData();
     const json = JSON.stringify(saveData, null, 2);
-    const encrypted = encryptData(json);
+    return encryptData(json);
+}
+
+// ==================== 修改：导出存档文件（复用导出文本） ====================
+function exportGame() {
+    const encrypted = getGameExportText();
     const blob = new Blob([encrypted], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -270,6 +276,27 @@ function exportGame() {
     alert('存档已导出为文件（.civ）');
 }
 
+// ==================== 新增：复制存档文本到剪贴板 ====================
+async function copyGameExportText() {
+    const encrypted = getGameExportText();
+    try {
+        await navigator.clipboard.writeText(encrypted);
+        alert('存档文本已复制到剪贴板！');
+    } catch(e) {
+        // 降级方案：显示文本弹窗
+        prompt('复制以下加密文本（手动复制）', encrypted);
+    }
+}
+
+// ==================== 新增：从文件导入存档 ====================
+function importGameFromFile(file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const encrypted = e.target.result;
+        importGame(encrypted);
+    };
+    reader.readAsText(file);
+}
 function importGame(encryptedText) {
     try {
         const decryptedJson = decryptData(encryptedText);

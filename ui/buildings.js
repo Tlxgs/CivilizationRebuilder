@@ -172,7 +172,7 @@ function switchBuildingClass(cls) {
                 html += `<button class="mode-gear-btn" data-building="${b}" title="当前模式：${modeName}。点击切换模式">⚙️</button>`;
             }
             let effHtml = '';
-            if (bd.active > 0 && bd.efficiency !== undefined && bd.efficiency < 0.9999) {
+            if (bd.active > 0 && bd.efficiency !== undefined && bd.efficiency < 0.995) {
                 const percent = (bd.efficiency * 100).toFixed(0);
                 effHtml = `<span style="color:#e6a017; font-size:0.8rem; margin-left:6px;">效率: ${percent}%</span>`;
             }
