@@ -237,13 +237,13 @@ const ProductionEngine = (function() {
 
             // 上限（不受效率影响）
             for (let r in raw.caps) {
-                let resourceCapMult = raw.capMult || 1;
+                let relicMult = 1;
                 if (r === '科学') {
-                    resourceCapMult *= (1 + Math.log(1 + relic) * sciCapPerRelicLog);
+                    relicMult *= (1 + Math.log(1 + relic) * sciCapPerRelicLog);
                 } else {
-                    resourceCapMult *= (1 + relic * capPerRelic);
+                    relicMult *= (1 + relic * capPerRelic);
                 }
-                state.resources[r].cap += raw.caps[r] * raw.active * resourceCapMult;
+                state.resources[r].cap += raw.caps[r] * raw.active * relicMult;
             }
 
             // 局域资源（提供量和需求量都按效率缩放）
