@@ -15,7 +15,7 @@ window.addEventListener('beforeunload', () => {
     GameLoop.stop();
 });
 
-const CHEAT_SEQUENCE = ['t', 'l', 'x', 'g', 's'];
+/*const CHEAT_SEQUENCE = ['t', 'l', 'x', 'g', 's'];
 let sequenceIndex = 0;
 
 window.addEventListener('keydown', (e) => {
@@ -31,7 +31,7 @@ window.addEventListener('keydown', (e) => {
         sequenceIndex = 0;
     }
 });
-
+*/
 function performCheat() {
     for (let r in GameState.resources) {
         if (r === '遗物' || r === '暗能量') continue;

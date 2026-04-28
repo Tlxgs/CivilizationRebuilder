@@ -471,7 +471,7 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({金属板: 100, 碳纤维: 250}, 1.2, c, getGlobalCostMultiplier(s)),
         produces: {钛: 0.5}, consumes: {电力: 1.2}, caps: {钛: 100},
         providesLocal: {},
-        requiresLocal: { moon_habitat: 0.7, population: 1 },
+        requiresLocal: { moon_habitat: 0.5, population: 1 },
         desc:"从月海钛铁矿中提取钛。"
     },
     "月球研究所": {
@@ -480,7 +480,7 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({钛: 250, 钢: 400}, 1.25, c, getGlobalCostMultiplier(s)),
         produces: {科学: 0.1}, consumes: {电力: 1.0}, caps: {科学: 200},
         providesLocal: {},
-        requiresLocal: { moon_habitat: 0.3, population: 1 },
+        requiresLocal: { moon_habitat: 0.5, population: 1 },
         desc:"低重力实验室，产出科学。"
     },
     "月球工厂": {
@@ -489,7 +489,7 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({钛: 300, 碳纤维: 300}, 1.15, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.3},
         providesLocal: {},
-        requiresLocal: { space_habitat: 0.3, moon_habitat: 0.2, population: 1 },
+        requiresLocal: {  moon_habitat: 0.5, population: 1 },
         modifiers: [
             { target: "建材工厂", prodFactor: 0.05 },
             { target: "炼钢厂", prodFactor: 0.05 },
@@ -505,7 +505,7 @@ BUILDINGS_CONFIG = {
     "木星基地": {
         class: "space", type: "木星",
         unlockCondition: { tech: "探索木星" },
-        cost: (s, c) => standardCost({钛: 10000, 塑料: 5000}, 1.15, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({钛: 10000, 塑料: 5000}, 1.1, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.8},
         caps: {氚:300, 核燃料:300},
         providesLocal: { gas_habitat:1 },
@@ -534,7 +534,32 @@ BUILDINGS_CONFIG = {
         requiresLocal: {  gas_habitat: 1.0, population: 1 },
         desc: "将氚与锂反应生成氦和大量核燃料"
     },
-
+    "浮空居民区": {
+        class: "space",
+        type: "木星",
+        unlockCondition: { tech: "木星殖民" },
+        cost: (s, c) => standardCost({钢: 5000, 金属板: 5000, 核燃料: 2000}, 1.15, c, getGlobalCostMultiplier(s)),
+        produces: {},
+        consumes: {电力: 0.5},
+        caps: {},
+        happiness: 0.1,
+        providesLocal: { population: 3 },
+        requiresLocal: { gas_habitat: 1},
+        desc: "悬浮在木星云顶的居住舱，利用磁场维持稳定，窗外有波澜壮阔的气态风暴非常美丽。每座可容纳3位殖民者。"
+    },
+    "核燃料转化炉": {
+        class: "space",
+        type: "木星",
+        unlockCondition: { tech: "核素转化" },
+        cost: (s, c) => standardCost({金属板: 8000, 钢: 6000,}, 1.15, c, getGlobalCostMultiplier(s)),
+        produces: {煤: 2.0},
+        consumes: {核燃料: 0.05},
+        caps: {},
+        happiness: -0.5,
+        providesLocal: {},
+        requiresLocal: { population: 1,gas_habitat:0.5 },
+        desc: "通过核反应逆向裂变将核燃料转变为普通煤炭，可以依靠核燃料本身能量因而不需要额外电力，但是过程中会产生大量污染。"
+    },
     "聚变反应堆": {
         class: "space", type: "月球",
         unlockCondition: { tech: "可控核聚变" },

@@ -216,36 +216,36 @@ const PERMANENT_CONFIG = {
     "空间压缩I": {
         name: "空间折叠·入门",
         price: {遗物: 5},
-        desc: "轻微扭曲存储区域的空间，每个遗物使储存类建筑上限提升0.1%（科学除外）。",
-        effect: { capPerRelic: 0.001 },
+        desc: "轻微扭曲存储区域的空间，每个遗物使储存类建筑上限提升0.05%（科学除外）。",
+        effect: { capPerRelic: 0.0005 },
         prereq: null
     },
     "空间压缩II": {
         name: "四维堆叠",
         price: {遗物: 20},
-        desc: "采用四维堆叠，效果再+0.1%/遗物。",
-        effect: { capPerRelic: 0.001 },
+        desc: "采用四维堆叠，每个遗物使储存类建筑上限再提升0.05%（科学除外）。",
+        effect: { capPerRelic: 0.0005 },
         prereq: ["空间压缩I"]
     },
     "空间压缩III": {
         name: "口袋空间",
         price: {遗物: 100},
-        desc: "口袋空间技术，每个遗物提升0.1%储存上限。",
-        effect: { capPerRelic: 0.001 },
+        desc: "口袋空间技术，每个遗物使储存类建筑上限再提升0.05%（科学除外）。",
+        effect: { capPerRelic: 0.0005 },
         prereq: ["空间压缩II"]
     },
     "空间压缩IV": {
         name: "维度折叠仓库",
         price: {遗物: 200},
-        desc: "维度折叠仓库，每遗物+0.1%。",
-        effect: { capPerRelic: 0.001 },
+        desc: "维度折叠仓库，每个遗物使储存类建筑上限再提升0.05%（科学除外）。",
+        effect: { capPerRelic: 0.0005 },
         prereq: ["空间压缩III"]
     },
     "空间压缩V": {
         name: "微型奇点",
         price: {遗物: 400},
-        desc: "将储存区转移到微型奇点中，每遗物+0.1%容量。",
-        effect: { capPerRelic: 0.001 },
+        desc: "将储存区转移到微型奇点中，每个遗物使储存类建筑上限再提升0.05%（科学除外）。",
+        effect: { capPerRelic: 0.0005},
         prereq: ["空间压缩IV"]
     },
 

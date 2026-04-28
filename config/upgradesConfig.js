@@ -48,10 +48,4 @@ const UPGRADES_CONFIG = {
         effect: {聚变反应堆:0.01}, level: 0,
         desc: "增加更多磁线圈和真空舱段，聚变反应堆的输出提升1%/级。" 
     },
-    "宜居化改造": {
-        unlockCondition: { tech: "宜居化改造" },
-        cost: (state, level) => standardUpgradeCost({钛:500, 科学:3000}, 1.05, level, getGlobalCostMultiplier(state)),
-        effect: {月球基地:0.01}, level: 0,
-        desc: "改进水循环和辐射屏蔽层，月球基地的生产效率提高1%/级。" 
-    }
 };
