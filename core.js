@@ -22,7 +22,6 @@ class GameEngine {
             b.count++;
             b.active++;
             successCount++;
-            // 立即更新当前建筑的价格（因为数量变了）
             b.price = cfg.cost(GameState, b.count);
         }
         if (successCount > 0) {

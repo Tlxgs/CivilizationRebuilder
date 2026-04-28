@@ -171,14 +171,19 @@ function switchBuildingClass(cls) {
                 const modeName = cfg.modes[bd.mode || 0]?.name || '未知';
                 html += `<button class="mode-gear-btn" data-building="${b}" title="当前模式：${modeName}。点击切换模式">⚙️</button>`;
             }
+            let effHtml = '';
+            if (bd.active > 0 && bd.efficiency !== undefined && bd.efficiency < 0.9999) {
+                const percent = (bd.efficiency * 100).toFixed(0);
+                effHtml = `<span style="color:#e6a017; font-size:0.8rem; margin-left:6px;">效率: ${percent}%</span>`;
+            }
             html += `<div class="building-card-info">
                 <strong class="${nameClass}">${b}</strong>
-                <small>${bd.active}/${bd.count}</small>`;
+                <small>${bd.active}/${bd.count}</small>${effHtml}`;
             if (cfg.modes && cfg.modes.length > 1) {
                 html += `<span class="mode-indicator"> | ${cfg.modes[bd.mode || 0].name}</span>`;
             }
-            html += `</div>
-            <div class="btn-group">
+            html += `</div>`;
+            html += `<div class="btn-group">
                 <button class="btn-square plus-btn" data-building="${b}">+</button>
                 <button class="btn-square minus-btn" data-building="${b}">-</button>
             </div></div>`;

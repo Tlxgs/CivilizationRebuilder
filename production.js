@@ -254,6 +254,15 @@ const ProductionEngine = (function() {
                 state.localResources[lr].used += raw.requiresLocal[lr] * effActive;
             }
         }
+        for (let bKey in state.buildings) {
+            const bld = state.buildings[bKey];
+            if (bldRaw[bKey]) {
+                bld.efficiency = efficiency[bKey] || 1.0;
+            } else {
+                // 未激活的建筑效率默认为 1（或保留上次值）
+                bld.efficiency = 1.0;
+            }
+        }
     }
 
     // ========== 建筑详细统计（用于 tooltip） ==========
