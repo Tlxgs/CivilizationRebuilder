@@ -14,17 +14,20 @@ class GameEngine {
     }
     buyBuilding(key, quantity = 1) {
         const b = GameState.buildings[key];
-        if (!b) return false;
+        const cfg = BUILDINGS_CONFIG[key];
+        if (!b || !cfg) return false;
         let successCount = 0;
         for (let i = 0; i < quantity; i++) {
             if (!consumeResources(b.price)) break;
             b.count++;
             b.active++;
             successCount++;
+            // 立即更新当前建筑的价格（因为数量变了）
+            b.price = cfg.cost(GameState, b.count);
         }
         if (successCount > 0) {
-            updateBuildingPrices();   // 重新计算建筑价格
-            updateUpgradePrices();    // 升级价格可能受建筑数量影响（如月球工厂）
+            // 全局刷新，确保其他建筑可能受全局成本乘数影响的价格也被更新
+            updateBuildingPrices();
             computeProductionAndCaps();
             renderAll();
         }
