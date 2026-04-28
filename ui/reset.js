@@ -1,10 +1,14 @@
 // ui/reset.js
 function renderResetPanel() {
     const panel = document.getElementById('panel-reset');
+    const currentTheme = localStorage.getItem('theme') || 'light';
+    const themeBtnText = currentTheme === 'dark' ? '浅色模式' : '深色模式';
+
     panel.innerHTML = `
         <div class="reset-area">
             <button class="btn-rect" id="hard-reset" title="彻底清除存档，重新开始游戏">硬重置</button>
             <button class="btn-rect" id="manual-save">手动保存</button>
+            <button class="btn-rect" id="toggle-theme">${themeBtnText}</button>
         </div>
         <div class="reset-area" style="margin-top: 1rem;">
             <button class="btn-rect" id="export-file-btn">导出存档文件</button>
@@ -20,13 +24,9 @@ function renderResetPanel() {
         <p>有任何建议或者遇到bug都可以发送到tlxgsgame@163.com，你的任何想法都可能进入到未来的游戏中！</p>
     `;
 
-    // 绑定4个功能按钮事件
-    document.getElementById('export-file-btn')?.addEventListener('click', () => {
-        exportGame();
-    });
-    document.getElementById('export-text-btn')?.addEventListener('click', () => {
-        copyGameExportText();
-    });
+    // 绑定功能按钮事件
+    document.getElementById('export-file-btn')?.addEventListener('click', () => exportGame());
+    document.getElementById('export-text-btn')?.addEventListener('click', () => copyGameExportText());
     document.getElementById('import-text-btn')?.addEventListener('click', () => {
         document.getElementById('import-modal').style.display = 'flex';
     });
@@ -40,6 +40,15 @@ function renderResetPanel() {
             }
         };
         input.click();
+    });
+
+    // 主题切换按钮
+    document.getElementById('toggle-theme')?.addEventListener('click', () => {
+        const isDark = document.body.classList.toggle('dark-theme');
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        // 更新按钮文字
+        const btn = document.getElementById('toggle-theme');
+        if (btn) btn.textContent = isDark ? '浅色模式' : '深色模式';
     });
 }
 

@@ -6,10 +6,15 @@ function renderPopulationInfo() {
     const used = Math.floor(pop.used);
     const cap  = Math.floor(pop.capacity);
     container.innerHTML = `人口: ${used} / ${cap}`;
-    if (used > cap) container.style.color = '#c52828';
-    else if (used === cap) container.style.color = '#e6a017';
-    else container.style.color = '#2d3f53';
+
+    // 清除旧的颜色类
+    container.classList.remove('pop-danger', 'pop-warning');
+
+    if (used > cap) {
+        container.classList.add('pop-danger');
+    } else if (used === cap) {
+        container.classList.add('pop-warning');
+    }
 }
 
-// 在 renderAll 中调用（见下一步）
 window.renderPopulationInfo = renderPopulationInfo;

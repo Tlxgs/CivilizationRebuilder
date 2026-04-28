@@ -130,7 +130,7 @@ function switchBuildingClass(cls) {
 
     let html = '';
 
-    // 1. 大类通用局域资源（如太空宜居度对整个 space 类生效）
+    // 大类通用局域资源
     const classResources = getLocalResourcesForClass(cls);
     if (classResources.length > 0) {
         html += '<div class="class-local-resources" style="display:flex; gap:1rem; margin-bottom:0.8rem; flex-wrap:wrap; padding:0.2rem 0;">';
@@ -140,20 +140,17 @@ function switchBuildingClass(cls) {
         html += '</div>';
     }
 
-    // 2. 按 type 渲染子类
     for (let type in typeMap) {
         const buildings = typeMap[type];
-        // 子类专属局域资源（如月球的氧气）
         const typeResources = getLocalResourcesForType(type);
         let resourceHtml = '';
         typeResources.forEach(key => {
             resourceHtml += renderLocalResourceValue(key);
         });
 
-        // 子类标题行，右侧带局域资源值
         html += `<div class="building-category" style="margin-bottom:1rem;">
             <div style="display:flex; align-items:center; margin-bottom:5px;">
-                <h4 style="border-left:3px solid #2a7faa; padding-left:5px; margin:0;">${type}</h4>
+                <h4 style="border-left:3px solid var(--accent); padding-left:5px; margin:0;">${type}</h4>
                 ${resourceHtml}
             </div>
             <div class="building-grid">`;
@@ -220,38 +217,26 @@ function renderBuildingPanel() {
         currentBuildingClass = classes[0];
     }
 
-    let html = '<div class="sub-tabs" style="margin-bottom:0.8rem; display:flex; gap:0.3rem; border-bottom:2px solid #e9ecef;">';
+    let html = '<div class="sub-tabs">';
     classes.forEach(cls => {
         const active = cls === currentBuildingClass;
-        html += `<button class="sub-tab-btn ${active ? 'active' : ''}" data-class="${cls}" style="
-            background:${active ? '#fff' : '#f1f5f9'}; color:${active ? '#0a3144' : '#2c3e50'};
-            border:1px solid ${active ? '#dee2e6' : 'transparent'}; border-bottom:${active ? '2px solid #2a7faa' : 'none'};
-            padding:0.4rem 1rem; border-radius:0.5rem 0.5rem 0 0; cursor:pointer; font-weight:600; font-size:0.9rem;">
-            ${getClassName(cls)}</button>`;
+        html += `<button class="sub-tab-btn${active ? ' active' : ''}" data-class="${cls}">${getClassName(cls)}</button>`;
     });
     html += '</div><div id="building-class-content"></div>';
     panel.innerHTML = html;
 
     switchBuildingClass(currentBuildingClass);
 
+    // 绑定子标签点击事件
     panel.querySelectorAll('.sub-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const cls = btn.dataset.class;
-            panel.querySelectorAll('.sub-tab-btn').forEach(b => {
-                b.classList.remove('active');
-                b.style.background = '#f1f5f9';
-                b.style.color = '#2c3e50';
-                b.style.border = '1px solid transparent';
-                b.style.borderBottom = 'none';
-            });
+            // 移除所有 active 类
+            panel.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+            // 给当前 btn 添加 active
             btn.classList.add('active');
-            btn.style.background = '#fff';
-            btn.style.color = '#0a3144';
-            btn.style.border = '1px solid #dee2e6';
-            btn.style.borderBottom = '2px solid #2a7faa';
             switchBuildingClass(cls);
         });
     });
 }
-
 window.renderBuildingPanel = renderBuildingPanel;
