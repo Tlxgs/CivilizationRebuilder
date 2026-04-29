@@ -177,7 +177,6 @@ const GameLoop = (function() {
         // 追赶完成后刷新全部 UI 和日志
         ProductionEngine.computeProductionAndCaps();
         renderAll();
-        addEventLog(`离线追赶 ${missedTicks} 个游戏tick，游戏时间前进 ${(missedTicks * BASE_TICK_DT * speed).toFixed(1)} 秒。`);
         lastRealTimestamp = now;
     }
 
