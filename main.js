@@ -21,9 +21,9 @@ window.addEventListener('beforeunload', () => {
     GameLoop.stop();
 });
 
-/*const CHEAT_SEQUENCE = ['t', 'l', 'x', 'g', 's'];
+const CHEAT_SEQUENCE = ['t', 'l', 'x', 'g', 's'];
 let sequenceIndex = 0;
-
+/*
 window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     const key = e.key.toLowerCase();

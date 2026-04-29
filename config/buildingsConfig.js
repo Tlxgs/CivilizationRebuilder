@@ -408,9 +408,21 @@ BUILDINGS_CONFIG = {
         unlockCondition: { tech: "火箭动力学" },
         cost: (s, c) => standardCost({建材: 200,金属板:200, 核燃料: 20}, 1.2, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {核燃料:0.02}, caps: {},
-        providesLocal: {space_habitat:1},
+        providesLocal: (state) => ({
+            space_habitat: 1 * (1 + 0.05 * (state.buildings["航天公司"]?.active || 0))
+        }),
         requiresLocal: {},
-        desc: "火箭发射设施，定期消耗核燃料将载荷送入轨道，提供1点太空承载。"
+        desc: "火箭发射设施，定期消耗核燃料将载荷送入轨道，提供太空承载。"
+    },
+    "航天公司": {
+        class: "ground", type: "其他",
+        unlockCondition: { tech: "商业航天" },
+        cost: (s, c) => standardCost({金属板: 3000,  金: 1000}, 1.25, c, getGlobalCostMultiplier(s)),
+        produces: {}, consumes: {电力: 0.5, 金: 0.1},
+        caps: {},
+        providesLocal: {},
+        requiresLocal: { population: 1 },
+        desc: "商业航天企业，通过竞争与创新，每激活一个航天公司可使每个发射井提供的太空承载提升5%。"
     },
     // ========== 太空==========
     "轨道电梯": {

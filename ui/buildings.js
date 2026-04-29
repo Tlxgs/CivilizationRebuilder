@@ -17,24 +17,22 @@ function getBuildingTooltip(buildingKey) {
     html += `数量: ${bd.count} | 激活: ${bd.active}<br>`;
     html += `价格: ${priceStr}<br><br><strong>当前效果 (每座):<br></strong>`;
 
-    // 局域资源供需
-    const provides = cfg.providesLocal || {};
-    const requires = cfg.requiresLocal || {};
-    for (let lrKey in provides) {
-        const lrCfg = LOCAL_RESOURCES_CONFIG[lrKey];
-        if (lrCfg && provides[lrKey] !== 0) {
-            html += `提供${lrCfg.name}: +${provides[lrKey]}<br>`;
-        }
-    }
-    for (let lrKey in requires) {
-        const lrCfg = LOCAL_RESOURCES_CONFIG[lrKey];
-        if (lrCfg && requires[lrKey] !== 0) {
-            html += `需求${lrCfg.name}: ${requires[lrKey]}<br>`;
-        }
-    }
 
     const stats = ProductionEngine.getBuildingStats(buildingKey);
     if (stats) {
+        // 局域资源
+        for (let lrKey in stats.providesLocal) {
+            const lrCfg = LOCAL_RESOURCES_CONFIG[lrKey];
+            if (lrCfg && stats.providesLocal[lrKey] !== 0) {
+                html += `提供${lrCfg.name}: +${stats.providesLocal[lrKey]}<br>`;
+            }
+        }
+        for (let lrKey in stats.requiresLocal) {
+            const lrCfg = LOCAL_RESOURCES_CONFIG[lrKey];
+            if (lrCfg && stats.requiresLocal[lrKey] !== 0) {
+                html += `需求${lrCfg.name}: ${stats.requiresLocal[lrKey]}<br>`;
+            }
+        }
         for (let det of stats.details) {
             if (det.type === 'prod') html += `${det.resource}: +${formatNumber(det.perBuilding)}/秒<br>`;
             else if (det.type === 'cons') html += `${det.resource}: -${formatNumber(det.perBuilding)}/秒<br>`;

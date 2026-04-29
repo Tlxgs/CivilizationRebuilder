@@ -30,7 +30,19 @@ const ProductionEngine = (function() {
         if (typeof modeCfg.happiness === 'function') return modeCfg.happiness(state);
         return modeCfg.happiness;
     }
+    function getBaseProvidesLocal(cfg, building, state) {
+        const modeCfg = getActiveModeConfig(cfg, building);
+        if (!modeCfg.providesLocal) return {};
+        if (typeof modeCfg.providesLocal === 'function') return modeCfg.providesLocal(state);
+        return modeCfg.providesLocal;
+    }
 
+    function getBaseRequiresLocal(cfg, building, state) {
+        const modeCfg = getActiveModeConfig(cfg, building);
+        if (!modeCfg.requiresLocal) return {};
+        if (typeof modeCfg.requiresLocal === 'function') return modeCfg.requiresLocal(state);
+        return modeCfg.requiresLocal;
+    }
     function getActiveModeConfig(cfg, building) {
         if (!cfg.modes || !building || building.mode === undefined) return cfg;
         const mode = cfg.modes[building.mode];
@@ -97,8 +109,8 @@ const ProductionEngine = (function() {
                 produces: scaledProd,
                 consumes: scaledCons,
                 caps: scaledCap,
-                providesLocal: cfg.providesLocal || {},
-                requiresLocal: cfg.requiresLocal || {},
+                providesLocal: getBaseProvidesLocal(cfg, bld, state),
+                requiresLocal: getBaseRequiresLocal(cfg, bld, state),
                 happiness: baseHappy,   // 每座幸福度贡献，不受效率影响
                 capMult: capMult,
             };
@@ -291,6 +303,8 @@ const ProductionEngine = (function() {
         const baseCons = getBaseConsumes(cfg, building, state);
         const baseCap  = getBaseCaps(cfg, building, state);
         const baseHappy = getBaseHappiness(cfg, building, state);
+        const baseProvidesLocal = getBaseProvidesLocal(cfg, building, state);
+        const baseRequiresLocal = getBaseRequiresLocal(cfg, building, state);
 
         const relic = state.resources["遗物"]?.amount || 0;
         let capPerRelic = 0, sciCapPerRelicLog = 0;
@@ -326,7 +340,9 @@ const ProductionEngine = (function() {
             details,
             activeCount: building.active,
             happinessPerBuilding: baseHappy,
-            happinessTotal: baseHappy * building.active
+            happinessTotal: baseHappy * building.active,
+            providesLocal: baseProvidesLocal,
+            requiresLocal: baseRequiresLocal
         };
     }
 
