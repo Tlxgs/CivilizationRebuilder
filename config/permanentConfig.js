@@ -136,7 +136,7 @@ const PERMANENT_CONFIG = {
     },
     "高效生产X": {
         name: "因果逆流装置",
-        price: {遗物: 1000},
+        price: {遗物: 10000},
         desc: "因果逆流装置，让产品在制造之前就已存在，产量+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产IX"]
