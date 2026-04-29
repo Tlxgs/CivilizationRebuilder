@@ -129,14 +129,14 @@ const PERMANENT_CONFIG = {
     },
     "高效生产IX": {
         name: "黑洞时间膨胀",
-        price: {遗物: 6000},
+        price: {遗物: 600},
         desc: "将工厂建在黑洞视界边缘，利用引力时间膨胀加速生产，产量+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产VIII"]
     },
     "高效生产X": {
         name: "因果逆流装置",
-        price: {遗物: 10000},
+        price: {遗物: 1000},
         desc: "因果逆流装置，让产品在制造之前就已存在，产量+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产IX"]
