@@ -3,12 +3,15 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
     const permBackup = JSON.parse(JSON.stringify(GameState.permanent));
     const relic = GameState.resources["遗物"]?.amount || 0;
     const darkEnergy = GameState.resources["暗能量"]?.amount || 0;
+    GameState.speed = 1;
 
+    const timeCrystal = GameState.resources["时间晶体"]?.amount || 0;
     for (let r in GameState.resources) {
-        if (r === "遗物") GameState.resources[r].amount = relic + extraRelic;
+        if (r === "时间晶体") GameState.resources[r].amount = timeCrystal;       // 保留时间晶体
+        else if (r === "遗物") GameState.resources[r].amount = relic + extraRelic;
         else if (r === "暗能量") GameState.resources[r].amount = darkEnergy + extraDarkEnergy;
         else GameState.resources[r].amount = 0;
-        GameState.resources[r].visible = (GameState.resources[r].amount > 0) || (r === "木头") || (r === "科学");
+        GameState.resources[r].visible = (GameState.resources[r].amount > 0) || (r === "科学");
     }
 
     for (let b in GameState.buildings) {
@@ -59,10 +62,9 @@ function vacuumDecayReset() {
 }
 
 function hardReset() {
+    window._hardResetting = true; 
     localStorage.clear();
     location.reload();
-    ModifierSystem.clearCache();
-    renderAll();
 }
 
 function getMarketTradeVolume() {

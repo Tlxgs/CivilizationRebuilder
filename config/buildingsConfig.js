@@ -65,6 +65,16 @@ BUILDINGS_CONFIG = {
         requiresLocal: { population: 1 },
         desc: "露天矿坑，用爆破和机械破碎采集石料。需要1名工人。"
     },
+    "炭窑":{
+        class: "ground", type: "生产",
+        unlockCondition: { tech: "制炭技术" },
+        cost: (s, c) => standardCost({木头: 150}, 1.20, c, getGlobalCostMultiplier(s)),
+        produces: {煤: 0.4},
+        consumes: {木头:2.0}, caps: {},
+        providesLocal: {},
+        requiresLocal: { population: 1 },
+        desc: "将木头烧制成木炭，需要1名工人操作。"
+    },
     "煤矿": {
         class: "ground", type: "生产",
         unlockCondition: { tech: "煤矿生产" },

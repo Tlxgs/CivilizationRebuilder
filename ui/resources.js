@@ -2,7 +2,7 @@
 function renderResources() {
     const bar = document.getElementById('resource-bar');
     if (!bar) return;
-    bar.innerHTML = '';  // 清空，完全重绘
+    bar.innerHTML = '';
 
     for (let r in GameState.resources) {
         const res = GameState.resources[r];
@@ -13,25 +13,26 @@ function renderResources() {
         const capDisplay = (cap === Infinity) ? "∞" : formatNumber(cap);
         const production = res.production;
         const prodText = (production > 0 ? '+' : '') + formatNumber(production);
-        const text = `${r}: ${formatNumber(amount)}/${capDisplay} (${prodText}/s)`;
 
-        // 计算进度百分比（上限无限时进度为0）
+        // 构建显示文本，若无产量则隐藏产出部分
+        let text = `${r}: ${formatNumber(amount)}/${capDisplay}`;
+        if (Math.abs(production) > 1e-9) {
+            text += ` (${prodText}/s)`;
+        }
+
         let percent = 0;
         if (cap !== Infinity && cap > 0) {
             percent = Math.min(100, (amount / cap) * 100);
         }
 
-        // 创建卡片容器
         const item = document.createElement('div');
         item.className = 'resource-item';
         item.dataset.resource = r;
 
-        // 进度条元素
         const progressDiv = document.createElement('div');
         progressDiv.className = 'resource-progress';
         progressDiv.style.width = `${percent}%`;
 
-        // 文本元素
         const textDiv = document.createElement('div');
         textDiv.className = 'resource-text';
         textDiv.textContent = text;
@@ -39,7 +40,6 @@ function renderResources() {
         item.appendChild(progressDiv);
         item.appendChild(textDiv);
 
-        // tooltip 显示资源详细贡献
         item.addEventListener('mouseenter', () => {
             const resName = item.dataset.resource;
             const resData = GameState.resources[resName];
@@ -47,7 +47,12 @@ function renderResources() {
 
             let tooltipHtml = `<strong>${resName}</strong><br>`;
             tooltipHtml += `当前: ${formatNumber(resData.amount)} / ${resData.cap === Infinity ? "∞" : formatNumber(resData.cap)}<br>`;
-            tooltipHtml += `净产量: ${resData.production > 0 ? '+' : ''}${formatNumber(resData.production)}/秒<br><br>`;
+            if (Math.abs(resData.production) > 1e-9) {
+                const sign = resData.production > 0 ? '+' : '';
+                tooltipHtml += `净产量: ${sign}${formatNumber(resData.production)}/秒<br><br>`;
+            } else {
+                tooltipHtml += `<br>`;
+            }
             tooltipHtml += `<strong>各建筑贡献</strong><br>`;
 
             const contributions = getResourceContributions(resName);

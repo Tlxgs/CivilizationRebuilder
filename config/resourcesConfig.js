@@ -22,5 +22,5 @@ const RESOURCES_CONFIG = {
     "军备":       { baseCap: 100 },
     "遗物":       { baseCap: 1000000 },
     "暗能量":     { baseCap: 1000000 },
-    "时间晶体":   { baseCap: 1000000 }
+    "时间晶体":   { baseCap: 36000 }
 };

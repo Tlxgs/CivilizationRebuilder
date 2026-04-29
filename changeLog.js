@@ -1,6 +1,10 @@
 const ChangelogData = {
     version: "v0.2",
     logs: [
+        { version: "v0.5.3", date: "2026-04-29", changes: [
+            "增加一些煤相关的科技和建筑，煤变得（稍微（^-^））不那么缺乏。",
+            "增加离线收益机制。"
+        ]},
         { version: "v0.5.2", date: "2026-04-29", changes: [
             "增加一个新科技和建筑",
         ]},

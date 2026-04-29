@@ -1,4 +1,12 @@
 const actionMetaList = [
+    {
+        id: 'toggle_speed',
+        text: () => GameState.speed === 2 ? '恢复1倍速' : '开启2倍速',
+        tooltip: () => GameState.speed === 2
+            ? '恢复1倍速游戏'
+            : `消耗时间晶体开启2倍速\n当前时间晶体: ${formatNumber(GameState.resources['时间晶体']?.amount || 0)}`,
+        condition: () => GameState.speed === 2 || (GameState.resources['时间晶体']?.amount || 0) >= 0.1
+    },
     { id: 'collect_wood', text: '收集木头', tooltip: '立即获得 +1 木头' },
     { id: 'collect_stone', text: '收集石头', tooltip: '立即获得 +1 石头' },
     { id: 'research_tech', text: '研究科技', tooltip: '立即获得 +1 科学' },
@@ -12,13 +20,19 @@ function renderActionsPanel() {
     let html = '<h3>行动</h3><div class="action-buttons">';
     actionMetaList.forEach(meta => {
         if (meta.condition && !meta.condition()) return;
-        html += `<button class="action-btn" data-action="${meta.id}">${meta.text}</button>`;
+        const btnText = typeof meta.text === 'function' ? meta.text() : meta.text;
+        html += `<button class="action-btn" data-action="${meta.id}">${btnText}</button>`;
     });
     html += '</div>';
     container.innerHTML = html;
     document.querySelectorAll('.action-btn').forEach(btn => {
         const meta = actionMetaList.find(m => m.id === btn.dataset.action);
-        if (meta) btn.addEventListener('mouseenter', () => showTooltip(btn, meta.tooltip));
+        if (meta) {
+            btn.addEventListener('mouseenter', () => {
+                const tip = typeof meta.tooltip === 'function' ? meta.tooltip() : meta.tooltip;
+                showTooltip(btn, tip);
+            });
+        }
     });
 }
 window.renderActionsPanel = renderActionsPanel;

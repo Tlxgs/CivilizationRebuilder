@@ -130,4 +130,6 @@ function initGameData() {
         equipped: [null, null, null],
         inventory: []
     };
+    GameState.speed = 1;          // 默认1倍速
+    GameState.lastSaveTime = null;
 }

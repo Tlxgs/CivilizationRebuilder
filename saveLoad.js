@@ -47,6 +47,8 @@ function getSaveData() {
     const saveData = {
         version: "1.0",
         gameDays: GameState.gameDays,
+        lastSaveTime: GameState.lastSaveTime,
+        speed: GameState.speed,   
         activeRandomEvents: GameState.activeRandomEvents ? GameState.activeRandomEvents.map(ev => ({
             id: ev.id,
             name: ev.name,
@@ -55,7 +57,7 @@ function getSaveData() {
             durationDays: ev.durationDays,
             endDay: ev.endDay,
             baseProbability: ev.baseProbability,
-            prereqTech: ev.prereqTech
+            prereqTech: ev.prereqTech,
         })) : [],
         eventLogs: GameState.eventLogs.slice(),
         resources: {}, buildings: {}, techs: {}, upgrades: {}, policies: {}, permanent: {}
@@ -123,6 +125,7 @@ function saveGame() {
 }
 // saveLoad.js (只修改 refreshGameStateFromSave 函数)
 function refreshGameStateFromSave(saveData) {
+
     // 1. 备份永恒升级状态
     const permBackup = {};
     if (saveData.permanent) {
@@ -202,6 +205,8 @@ function refreshGameStateFromSave(saveData) {
     refreshAllVisibility();
 
     // 10. 恢复日期、事件、日志
+    if (saveData.lastSaveTime!== undefined) GameState.lastSaveTime = saveData.lastSaveTime;
+    if (saveData.speed !== undefined) GameState.speed = saveData.speed;
     if (saveData.gameDays !== undefined) GameState.gameDays = saveData.gameDays;
     if (saveData.eventLogs) GameState.eventLogs = saveData.eventLogs;
     if (saveData.activeRandomEvents) {

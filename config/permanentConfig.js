@@ -36,7 +36,7 @@ const PERMANENT_CONFIG = {
         prereq: ["节约成本IV"]
     },
     "节约成本VI": {
-        name: "虚空铸造·初阶",
+        name: "虚空铸造·入门",
         price: {遗物: 1000, 暗能量: 10},
         desc: "利用暗能量扭曲局部时空，使建造所需物质减少，成本增长率-4%。",
         effect: { costRatio: 0.95 },

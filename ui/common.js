@@ -226,7 +226,6 @@ function getBuildingAffordabilityStatus(price) {
     return 'insufficient';
 }
 
-// 轻量级更新资源条（不重建 DOM）
 function refreshResourceBars() {
     for (let r in GameState.resources) {
         const res = GameState.resources[r];
@@ -238,7 +237,12 @@ function refreshResourceBars() {
         const capDisplay = cap === Infinity ? '∞' : formatNumber(cap);
         const prod = res.production;
         const prodText = (prod > 0 ? '+' : '') + formatNumber(prod);
-        const text = `${r}: ${formatNumber(amount)}/${capDisplay} (${prodText}/s)`;
+        
+        let text = `${r}: ${formatNumber(amount)}/${capDisplay}`;
+        if (Math.abs(prod) > 1e-9) {
+            text += ` (${prodText}/s)`;
+        }
+        
         const textDiv = item.querySelector('.resource-text');
         if (textDiv) textDiv.textContent = text;
         let percent = 0;

@@ -90,6 +90,23 @@ class GameEngine {
 
     performAction(actionId) {
         const handlers = {
+            toggle_speed: () => {
+                if (GameState.speed === 2) {
+                    GameState.speed = 1;
+                    GameLoop.resetTimer();
+                    addEventLog("游戏速度恢复为1倍速。");
+                    return true;
+                } else {
+                    const crystal = GameState.resources["时间晶体"];
+                    if (!crystal || crystal.amount < 1) {
+                        alert("时间晶体不足！");
+                        return false;
+                    }
+                    GameState.speed = 2;
+                    GameLoop.resetTimer();
+                    return true;
+                }
+            },
             collect_wood: () => {
                 GameState.resources["木头"].amount = Math.min(
                     GameState.resources["木头"].cap,
