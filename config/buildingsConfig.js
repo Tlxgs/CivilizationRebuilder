@@ -327,7 +327,7 @@ BUILDINGS_CONFIG = {
         class: "ground", type: "科学",
         unlockCondition: { tech: "量子力学" },
         cost: (s, c) => standardCost({金属板:500, 建材:500, 科学:500}, 1.2, c, getGlobalCostMultiplier(s)),
-        produces: {科学:0.2}, consumes: {电力:0.6}, caps: {},
+        produces: {科学:0.1}, consumes: {电力:0.3}, caps: {},modifiers:[{target: "大学", capFactor: 0.02}],
         providesLocal: {},
         requiresLocal: { population: 1 },
         desc: "环形对撞机，产出科学，且每座（无论是否激活）提升2%遗物获取概率。"
@@ -503,13 +503,13 @@ BUILDINGS_CONFIG = {
         providesLocal: {},
         requiresLocal: {  moon_habitat: 0.5, population: 1 },
         modifiers: [
-            { target: "建材工厂", prodFactor: 0.05 },
-            { target: "炼钢厂", prodFactor: 0.05 },
-            { target: "电解铝厂", prodFactor: 0.05 },
-            { target: "金属加工厂", prodFactor: 0.05 },
-            { target: "塑料厂", prodFactor: 0.05 },
-            { target: "碳纤维厂", prodFactor: 0.05 },
-            { target: "核燃料工厂", prodFactor: 0.05 }
+            { target: "建材工厂", prodFactor: 0.1 },
+            { target: "炼钢厂", prodFactor: 0.1 },
+            { target: "电解铝厂", prodFactor: 0.1 },
+            { target: "金属加工厂", prodFactor: 0.1 },
+            { target: "塑料厂", prodFactor: 0.1 },
+            { target: "碳纤维厂", prodFactor: 0.1 },
+            { target: "核燃料工厂", prodFactor: 0.1 }
         ],
         desc:"利用月球真空环境精炼材料，提升地面多种工厂产量。"
     },
@@ -614,7 +614,7 @@ BUILDINGS_CONFIG = {
         class: "space", type: "月球",
         unlockCondition: { tech: "暗物质利用" },
         cost: (s, c) => standardCost({钛:5000, 碳纤维:500, 科学:500}, 1.15, c, getGlobalCostMultiplier(s)),
-        produces: {电力:0.2, 科学:0.2}, consumes: {},
+        produces: {电力:0.2, 科学:0.2}, consumes: {},modifiers:[{target: "月球研究所", capFactor: 0.05}],
         requiresLocal: { population: 1 },
         desc:"探测并转化暗能量为电力和科学，堪称‘永动机’。"
     },

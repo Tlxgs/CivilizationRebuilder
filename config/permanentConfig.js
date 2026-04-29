@@ -31,42 +31,42 @@ const PERMANENT_CONFIG = {
     "节约成本V": {
         name: "黄金分割",
         price: {遗物: 618},
-        desc: "利用黄金分割比建造建筑实现优化，同时这个名字也是对神作的致敬",
+        desc: "利用黄金分割比建造建筑实现优化，同时这个名字也是对神作的致敬，成本增长率-5%",
         effect: { costRatio: 0.95 },
         prereq: ["节约成本IV"]
     },
     "节约成本VI": {
         name: "虚空铸造·初阶",
         price: {遗物: 1000, 暗能量: 10},
-        desc: "利用暗能量扭曲局部时空，使建造所需物质减少，成本增长率-5%。",
+        desc: "利用暗能量扭曲局部时空，使建造所需物质减少，成本增长率-4%。",
         effect: { costRatio: 0.95 },
         prereq: ["节约成本V"]
     },
     "节约成本VII": {
-        name: "维度折叠·中阶",
+        name: "虚空铸造·中阶",
         price: {遗物: 1500, 暗能量: 20},
-        desc: "维度折叠技术，让原料体积压缩，成本增长率-5%。",
+        desc: "维度折叠技术，让原料体积压缩，成本增长率-4%。",
         effect: { costRatio: 0.95 },
         prereq: ["节约成本VI"]
     },
     "节约成本VIII": {
-        name: "反物质催化·高阶",
+        name: "虚空铸造·高阶",
         price: {遗物: 2000, 暗能量: 40},
-        desc: "反物质催化建造，原子级重组，成本增长率-5%。",
+        desc: "反物质催化建造，原子级重组，成本增长率-3%。",
         effect: { costRatio: 0.95 },
         prereq: ["节约成本VII"]
     },
     "节约成本IX": {
-        name: "虚空造物·大师",
+        name: "虚空铸造·专家",
         price: {遗物: 2500, 暗能量: 80},
-        desc: "虚空造物技术，从真空中借取能量，成本增长率-5%。",
+        desc: "虚空造物技术，从真空中借取物质来建造，成本增长率-3%。",
         effect: { costRatio: 0.95 },
         prereq: ["节约成本VIII"]
     },
     "节约成本X": {
         name: "因果重塑",
         price: {遗物: 3000, 暗能量: 160},
-        desc: "因果律修改，让建筑所需资源在历史中就不存在，成本增长率-5%。",
+        desc: "因果律修改，让建筑所需资源在历史中就不存在，成本增长率-2%。",
         effect: { costRatio: 0.95 },
         prereq: ["节约成本IX"]
     },
@@ -79,49 +79,49 @@ const PERMANENT_CONFIG = {
         prereq: null
     },
     "高效生产II": {
-        name: "泰勒管理法",
+        name: "精益思维·中阶",
         price: {遗物: 20},
         desc: "学习泰勒科学管理法，产量再+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产I"]
     },
     "高效生产III": {
-        name: "统计过程控制",
+        name: "精益思维·高阶",
         price: {遗物: 40},
         desc: "引入统计过程控制，减少次品率，产量+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产II"]
     },
     "高效生产IV": {
-        name: "全自动生产线",
+        name: "精益思维·专家",
         price: {遗物: 60},
         desc: "全面自动化改造，产量+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产III"]
     },
     "高效生产V": {
-        name: "AI调度大师",
+        name: "统筹规划·入门",
         price: {遗物: 80},
         desc: "开发专用AI调度软件，产量+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产IV"]
     },
     "高效生产VI": {
-        name: "纳米润滑涂层",
+        name: "统筹规划·中阶",
         price: {遗物: 100},
         desc: "纳米涂层降低摩擦，产量+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产V"]
     },
     "高效生产VII": {
-        name: "量子催化反应",
+        name: "统筹规划·高阶",
         price: {遗物: 150},
         desc: "利用量子隧穿效应优化化学反应，产量+5%。",
         effect: { globalProd: 0.05 },
         prereq: ["高效生产VI"]
     },
     "高效生产VIII": {
-        name: "自修复材料",
+        name: "统筹规划·专家",
         price: {遗物: 300},
         desc: "自修复材料让机器永不停机，产量+5%。",
         effect: { globalProd: 0.05 },
@@ -143,28 +143,28 @@ const PERMANENT_CONFIG = {
     },
 
     "高速生产I": {
-        name: "加速传动·初",
+        name: "加速传动·入门",
         price: {遗物: 5},
         desc: "提高传送带速度，所有建筑生产速度+10%（消耗同步增加）。",
         effect: { globalSpeed: 0.10 },
         prereq: null
     },
     "高速生产II": {
-        name: "超频电机",
+        name: "加速传动·中阶",
         price: {遗物: 10},
         desc: "超频电机，速度再+10%。",
         effect: { globalSpeed: 0.10 },
         prereq: ["高速生产I"]
     },
     "高速生产III": {
-        name: "多线程并行",
+        name: "加速传动·高阶",
         price: {遗物: 15},
         desc: "多线程并行处理，速度+10%。",
         effect: { globalSpeed: 0.10 },
         prereq: ["高速生产II"]
     },
     "高速生产IV": {
-        name: "光速数据总线",
+        name: "加速传动·专家",
         price: {遗物: 20},
         desc: "光速数据总线，速度+10%。",
         effect: { globalSpeed: 0.10 },
@@ -178,37 +178,37 @@ const PERMANENT_CONFIG = {
         prereq: ["高速生产IV"]
     },
     "高速生产VI": {
-        name: "时间感知场",
+        name: "原子级装配",
         price: {遗物: 50},
-        desc: "时间感知加速场，速度+10%。",
+        desc: "分子级装配，速度+10%。",
         effect: { globalSpeed: 0.10 },
         prereq: ["高速生产V"]
     },
     "高速生产VII": {
-        name: "超光速通信",
+        name: "质子级装配",
         price: {遗物: 80},
-        desc: "超光速通信控制，速度+10%。",
+        desc: "质子级装配，速度+10%。",
         effect: { globalSpeed: 0.10 },
         prereq: ["高速生产VI"]
     },
     "高速生产VIII": {
-        name: "量子并行加工",
+        name: "夸克级装配",
         price: {遗物: 120},
-        desc: "量子并行加工，速度+10%。",
+        desc: "夸克级装配，速度+10%。",
         effect: { globalSpeed: 0.10 },
         prereq: ["高速生产VII"]
     },
     "高速生产IX": {
-        name: "平行宇宙副本",
+        name: "弦级装配",
         price: {遗物: 200},
-        desc: "建造平行宇宙副本同步生产，速度+10%。",
+        desc: "弦级装配，速度+10%。",
         effect: { globalSpeed: 0.10 },
         prereq: ["高速生产VIII"]
     },
     "高速生产X": {
         name: "时间领主",
         price: {遗物: 300},
-        desc: "成为时间领主，直接让生产线进入时间循环，速度+10%。",
+        desc: "成为时间领主，在生产线出现之前就把东西造出来了，速度+10%。",
         effect: { globalSpeed: 0.10 },
         prereq: ["高速生产IX"]
     },
@@ -221,31 +221,31 @@ const PERMANENT_CONFIG = {
         prereq: null
     },
     "空间压缩II": {
-        name: "四维堆叠",
+        name: "空间折叠·中阶",
         price: {遗物: 20},
-        desc: "采用四维堆叠，每个遗物使储存类建筑上限再提升0.05%（科学除外）。",
-        effect: { capPerRelic: 0.0005 },
+        desc: "采用四维堆叠，每个遗物使储存类建筑上限再提升0.04%（科学除外）。",
+        effect: { capPerRelic: 0.0004 },
         prereq: ["空间压缩I"]
     },
     "空间压缩III": {
-        name: "口袋空间",
+        name: "空间折叠·高阶",
         price: {遗物: 100},
-        desc: "口袋空间技术，每个遗物使储存类建筑上限再提升0.05%（科学除外）。",
-        effect: { capPerRelic: 0.0005 },
+        desc: "口袋空间技术，每个遗物使储存类建筑上限再提升0.03%（科学除外）。",
+        effect: { capPerRelic: 0.0003 },
         prereq: ["空间压缩II"]
     },
     "空间压缩IV": {
-        name: "维度折叠仓库",
+        name: "空间折叠·大师",
         price: {遗物: 200},
-        desc: "维度折叠仓库，每个遗物使储存类建筑上限再提升0.05%（科学除外）。",
-        effect: { capPerRelic: 0.0005 },
+        desc: "维度折叠仓库，每个遗物使储存类建筑上限再提升0.02%（科学除外）。",
+        effect: { capPerRelic: 0.0002 },
         prereq: ["空间压缩III"]
     },
     "空间压缩V": {
         name: "微型奇点",
         price: {遗物: 400},
-        desc: "将储存区转移到微型奇点中，每个遗物使储存类建筑上限再提升0.05%（科学除外）。",
-        effect: { capPerRelic: 0.0005},
+        desc: "将储存区转移到微型奇点中，每个遗物使储存类建筑上限再提升0.01%（科学除外）。",
+        effect: { capPerRelic: 0.0001},
         prereq: ["空间压缩IV"]
     },
 
