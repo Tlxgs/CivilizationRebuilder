@@ -1,21 +1,21 @@
 // config/permanentConfig.js
 const PERMANENT_CONFIG = {
     "节约成本I": {
-        name: "成本优化·初级",
+        name: "成本优化·入门",
         price: {遗物: 10},
         desc: "学习更高效的材料利用方法，所有建筑的成本增长率（有时也被叫做成本蠕变，不过这里是乘算而不是减算）降低5%。",
         effect: { costRatio: 0.95 },
         prereq: null
     },
     "节约成本II": {
-        name: "成本优化·中级",
+        name: "成本优化·中阶",
         price: {遗物: 30},
         desc: "进一步优化装配流程，成本增长率再降5%。",
         effect: { costRatio: 0.95 },
         prereq: ["节约成本I"]
     },
     "节约成本III": {
-        name: "成本优化·高级",
+        name: "成本优化·高阶",
         price: {遗物: 100},
         desc: "采用模块化设计，建筑扩建时材料浪费更少，成本增长率-5%。",
         effect: { costRatio: 0.95 },
@@ -235,7 +235,7 @@ const PERMANENT_CONFIG = {
         prereq: ["空间压缩II"]
     },
     "空间压缩IV": {
-        name: "空间折叠·大师",
+        name: "空间折叠·专家",
         price: {遗物: 200},
         desc: "维度折叠仓库，每个遗物使储存类建筑上限再提升0.02%（科学除外）。",
         effect: { capPerRelic: 0.0002 },
