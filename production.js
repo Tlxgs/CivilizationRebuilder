@@ -133,7 +133,7 @@ const ProductionEngine = (function() {
                     totalProd[r] = (totalProd[r] || 0) + raw.produces[r] * e;
                 }
                 for (let r in raw.consumes) {
-                    totalCons[r] = (totalCons[r] || 0) + raw.consumes[r] * e;
+                    totalCons[r] = (totalCons[r] || 0) + raw.consumes[r] * raw.active;
                 }
             }
 
@@ -147,9 +147,9 @@ const ProductionEngine = (function() {
                 if (cons < 1e-9) {
                     R_global[r] = 1.0;
                 } else {
-                    const available = stock + prod * dt;
-                    const needed = cons * dt;
-                    R_global[r] = Math.min(1.0, available / needed);
+                    const available = stock+prod*dt;
+                    const needed = cons*dt;
+                    R_global[r] = Math.min(1.00, available / needed);
                 }
             }
 
@@ -162,7 +162,7 @@ const ProductionEngine = (function() {
                     localCap[lr] = (localCap[lr] || 0) + raw.providesLocal[lr] * e;
                 }
                 for (let lr in raw.requiresLocal) {
-                    localUsed[lr] = (localUsed[lr] || 0) + raw.requiresLocal[lr] * e;
+                    localUsed[lr] = (localUsed[lr] || 0) + raw.requiresLocal[lr] * raw.active;
                 }
             }
             let R_local = {};
@@ -172,10 +172,10 @@ const ProductionEngine = (function() {
                 if (used < 1e-9) {
                     R_local[lr] = 1.0;
                 } else {
-                    R_local[lr] = Math.min(1.0, cap / used);
+                    R_local[lr] = Math.min(1.00, cap / used);
                 }
             }
-
+            
             // 更新效率：取所有消耗资源/局域需求充足率的最小值
             for (let bKey in bldRaw) {
                 let minR = 1.0;
@@ -188,7 +188,7 @@ const ProductionEngine = (function() {
                     const R = R_local[lr] !== undefined ? R_local[lr] : 1.0;
                     if (R < minR) minR = R;
                 }
-                efficiency[bKey] = minR;
+                efficiency[bKey] = efficiency[bKey]*0+1*minR;
             }
         }
 
