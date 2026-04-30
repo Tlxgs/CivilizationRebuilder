@@ -13,10 +13,10 @@ const GameLoop = (function() {
         return GameState.speed === 2 ? 2 : 1;
     }
 
-    // 资源更新（接受实际游戏时间增量）
     function tickResources(deltaGameSec) {
         ProductionEngine.computeProductionAndCaps();
 
+        // 更新资源量（生产/消耗）
         for (let r in GameState.resources) {
             const res = GameState.resources[r];
             res.amount += res.production * deltaGameSec;
@@ -25,15 +25,9 @@ const GameLoop = (function() {
             if (res.amount > 0.001) res.visible = true;
         }
 
-        for (let r in GameState.resources) {
-            const res = GameState.resources[r];
-            if (res.heat !== undefined) {
-                res.heat = Formulas.calcHeatDecay(res.heat, deltaGameSec);
-                res.heat = Math.min(100, Math.max(0.01, res.heat));
-            }
-        }
+        // 更新贸易热度（持续贸易影响 + 衰减）
+        TradeEngine.updateHeat(deltaGameSec, GameState);
     }
-
     function advanceDay() {
         GameState.gameDays++;
         const year = Math.floor(GameState.gameDays / 360);

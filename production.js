@@ -266,6 +266,7 @@ const ProductionEngine = (function() {
                 state.localResources[lr].used += raw.requiresLocal[lr] * effActive;
             }
         }
+
         for (let bKey in state.buildings) {
             const bld = state.buildings[bKey];
             if (bldRaw[bKey]) {
@@ -274,6 +275,29 @@ const ProductionEngine = (function() {
                 // 未激活的建筑效率默认为 1（或保留上次值）
                 bld.efficiency = 1.0;
             }
+        }
+            // ========== 贸易流量计算 ==========
+        // 获取实际贸易速率
+        const actualTradeRates = TradeEngine.computeActualTradeRates(state);
+        
+        // 计算各资源贸易净产量
+        for (let r in actualTradeRates) {
+            const tradeRate = actualTradeRates[r];
+            if (tradeRate !== 0) {
+                state.resources[r].production += tradeRate;
+            }
+        }
+        
+        // 计算黄金的贸易流量（金本身不直接交易，但受进出口影响）
+        let goldTradeFlow = 0;
+        for (let r in actualTradeRates) {
+            const rate = actualTradeRates[r];
+            if (rate !== 0) {
+                goldTradeFlow += TradeEngine.getGoldFlowForResource(state, r, rate);
+            }
+        }
+        if (goldTradeFlow !== 0) {
+            state.resources["金"].production += goldTradeFlow;
         }
     }
 
@@ -398,6 +422,26 @@ const ProductionEngine = (function() {
             if (baseCons[resourceName]) {
                 const val = -baseCons[resourceName] * bld.active * consMult;
                 contributions.push({ building: b, value: val });
+            }
+        }
+        // 添加贸易贡献
+        const actualTradeRates = TradeEngine.computeActualTradeRates(GameState);
+        const tradeRate = actualTradeRates[resourceName];
+        if (tradeRate !== undefined && tradeRate !== 0) {
+            contributions.push({ building: "贸易", value: tradeRate });
+        }
+        
+        // 如果是金资源，需要汇总贸易产生/消耗的金
+        if (resourceName === "金") {
+            let goldTrade = 0;
+            for (let r in actualTradeRates) {
+                const rate = actualTradeRates[r];
+                if (rate !== 0) {
+                    goldTrade += TradeEngine.getGoldFlowForResource(GameState, r, rate);
+                }
+            }
+            if (goldTrade !== 0) {
+                contributions.push({ building: "贸易", value: goldTrade });
             }
         }
         return contributions;

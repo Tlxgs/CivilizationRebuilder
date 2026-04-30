@@ -64,22 +64,6 @@ const Formulas = (function() {
         return { sellAmount, gainGold };
     }
 
-    // ========== 热度衰减 ==========
-    /**
-     * 计算热度随时间衰减后的值
-     * @param {number} heat - 当前热度
-     * @param {number} deltaSec - 时间增量（秒）
-     * @param {number} decayRate - 衰减速率（每秒衰减比例）
-     */
-    function calcHeatDecay(heat, deltaSec, decayRate = 0.001) {
-        if (heat > 1) {
-            return Math.max(1, heat - heat * decayRate * deltaSec);
-        } else if (heat < 1) {
-            return Math.min(1, heat + heat * decayRate * deltaSec);
-        }
-        return heat;
-    }
-
     // ========== 晶体系统 ==========
     /**
      * 根据军备数量计算晶体品质
@@ -131,8 +115,7 @@ const Formulas = (function() {
         calcMarketTradeVolume,
         calcBuyResourceParams,
         calcSellResourceParams,
-        // 热度
-        calcHeatDecay,
+
         // 晶体
         calcCrystalQuality,
         calcCrystalEffectCount,

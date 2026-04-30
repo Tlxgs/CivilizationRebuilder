@@ -67,7 +67,7 @@ function getSaveData() {
         const res = GameState.resources[r];
         saveData.resources[r] = {
             amount: res.amount,
-            heat: res.heat,
+            tradeHeat: res.tradeHeat,
             visible: res.visible
         };
     }
@@ -114,6 +114,9 @@ function getSaveData() {
             researched: GameState.permanent[perm].researched
         };
     }
+    saveData.tradeRates = JSON.parse(JSON.stringify(GameState.tradeRates));
+    saveData.userTradeVolume = GameState.userTradeVolume;
+    saveData.maxTradeVolume = GameState.maxTradeVolume;
     saveData.crystals = JSON.parse(JSON.stringify(GameState.crystals));
     return saveData;
 }
@@ -123,7 +126,6 @@ function saveGame() {
     const saveData = getSaveData();
     localStorage.setItem('civilizationRebuilder', JSON.stringify(saveData));
 }
-// saveLoad.js (只修改 refreshGameStateFromSave 函数)
 function refreshGameStateFromSave(saveData) {
 
     // 1. 备份永恒升级状态
@@ -150,7 +152,7 @@ function refreshGameStateFromSave(saveData) {
             if (GameState.resources[r]) {
                 const saved = saveData.resources[r];
                 if (saved.amount !== undefined) GameState.resources[r].amount = saved.amount;
-                if (saved.heat !== undefined) GameState.resources[r].heat = saved.heat;
+                if (saved.tradeHeat !== undefined) GameState.resources[r].tradeHeat = saved.tradeHeat;
                 if (saved.visible !== undefined) GameState.resources[r].visible = saved.visible;
                 if (GameState.resources[r].amount > 0) GameState.resources[r].visible = true;
             }
@@ -200,11 +202,32 @@ function refreshGameStateFromSave(saveData) {
             }
         }
     }
-
-    // 9. 刷新所有可见性（根据当前科技状态）
+    // 恢复贸易数据
+    if (saveData.tradeRates) {
+        GameState.tradeRates = saveData.tradeRates;
+    }
+    if (saveData.userTradeVolume !== undefined) {
+        GameState.userTradeVolume = saveData.userTradeVolume;
+    }
+    if (saveData.maxTradeVolume !== undefined) {
+        GameState.maxTradeVolume = saveData.maxTradeVolume;
+    } else {
+        // 兼容旧存档
+        TradeEngine.updateMaxTradeVolume(GameState);
+    }
+    
+    // 确保 tradeRates 为所有可贸易资源都有值
+    for (let r in RESOURCES_CONFIG) {
+        if (RESOURCES_CONFIG[r].value !== undefined && r !== "金") {
+            if (GameState.tradeRates[r] === undefined) {
+                GameState.tradeRates[r] = 0;
+            }
+        }
+    }
+    // 刷新所有可见性（根据当前科技状态）
     refreshAllVisibility();
 
-    // 10. 恢复日期、事件、日志
+    // 恢复日期、事件、日志
     if (saveData.lastSaveTime!== undefined) GameState.lastSaveTime = saveData.lastSaveTime;
     if (saveData.speed !== undefined) GameState.speed = saveData.speed;
     if (saveData.gameDays !== undefined) GameState.gameDays = saveData.gameDays;

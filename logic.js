@@ -7,7 +7,7 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
 
     const timeCrystal = GameState.resources["时间晶体"]?.amount || 0;
     for (let r in GameState.resources) {
-        if (r === "时间晶体") GameState.resources[r].amount = timeCrystal;       // 保留时间晶体
+        if (r === "时间晶体") GameState.resources[r].amount = timeCrystal;
         else if (r === "遗物") GameState.resources[r].amount = relic + extraRelic;
         else if (r === "暗能量") GameState.resources[r].amount = darkEnergy + extraDarkEnergy;
         else GameState.resources[r].amount = 0;
@@ -29,6 +29,10 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
     for (let p in GameState.policies) GameState.policies[p].visible = false;
 
     GameState.permanent = permBackup;
+
+    // 重置贸易系统和热度
+    TradeEngine.updateMaxTradeVolume(GameState);
+    TradeEngine.resetTradeRates(GameState);
 
     ProductionEngine.updateBuildingPrices();
     ProductionEngine.updateUpgradePrices();

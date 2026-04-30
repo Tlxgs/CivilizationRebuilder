@@ -22,8 +22,10 @@ function initGameData() {
             visible: false,
             baseCap: cfg.baseCap,
             cap: cfg.baseCap,
+            tradeHeat: 0,   
         };
         for (let prop in cfg) {
+            if (prop === 'heat') continue;  
             if (!GameState.resources[rKey].hasOwnProperty(prop)) {
                 GameState.resources[rKey][prop] = cfg[prop];
             }
@@ -113,6 +115,17 @@ function initGameData() {
             prereq: cfg.prereq ? [...cfg.prereq] : null,
             researched: false
         };
+    }
+    // 贸易系统初始化
+    GameState.tradeRates = {};           // 每个资源的持续贸易速率（正=进口，负=出口）
+    GameState.maxTradeVolume = 0;        // 最大单次贸易量（基于建筑计算）
+    GameState.userTradeVolume = 0;        // 用户设定的单次贸易量（不超过 maxTradeVolume）
+
+    // 为所有可贸易资源初始化 tradeRates 为 0
+    for (let r in RESOURCES_CONFIG) {
+        if (RESOURCES_CONFIG[r].value !== undefined && r !== "金") {
+            GameState.tradeRates[r] = 0;
+        }
     }
 
     refreshAllVisibility();

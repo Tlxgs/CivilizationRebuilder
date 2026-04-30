@@ -12,6 +12,17 @@ const EVENTS_CONFIG = {
             { type: "resourceMultiplier", resource: "科学", multiplier: 2.0 }
         ]
     },
+    "缸中之脑": {
+        id: "缸中之脑",
+        name: "思考人生",
+        desc: "有人说他们并非生活在真实世界，而是在一个网页放置游戏中，这么荒诞的想法怎么可能是真的呢！",
+        durationDays: (state) => 10 + Math.floor(Math.random() * 30),  
+        baseProbability: 0.8,
+        prereqTech: null,
+        effects: [
+            { type: "resourceMultiplier", resource: "科学", multiplier: 0.8 }
+        ]
+    },
     "铁陨石坠落": {
         id: "铁陨石坠落",
         name: "铁陨石坠落",
