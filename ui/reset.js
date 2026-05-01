@@ -6,7 +6,9 @@ function renderResetPanel() {
 
     panel.innerHTML = `
         <div class="reset-area">
-            <button class="btn-rect" id="hard-reset" title="彻底清除存档，重新开始游戏">硬重置</button>
+            <button class="btn-rect" id="soft-reset" title="重新开始游戏,只保留成就、永恒等">软重置</button>
+            <button class="btn-rect" id="hard-reset" title="彻底清除存档">硬重置</button>
+            
             <button class="btn-rect" id="manual-save">手动保存</button>
             <button class="btn-rect" id="toggle-theme">${themeBtnText}</button>
         </div>
@@ -44,7 +46,16 @@ function renderResetPanel() {
         };
         input.click();
     });
-
+    const softResetBtn = document.getElementById('soft-reset');
+    if (softResetBtn) {
+        softResetBtn.addEventListener('click', () => {
+            if (confirm("执行软重置？\n所有建筑、科技、资源将被清空，但永恒升级和已获得的成就会保留。")) {
+                softReset(0, 0);
+                addEventLog("执行了软重置。");
+                renderAll();
+            }
+        });
+    }
     // 主题切换按钮
     document.getElementById('toggle-theme')?.addEventListener('click', () => {
         const isDark = document.body.classList.toggle('dark-theme');

@@ -7,6 +7,7 @@ let GameState = {
     upgrades: {},
     policies: {},
     permanent: {},
+    achievements: {}, 
     gameTime: 0
 };
 
@@ -69,7 +70,9 @@ function initTechs() {
             prereq: config.prereq ? [...config.prereq] : null,
             desc: config.desc,
             effect: config.effect ? JSON.parse(JSON.stringify(config.effect)) : null,
-            researched: config.researched || false
+            researched: config.researched || false,
+            challenge: config.challenge ? JSON.parse(JSON.stringify(config.challenge)) : null,
+            challengeCompleted: false,   // 新增：标记该挑战的永久成就是否已解锁
         };
     }
 }
@@ -153,6 +156,8 @@ function initGameData() {
         equipped: [null, null, null],
         inventory: []
     };
+    GameState.achievements = GameState.achievements || {};
+    GameState.activeChallenges = GameState.activeChallenges || [];
 
     initResources();
     initLocalResources();

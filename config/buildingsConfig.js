@@ -569,6 +569,18 @@ BUILDINGS_CONFIG = {
         requiresLocal: { gas_habitat: 1},
         desc: "悬浮在木星云顶的居住舱，利用磁场维持稳定，窗外有波澜壮阔的气态风暴非常美丽。每座可容纳3位殖民者。"
     },
+    "燃料库": {
+        class: "space",
+        type: "木星",
+        unlockCondition: { tech: "燃料储存" },
+        cost: (s, c) => standardCost({碳纤维:20000,金属板:10000}, 1.15, c, getGlobalCostMultiplier(s)),
+        produces: {},
+        consumes: {},
+        caps: {铀:2000,氚:2000,核燃料:2000},
+        providesLocal: {},
+        requiresLocal: {gas_habitat:0.5 },
+        desc: "建造巨大的燃料库，安全存储大量高能燃料"
+    },
     "核燃料转化炉": {
         class: "space",
         type: "木星",
@@ -581,6 +593,18 @@ BUILDINGS_CONFIG = {
         providesLocal: {},
         requiresLocal: { population: 1,gas_habitat:0.5 },
         desc: "通过核反应逆向裂变将核燃料转变为普通煤炭，可以依靠核燃料本身能量因而不需要额外电力，但是过程中会产生大量污染。"
+    },
+    "木卫二前哨": {
+        class: "space",
+        type: "木卫二",
+        unlockCondition: { tech: "探索木卫二" },
+        cost: (s, c) => standardCost({钛:20000,钢:10000}, 1.15, c, getGlobalCostMultiplier(s)),
+        produces: {},
+        consumes: {电力:0.6},
+        caps: {},
+        providesLocal: {europa_habitat:2},
+        requiresLocal: {gas_habitat:1},
+        desc: "在木卫二上建立前哨，探索这颗冰封的星球"
     },
     "聚变反应堆": {
         class: "space", type: "月球",
@@ -604,7 +628,7 @@ BUILDINGS_CONFIG = {
     "戴森球": {
         class: "space", type: "太阳",
         unlockCondition: { tech: "戴森球计划" },
-        cost: (s, c) => standardCost({钛: 500000, 金属板: 500000}, 1.2, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({钛: 500000, 金属板: 500000}, 1.1, c, getGlobalCostMultiplier(s)),
         produces: {电力:1.5}, consumes: {}, caps: {},
         providesLocal: {},
         requiresLocal: {},

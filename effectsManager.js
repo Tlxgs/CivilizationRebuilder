@@ -156,6 +156,19 @@ const EffectsManager = (function() {
             }
             // capPerRelic 和 sciCapPerRelicLog 在 production 中动态计算，不注册固定值
         }
+        for (let achName in state.achievements) {
+            const ach = state.achievements[achName];
+            if (!ach.effect) continue;
+            const eff = ach.effect;
+            if (eff.globalProd) registerEffect('global.prod', 'achievement', achName, eff.globalProd, true);
+            if (eff.globalCost) registerEffect('global.cost', 'achievement', achName, eff.globalCost, true);
+            if (eff.globalScienceProd) registerEffect('resource.科学.prod', 'achievement', achName, eff.globalScienceProd, true);
+            if (eff.globalMilitaryProd) {
+                registerEffect('building.军营.prod', 'achievement', achName, eff.globalMilitaryProd, true);
+                registerEffect('building.军工厂.prod', 'achievement', achName, eff.globalMilitaryProd, true);
+            }
+            // 扩展其他效果
+        }
 
         // 5. 建筑间加成（modifiers字段）
         for (let buildingId in state.buildings) {
@@ -202,6 +215,30 @@ const EffectsManager = (function() {
                         registerEffect(`building.${eff.building}.${field}`, 'event', ev.id, eff.multiplier - 1, true);
                     } else if (eff.type === 'happinessMod') {
                         registerEffect('global.happiness', 'event', ev.id, eff.value, false);
+                    }
+                }
+            }
+        }
+        // 8. 激活的挑战效果
+        for (let challengeId of state.activeChallenges) {
+            const tech = TECHS_CONFIG[challengeId];
+            if (!tech || !tech.challenge) continue;
+            const eff = tech.challenge.duringEffect;
+            if (!eff) continue;
+            for (let key in eff) {
+                if (key === 'globalProd') {
+                    registerEffect('global.prod', 'challenge', challengeId, eff.globalProd, true);
+                } else if (key === 'globalCap') {
+                    registerEffect('global.cap', 'challenge', challengeId, eff.globalCap, true);
+                } else if (key === 'globalCost') {
+                    registerEffect('global.cost', 'challenge', challengeId, eff.globalCost, true);
+                } else if (key === 'globalScienceProd') {
+                    registerEffect('resource.科学.prod', 'challenge', challengeId, eff.globalScienceProd, true);
+                } else if (key === 'globalMilitaryProd') {
+                    registerEffect('building.军营.prod', 'challenge', challengeId, eff.globalMilitaryProd, true);
+                } else {
+                    if (typeof eff[key] === 'object' && eff[key].prodFactor) {
+                        registerEffect(`resource.${key}.prod`, 'challenge', challengeId, eff[key].prodFactor, true);
                     }
                 }
             }

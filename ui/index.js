@@ -8,6 +8,7 @@ function renderAll() {
     renderUpgradePanel();
     renderPolicyPanel();
     renderPermanentPanel();
+    renderAchievementsPanel();
     renderResetPanel();
     renderTradePanel();
     renderChangelogPanel();

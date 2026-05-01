@@ -48,7 +48,8 @@ function updateTabsVisibility() {
 
     const changelogTab = document.querySelector('.tab-btn[data-tab="changelog"]');
     if (changelogTab) changelogTab.style.display = '';
-
+    const achievementsTab = document.querySelector('.tab-btn[data-tab="achievements"]');
+    if (achievementsTab) achievementsTab.style.display = ''; // 始终显示
     // 如果当前激活的标签被隐藏，自动切换到第一个可见标签
     const activeTab = document.querySelector('.tab-btn.active');
     if (activeTab && activeTab.style.display === 'none') {

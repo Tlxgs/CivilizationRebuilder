@@ -31,5 +31,13 @@ const LOCAL_RESOURCES_CONFIG = {
         requireKey: 'requiresLocal',
         displayLocation: '木星',
     },
+    europa_habitat: {
+        id: 'europa_habitat',
+        name: '木卫二宜居度',
+        buildingFilter: (bKey, cfg) => cfg.type === '木卫二',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: '木卫二',
+    },
 };
 window.LOCAL_RESOURCES_CONFIG = LOCAL_RESOURCES_CONFIG;

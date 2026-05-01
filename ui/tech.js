@@ -34,6 +34,13 @@ function renderTechPanel() {
     for (let t in GameState.techs) {
         const tech = GameState.techs[t];
         if (tech.researched) continue;
+        if (tech.challenge) {
+            const relicAmount = GameState.resources["遗物"]?.amount || 0;
+            const isPrintingResearched = GameState.techs["印刷术"]?.researched === true;
+            if (relicAmount < 1 || isPrintingResearched) {
+                continue;   // 不满足条件，直接跳过，不显示该科技
+            }
+        }
         // 前置检查
         let canResearch = true;
         if (tech.prereq) {

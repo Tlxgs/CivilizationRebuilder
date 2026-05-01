@@ -1,10 +1,19 @@
-// 通用软重置
 function softReset(extraRelic = 0, extraDarkEnergy = 0) {
+    GameState.gameDays = 0;
     const permBackup = JSON.parse(JSON.stringify(GameState.permanent));
+    const achievementsBackup = JSON.parse(JSON.stringify(GameState.achievements || {}));
+    // 备份挑战完成标记
+    const challengeCompletedBackup = {};
+    for (let techId in GameState.techs) {
+        if (GameState.techs[techId].challengeCompleted) {
+            challengeCompletedBackup[techId] = true;
+        }
+    }
+
     const relic = GameState.resources["遗物"]?.amount || 0;
     const darkEnergy = GameState.resources["暗能量"]?.amount || 0;
     GameState.speed = 1;
-
+    GameState.activeChallenges = [];
     const timeCrystal = GameState.resources["时间晶体"]?.amount || 0;
     for (let r in GameState.resources) {
         if (r === "时间晶体") GameState.resources[r].amount = timeCrystal;
@@ -21,7 +30,9 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
         bd.visible = false;
     }
 
-    for (let t in GameState.techs) GameState.techs[t].researched = false;
+    for (let t in GameState.techs) {
+        GameState.techs[t].researched = false;
+    }
     for (let u in GameState.upgrades) {
         GameState.upgrades[u].level = 0;
         GameState.upgrades[u].visible = false;
@@ -29,6 +40,13 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
     for (let p in GameState.policies) GameState.policies[p].visible = false;
 
     GameState.permanent = permBackup;
+    GameState.achievements = achievementsBackup;
+    // 恢复挑战完成标记
+    for (let techId in challengeCompletedBackup) {
+        if (GameState.techs[techId]) {
+            GameState.techs[techId].challengeCompleted = true;
+        }
+    }
 
     // 重置贸易系统和热度
     TradeEngine.updateMaxTradeVolume(GameState);
@@ -40,6 +58,35 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
     renderAll();
 }
 
+function unlockAchievementsForReset(resetType) {
+    for (let techId in GameState.techs) {
+        const tech = GameState.techs[techId];
+        if (!tech.researched) continue;
+        if (!tech.challenge) continue;
+        // 已经领取过成就的跳过
+        if (tech.challengeCompleted) continue;
+
+        const reqType = tech.challenge.resetType;
+        if (reqType === resetType || reqType === 'any') {
+            const achName = tech.challenge.achievementName;
+            // 检查成就是否已存在（防止重复）
+            if (!GameState.achievements[achName]) {
+                GameState.achievements[achName] = {
+                    name: achName,
+                    effect: tech.challenge.permanentEffect,
+                    unlockedAt: GameState.gameDays
+                };
+                // 标记该科技挑战已完成，避免下次重置再次触发
+                tech.challengeCompleted = true;
+                addEventLog(`✨ 解锁成就「${achName}」！`);
+                // 立即刷新效果
+                ProductionEngine.refreshEffects();
+                computeProductionAndCaps();
+                renderAll();
+            }
+        }
+    }
+}
 function nukeReset() {
     const relicGain = Formulas.calcRelicGainFromNuke(
         GameState.resources["科学"].cap,
@@ -47,6 +94,7 @@ function nukeReset() {
         GameState.localResources.population.capacity   // 修正处
     );
     if (confirm(`发射核弹！\n将执行软重置，并获得 ${relicGain} 遗物。\n确定吗？`)) {
+        unlockAchievementsForReset('nuke');
         softReset(relicGain, 0);
         addEventLog(`发射核弹！获得 ${relicGain} 遗物。`);
     }
@@ -60,6 +108,7 @@ function vacuumDecayReset() {
     );
     const darkMatterCount = Math.floor(Math.sqrt(1+extraRelic));
     if (confirm(`执行真空衰变！\n获得遗物：${extraRelic}\n获得暗能量：${darkMatterCount}\n确定吗？`)) {
+        unlockAchievementsForReset('vacuum');
         softReset(extraRelic, darkMatterCount);
         addEventLog(`真空衰变！获得 ${extraRelic} 遗物和 ${darkMatterCount} 暗能量。`);
     }

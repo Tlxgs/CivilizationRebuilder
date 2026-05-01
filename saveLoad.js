@@ -60,7 +60,9 @@ function getSaveData() {
             prereqTech: ev.prereqTech,
         })) : [],
         eventLogs: GameState.eventLogs.slice(),
-        resources: {}, buildings: {}, techs: {}, upgrades: {}, policies: {}, permanent: {}
+        resources: {}, buildings: {}, techs: {}, upgrades: {}, policies: {}, permanent: {},
+        achievements: GameState.achievements,
+        activeChallenges: GameState.activeChallenges ? [...GameState.activeChallenges] : [],
     };
     // 只保存资源的动态字段：数量、热度、可见性（可选）
     for (let r in GameState.resources) {
@@ -85,8 +87,10 @@ function getSaveData() {
 
     // 科技：是否已研究
     for (let t in GameState.techs) {
+        const tech = GameState.techs[t];
         saveData.techs[t] = {
-            researched: GameState.techs[t].researched
+            researched: tech.researched,
+            challengeCompleted: tech.challengeCompleted || false
         };
     }
 
@@ -177,9 +181,11 @@ function refreshGameStateFromSave(saveData) {
             if (GameState.techs[t]) {
                 const saved = saveData.techs[t];
                 if (saved.researched !== undefined) GameState.techs[t].researched = saved.researched;
+                if (saved.challengeCompleted !== undefined) GameState.techs[t].challengeCompleted = saved.challengeCompleted;
             }
         }
     }
+    GameState.activeChallenges = saveData.activeChallenges || [];
 
     // 7. 恢复升级数据
     if (saveData.upgrades) {
@@ -263,7 +269,11 @@ function refreshGameStateFromSave(saveData) {
             GameState.crystals = { equipped: [null, null, null], inventory: [] };
         }
     }
-
+    if (saveData.activeChallenges) {
+        GameState.activeChallenges = saveData.activeChallenges;
+    } else {
+        GameState.activeChallenges = [];
+    }
     ProductionEngine.refreshEffects();
     updateBuildingPrices();
     updateUpgradePrices();

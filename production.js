@@ -77,9 +77,7 @@ const ProductionEngine = (function() {
             if (cfg.class === 'space') {
                 prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
             }
-            // 幸福度加在产量上
             prodMult *= happinessFactor;
-
             let consMult = EffectsManager.getBuildingConsMultiplier(bKey);
             consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
 

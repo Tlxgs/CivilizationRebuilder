@@ -19,6 +19,7 @@ const RESOURCES_CONFIG = {
     "铀":         { baseCap: 50,  value: 10,   },
     "氚":         { baseCap: 50 },
     "核燃料":     { baseCap: 50,  value: 20,   },
+    "生物质":     { baseCap: 100,  },
     "军备":       { baseCap: 100 },
     "遗物":       { baseCap: 1000000 },
     "暗能量":     { baseCap: 1000000 },

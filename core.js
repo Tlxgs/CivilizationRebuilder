@@ -9,7 +9,6 @@ class GameEngine {
         updateBuildingPrices();
         updateUpgradePrices();
         renderAll();
-        addEventLog(`${buildingKey} 切换至 ${cfg.modes[bld.mode].name}`);
         return true;
     }
     buyBuilding(key, quantity = 1) {
@@ -37,8 +36,15 @@ class GameEngine {
         const t = GameState.techs[key];
         if (t.researched) return false;
         if (!consumeResources(t.price)) return false;
+        if (t.challenge) {
+            const confirmMsg = `⚠️ 警告：研究挑战后除非完成挑战要求或进行软重置，否则不能退出挑战！确定要研究吗？`;
+            if (!confirm(confirmMsg)) return false;
+        }
         t.researched = true;
-        
+        if (t.challenge) {
+            if (!GameState.activeChallenges) GameState.activeChallenges = [];
+            GameState.activeChallenges.push(key);
+        }
         refreshAllVisibility();
         updateBuildingPrices();
         updateUpgradePrices();

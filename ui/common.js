@@ -26,7 +26,7 @@ function bindEvents() {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             const tab = btn.dataset.tab;
-            const panels = ['building', 'tech', 'upgrade', 'policy', 'trade', 'crystal', 'permanent', 'reset', 'changelog'];
+            const panels = ['building', 'tech', 'upgrade', 'policy', 'trade', 'crystal', 'permanent','achievements', 'reset', 'changelog'];
             panels.forEach(p => {
                 const panelEl = document.getElementById(`panel-${p}`);
                 if (panelEl) panelEl.style.display = p === tab ? 'block' : 'none';

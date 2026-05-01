@@ -1,6 +1,27 @@
 // techsConfig.js - 所有科技配置
 const TECHS_CONFIG = {
-
+    "技术封锁": {
+        price: {木头: 1},
+        prereq: null,
+        desc: "⚔️挑战：科学产量-90%。完成真空衰变后获得成就「知识曙光」：科学产量+20%。",
+        challenge: {
+            resetType: "vacuum",
+            achievementName: "知识曙光",
+            permanentEffect: { globalScienceProd: 0.20 },
+            duringEffect: { "科学": { prodFactor: -0.90 } }
+        }
+    },
+    "资源匮乏": {
+        price: {木头: 1},
+        prereq: null,
+        desc: "⚔️挑战：建筑成本增长率+20%。完成任意重置后获得成就「节俭大师」：所有建筑成本增长率-2%（均为乘算）。",
+        challenge: {
+            resetType: "any",
+            achievementName: "节俭大师",
+            permanentEffect: { globalCost: -0.02 },
+            duringEffect: { globalCost: 0.20 }
+        }
+    },
     "搭建帐篷": { price: {木头: 5}, prereq: null, desc: "用树枝和兽皮搭起简陋的容身之所，这是文明的第一个脚印。" },
     "伐木技术": { price: {木头: 5}, prereq: ["搭建帐篷"], desc: "学会用石斧砍伐树木，木材将成为你最早的工业血液。" },
     "采石技术": { price: {石头: 5}, prereq: ["伐木技术"], desc: "徒手或借用简易工具从地表采集石块，为更坚固的建筑打下基础。" },
@@ -135,11 +156,20 @@ const TECHS_CONFIG = {
     prereq: ["探索木星"],
     desc: "在木星大气中建造悬浮生态穹顶，为殖民者提供安全住所。"
     },
-
+    "燃料储存":{
+        price: {科学: 35000,核燃料:20000},
+        prereq: ["木星殖民"],
+        desc: "巨大的气态星球上有丰富的空间可以用于建造燃料库。"
+    },
     "核素转化": {
         price: {科学: 40000, 核燃料: 25000},
-        prereq: ["探索木星"],
+        prereq: ["燃料储存"],
         desc: "掌握原子核重组技术，可以将核燃料逆向转化为煤炭。"
+    },
+    "探索木卫二": {
+        price: {科学: 50000, 核燃料: 50000},
+        prereq: ["木星殖民"],
+        desc: "深入木卫二冰壳，发现地下海洋中活跃的外星微生物群落，既危险又充满潜力。",
     },
     "可控核聚变": { price: {科学: 25000}, prereq: ["氚处理"], desc: "磁约束或惯性约束，让‘人造太阳’为殖民地供能。" },
     "聚变规模化": { price: {科学: 40000}, prereq: ["可控核聚变"], desc: "多个反应堆并网，能源近乎无限。" },

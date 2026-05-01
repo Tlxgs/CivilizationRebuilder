@@ -210,6 +210,7 @@ const TradeEngine = (function() {
         }
     }
     
+    
     return {
         getMaxTradeVolume,
         updateMaxTradeVolume,
