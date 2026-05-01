@@ -187,7 +187,12 @@ const ProductionEngine = (function() {
                     const R = R_local[lr] !== undefined ? R_local[lr] : 1.0;
                     if (R < minR) minR = R;
                 }
+                
                 efficiency[bKey] = Math.min(1,efficiency[bKey]*minR);
+                if (efficiency[bKey]<0.001 && minR>0.001){
+                    efficiency[bKey] = Math.min(1,(0.0001+efficiency[bKey])*minR);
+                }
+
             }
         }
 
@@ -269,7 +274,7 @@ const ProductionEngine = (function() {
         for (let bKey in state.buildings) {
             const bld = state.buildings[bKey];
             if (bldRaw[bKey]) {
-                bld.efficiency = efficiency[bKey] || 1.0;
+                bld.efficiency = (efficiency[bKey] !== undefined) ? efficiency[bKey] : 1.0;
             } else {
                 // 未激活的建筑效率默认为 1（或保留上次值）
                 bld.efficiency = 1.0;
