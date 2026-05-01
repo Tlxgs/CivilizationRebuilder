@@ -118,9 +118,10 @@ const ProductionEngine = (function() {
 
         // 第二步：迭代求解效率因子（受全局/局域资源短缺限制）
         const ITERATIONS = 3;
-        let efficiency = {};
-        for (let bKey in bldRaw) {
-            efficiency[bKey] = 1.0; // 初始不降效
+        let efficiency = GameState.buildingEfficiency;
+        for (bd in bldRaw){
+            if (efficiency[bd]==undefined)
+                efficiency[bd]=1.0
         }
 
         for (let iter = 0; iter < ITERATIONS; iter++) {
@@ -133,7 +134,7 @@ const ProductionEngine = (function() {
                     totalProd[r] = (totalProd[r] || 0) + raw.produces[r] * e;
                 }
                 for (let r in raw.consumes) {
-                    totalCons[r] = (totalCons[r] || 0) + raw.consumes[r] * raw.active;
+                    totalCons[r] = (totalCons[r] || 0) + raw.consumes[r] * e;
                 }
             }
 
@@ -149,7 +150,7 @@ const ProductionEngine = (function() {
                 } else {
                     const available = stock+prod*dt;
                     const needed = cons*dt;
-                    R_global[r] = Math.min(1.00, available / needed);
+                    R_global[r] = Math.min(1.20, available / needed);
                 }
             }
 
@@ -162,7 +163,7 @@ const ProductionEngine = (function() {
                     localCap[lr] = (localCap[lr] || 0) + raw.providesLocal[lr] * e;
                 }
                 for (let lr in raw.requiresLocal) {
-                    localUsed[lr] = (localUsed[lr] || 0) + raw.requiresLocal[lr] * raw.active;
+                    localUsed[lr] = (localUsed[lr] || 0) + raw.requiresLocal[lr] * e;
                 }
             }
             let R_local = {};
@@ -172,13 +173,13 @@ const ProductionEngine = (function() {
                 if (used < 1e-9) {
                     R_local[lr] = 1.0;
                 } else {
-                    R_local[lr] = Math.min(1.00, cap / used);
+                    R_local[lr] = Math.min(1.20, cap / used);
                 }
             }
             
             // 更新效率：取所有消耗资源/局域需求充足率的最小值
             for (let bKey in bldRaw) {
-                let minR = 1.0;
+                let minR = 1.2;
                 const raw = bldRaw[bKey];
                 for (let r in raw.consumes) {
                     const R = R_global[r] !== undefined ? R_global[r] : 1.0;
@@ -188,7 +189,7 @@ const ProductionEngine = (function() {
                     const R = R_local[lr] !== undefined ? R_local[lr] : 1.0;
                     if (R < minR) minR = R;
                 }
-                efficiency[bKey] = efficiency[bKey]*0+1*minR;
+                efficiency[bKey] = Math.min(1,efficiency[bKey]*minR);
             }
         }
 

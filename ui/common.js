@@ -160,8 +160,8 @@ function refreshLocalResourcesDisplay() {
         const capDisplay = (lrKey === 'population') ? Math.floor(lr.capacity) : formatLocalNumber(lr.capacity);
         const displayText = `${cfg.name}: ${usedDisplay} / ${capDisplay}`;
 
-        const isOver = (lr.used - lr.capacity) > 1e-6;
-        const isEqual = Math.abs(lr.used - lr.capacity) <= 1e-6;
+        const isOver = (lr.used - lr.capacity) > 1;
+        const isEqual = Math.abs(lr.used - lr.capacity) <= 1;
         
         // 人口使用 CSS 类控制颜色，其他局域资源使用内联 style
         if (lrKey === 'population') {
