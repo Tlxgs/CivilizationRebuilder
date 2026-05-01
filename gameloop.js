@@ -1,7 +1,7 @@
 // gameloop.js - 基于真实时间戳的循环，页面隐藏/恢复自动追赶
 const GameLoop = (function() {
     const DAY_GAME_TIME = 1.0;          // 一天需要的游戏时间（秒）
-    const EVENT_TRIGGER_BASE_CHANCE = 0.005;
+    const EVENT_TRIGGER_BASE_CHANCE = 0.004;
     const MAX_DELTA_SEC = 3600;          // 单次最大游戏时间增量
 
     let intervalId = null;

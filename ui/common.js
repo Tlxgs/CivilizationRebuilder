@@ -150,14 +150,47 @@ function bindEvents() {
         renderAll();
     });
 }
+function refreshLocalResourcesDisplay() {
+    for (let lrKey in GameState.localResources) {
+        const lr = GameState.localResources[lrKey];
+        const cfg = LOCAL_RESOURCES_CONFIG[lrKey];
+        if (!lr || !cfg) continue;
+
+        const usedDisplay = (lrKey === 'population') ? Math.floor(lr.used) : formatLocalNumber(lr.used);
+        const capDisplay = (lrKey === 'population') ? Math.floor(lr.capacity) : formatLocalNumber(lr.capacity);
+        const displayText = `${cfg.name}: ${usedDisplay} / ${capDisplay}`;
+
+        const isOver = (lr.used - lr.capacity) > 1e-6;
+        const isEqual = Math.abs(lr.used - lr.capacity) <= 1e-6;
+        
+        // 人口使用 CSS 类控制颜色，其他局域资源使用内联 style
+        if (lrKey === 'population') {
+            const container = document.getElementById('population-info');
+            if (container) {
+                container.innerHTML = displayText;
+                container.classList.remove('pop-danger', 'pop-warning');
+                if (isOver) container.classList.add('pop-danger');
+                else if (isEqual) container.classList.add('pop-warning');
+            }
+        } else {
+            const color = isOver ? '#c52828' : (isEqual ? '#e6a017' : '#2d3f53');
+            document.querySelectorAll(`[data-local-resource="${lrKey}"]`).forEach(el => {
+                el.textContent = displayText;
+                el.style.color = color;
+            });
+        }
+    }
+}
 // 全局刷新动态颜色（每 tick 调用）
 function refreshAllDynamicColors() {
-    // 1. 刷新建筑卡片上的名称颜色
+    // 刷新建筑卡片
     document.querySelectorAll('.building-card').forEach(card => {
         const buildingKey = card.dataset.building;
         if (!buildingKey) return;
         const bld = GameState.buildings[buildingKey];
         if (!bld) return;
+        
+        // 更新价格颜色
         const price = bld.price;
         const status = getBuildingAffordabilityStatus(price);
         const nameStrong = card.querySelector('.building-card-info strong');
@@ -165,6 +198,24 @@ function refreshAllDynamicColors() {
             nameStrong.classList.remove('insufficient-name', 'unaffordable-name');
             if (status === 'insufficient') nameStrong.classList.add('insufficient-name');
             else if (status === 'cap-exceeded') nameStrong.classList.add('unaffordable-name');
+        }
+
+        // 更新效率显示（实时刷新百分比）
+        const infoDiv = card.querySelector('.building-card-info');
+        const effSpan = infoDiv ? infoDiv.querySelector('.building-efficiency') : null;
+        if (bld.active > 0 && bld.efficiency !== undefined && bld.efficiency < 0.995) {
+            const percent = (bld.efficiency * 100).toFixed(0);
+            if (effSpan) {
+                effSpan.textContent = `效率: ${percent}%`;
+            } else if (infoDiv) {
+                const newSpan = document.createElement('span');
+                newSpan.className = 'building-efficiency';
+                newSpan.style.cssText = 'color:#e6a017; font-size:0.8rem; margin-left:6px;';
+                newSpan.textContent = `效率: ${percent}%`;
+                infoDiv.appendChild(newSpan);
+            }
+        } else {
+            if (effSpan) effSpan.remove();
         }
     });
 
@@ -206,6 +257,7 @@ function refreshAllDynamicColors() {
 
     // 5. 刷新资源数值和进度条（轻量）
     refreshResourceBars();
+    refreshLocalResourcesDisplay();
 }
 
 // 辅助：判断建筑价格是否买得起（基于价格对象）

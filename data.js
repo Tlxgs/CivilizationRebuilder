@@ -1,4 +1,5 @@
-// data.js
+// data.js - 重构后的 initGameData
+
 let GameState = {
     resources: {},
     buildings: {},
@@ -9,10 +10,8 @@ let GameState = {
     gameTime: 0
 };
 
-function initGameData() {
-    GameState.happiness = 100;
-    GameState.season = 0;
-    GameState.seasonDayCounter = 0;
+// ---------- 辅助初始化函数 ----------
+function initResources() {
     GameState.resources = {};
     for (let rKey in RESOURCES_CONFIG) {
         const cfg = RESOURCES_CONFIG[rKey];
@@ -22,15 +21,18 @@ function initGameData() {
             visible: false,
             baseCap: cfg.baseCap,
             cap: cfg.baseCap,
-            tradeHeat: 0,   
+            tradeHeat: 0,
         };
         for (let prop in cfg) {
-            if (prop === 'heat') continue;  
+            if (prop === 'heat') continue;
             if (!GameState.resources[rKey].hasOwnProperty(prop)) {
                 GameState.resources[rKey][prop] = cfg[prop];
             }
         }
     }
+}
+
+function initLocalResources() {
     GameState.localResources = {};
     for (let lrKey in LOCAL_RESOURCES_CONFIG) {
         GameState.localResources[lrKey] = {
@@ -38,8 +40,11 @@ function initGameData() {
             used: 0
         };
     }
-    // 初始化建筑
+}
+
+function initBuildings() {
     GameState.buildings = {};
+    GameState.buildingEfficiency={}
     for (let bKey in BUILDINGS_CONFIG) {
         const cfg = BUILDINGS_CONFIG[bKey];
         const initialPrice = cfg.cost(GameState, 0);
@@ -53,8 +58,9 @@ function initGameData() {
             requiresLocal: cfg.requiresLocal || {},
         };
     }
+}
 
-    // 初始化科技
+function initTechs() {
     GameState.techs = {};
     for (let techKey in TECHS_CONFIG) {
         const config = TECHS_CONFIG[techKey];
@@ -66,14 +72,16 @@ function initGameData() {
             researched: config.researched || false
         };
     }
-    // 初始化升级（从配置读取）
+}
+
+function initUpgrades() {
     GameState.upgrades = {};
     for (let uKey in UPGRADES_CONFIG) {
         const cfg = UPGRADES_CONFIG[uKey];
         const initialPrice = cfg.cost(GameState, 0);
         GameState.upgrades[uKey] = {
             unlockCondition: cfg.unlockCondition ? { ...cfg.unlockCondition } : null,
-            price: { ...initialPrice },        // 深拷贝价格
+            price: { ...initialPrice },
             effect: cfg.effect ? { ...cfg.effect } : null,
             level: cfg.level || 0,
             visible: false,
@@ -81,8 +89,9 @@ function initGameData() {
             costFunc: cfg.cost
         };
     }
+}
 
-    // 初始化政策
+function initPolicies() {
     GameState.policies = {};
     for (let pKey in POLICIES_CONFIG) {
         const cfg = POLICIES_CONFIG[pKey];
@@ -102,13 +111,14 @@ function initGameData() {
             options: optionsCopy
         };
     }
+}
 
-    // 初始化永恒升级
+function initPermanent() {
     GameState.permanent = {};
     for (let permKey in PERMANENT_CONFIG) {
         const cfg = PERMANENT_CONFIG[permKey];
         GameState.permanent[permKey] = {
-            name: cfg.name || permKey,   
+            name: cfg.name || permKey,
             price: { ...cfg.price },
             desc: cfg.desc,
             effect: cfg.effect ? { ...cfg.effect } : null,
@@ -116,17 +126,42 @@ function initGameData() {
             researched: false
         };
     }
-    // 贸易系统初始化
-    GameState.tradeRates = {};           // 每个资源的持续贸易速率（正=进口，负=出口）
-    GameState.maxTradeVolume = 0;        // 最大单次贸易量（基于建筑计算）
-    GameState.userTradeVolume = 0;        // 用户设定的单次贸易量（不超过 maxTradeVolume）
+}
 
-    // 为所有可贸易资源初始化 tradeRates 为 0
+function initTrade() {
+    GameState.tradeRates = {};
+    GameState.maxTradeVolume = 0;
+    GameState.userTradeVolume = 0;
     for (let r in RESOURCES_CONFIG) {
         if (RESOURCES_CONFIG[r].value !== undefined && r !== "金") {
             GameState.tradeRates[r] = 0;
         }
     }
+}
+
+function initGameData() {
+    GameState.happiness = 100;
+    GameState.season = 0;
+    GameState.seasonDayCounter = 0;
+    GameState.gameDays = 0;
+    GameState.activeRandomEvents = [];
+    GameState.eventLogs = [];
+    GameState.happinessContributions = [];
+    GameState.speed = 1;
+    GameState.lastSaveTime = null;
+    GameState.crystals = {
+        equipped: [null, null, null],
+        inventory: []
+    };
+
+    initResources();
+    initLocalResources();
+    initBuildings();
+    initTechs();
+    initUpgrades();
+    initPolicies();
+    initPermanent();
+    initTrade();
 
     refreshAllVisibility();
 
@@ -135,14 +170,4 @@ function initGameData() {
         bd.count = bd.count || 0;
         bd.active = bd.active || 0;
     }
-    GameState.happinessContributions = [];
-    GameState.gameDays = 0;
-    GameState.activeRandomEvents = [];
-    GameState.eventLogs = [];
-    GameState.crystals = {
-        equipped: [null, null, null],
-        inventory: []
-    };
-    GameState.speed = 1;          // 默认1倍速
-    GameState.lastSaveTime = null;
 }

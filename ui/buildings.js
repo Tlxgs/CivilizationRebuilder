@@ -98,14 +98,21 @@ function renderLocalResourceValue(lrKey) {
     const cfg = LOCAL_RESOURCES_CONFIG[lrKey];
     if (!lr || !cfg) return '';
 
-    const usedDisplay = formatLocalNumber(lr.used);
-    const capDisplay  = formatLocalNumber(lr.capacity);
+    // 人口显示整数（向下取整），其他局域资源保留一位小数
+    const usedDisplay = (lrKey === 'population') ? Math.floor(lr.used) : formatLocalNumber(lr.used);
+    const capDisplay = (lrKey === 'population') ? Math.floor(lr.capacity) : formatLocalNumber(lr.capacity);
 
     const isOver = (lr.used - lr.capacity) > 1e-6;
     const isEqual = Math.abs(lr.used - lr.capacity) <= 1e-6;
+    
+    // 人口使用 CSS 类，其他局域资源使用内联颜色
+    if (lrKey === 'population') {
+        // 人口不在建筑面板中显示，这里返回空（因为人口显示在侧边栏）
+        return '';
+    }
+    
     const color = isOver ? '#c52828' : (isEqual ? '#e6a017' : '#2d3f53');
-
-    return `<span style="background:#f0f4ff; padding:2px 8px; border-radius:4px; color:${color}; font-weight:500; margin-left:8px; font-size:0.9rem;">
+    return `<span data-local-resource="${lrKey}" style="background:#f0f4ff; padding:2px 8px; border-radius:4px; color:${color}; font-weight:500; margin-left:8px; font-size:0.9rem;">
         ${cfg.name}: ${usedDisplay} / ${capDisplay}
     </span>`;
 }
@@ -169,7 +176,7 @@ function switchBuildingClass(cls) {
             let effHtml = '';
             if (bd.active > 0 && bd.efficiency !== undefined && bd.efficiency < 0.995) {
                 const percent = (bd.efficiency * 100).toFixed(0);
-                effHtml = `<span style="color:#e6a017; font-size:0.8rem; margin-left:6px;">效率: ${percent}%</span>`;
+                effHtml = `<span class="building-efficiency" style="color:#e6a017; font-size:0.8rem; margin-left:6px;">效率: ${percent}%</span>`;
             }
             html += `<div class="building-card-info">
                 <strong class="${nameClass}">${b}</strong>

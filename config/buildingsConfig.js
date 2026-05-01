@@ -289,7 +289,7 @@ BUILDINGS_CONFIG = {
         requiresLocal: { population: 1 },
         desc: "压水堆，可使用核燃料或铀。",
         modes: [
-            { id: "nuclear_fuel", name: "核燃料模式", produces: {电力: 0.5}, consumes: {核燃料: 0.01} },
+            { id: "nuclear_fuel", name: "核燃料模式", produces: {电力: 1.0}, consumes: {核燃料: 0.02} },
             { id: "uranium_fuel", name: "铀燃料模式", produces: {电力: 0.8}, consumes: {铀: 0.4} }
         ]
     },
