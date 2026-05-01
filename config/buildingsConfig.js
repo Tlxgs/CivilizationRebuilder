@@ -340,7 +340,7 @@ BUILDINGS_CONFIG = {
         produces: {科学:0.1}, consumes: {电力:0.3}, caps: {},modifiers:[{target: "大学", capFactor: 0.02}],
         providesLocal: {},
         requiresLocal: { population: 1 },
-        desc: "环形对撞机，产出科学，且每座（无论是否激活）提升2%遗物获取概率。"
+        desc: "环形对撞机，产出科学，且每座（无论是否激活）提升2%遗物获取量。"
     },
 
     // ========== 地面 - 存储 ==========
@@ -530,7 +530,10 @@ BUILDINGS_CONFIG = {
         cost: (s, c) => standardCost({钛: 10000, 塑料: 5000}, 1.1, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.8},
         caps: {氚:300, 核燃料:300},
-        providesLocal: { gas_habitat:1 },
+        providesLocal: (state) => {
+            const stabilizers = state.buildings["悬浮稳定器"]?.active || 0;
+            return { gas_habitat: 1 + stabilizers * 0.2 };
+        },
         requiresLocal: { space_habitat:1,population: 1 },
         modifiers: [
             { target: "氚提取站", prodFactor: 0.03 },
@@ -556,6 +559,7 @@ BUILDINGS_CONFIG = {
         requiresLocal: {  gas_habitat: 1.0, population: 1 },
         desc: "将氚与锂反应生成氦和大量核燃料"
     },
+    
     "浮空居民区": {
         class: "space",
         type: "木星",
@@ -565,9 +569,30 @@ BUILDINGS_CONFIG = {
         consumes: {电力: 0.5},
         caps: {},
         happiness: 0.1,
-        providesLocal: { population: 3 },
+        providesLocal: (state) => {
+            const centers = state.buildings["居住扩展中心"]?.active || 0;
+            return { population: 3 + centers * 0.2 };
+        },
         requiresLocal: { gas_habitat: 1},
         desc: "悬浮在木星云顶的居住舱，利用磁场维持稳定，窗外有波澜壮阔的气态风暴非常美丽。每座可容纳3位殖民者。"
+    },
+    "悬浮稳定器": {
+        class: "space", type: "木星",
+        unlockCondition: { tech: "悬浮稳定技术" },
+        cost: (s, c) => standardCost({建材:5000, 钛: 6000, 核燃料: 500}, 1.2, c, getGlobalCostMultiplier(s)),
+        produces: {}, consumes: {电力: 0.3}, caps: {},
+        providesLocal: {},
+        requiresLocal: {},
+        desc: "利用反重力装置稳定木星云顶浮空城，每座可使木星基地的宜居度提升0.2。"
+    },
+    "居住扩展中心": {
+        class: "space", type: "木星",
+        unlockCondition: { tech: "太空居住规划" },
+        cost: (s, c) => standardCost({钢: 800, 塑料: 10000, 核燃料: 2000}, 1.2, c, getGlobalCostMultiplier(s)),
+        produces: {}, consumes: {电力: 0.4}, caps: {},
+        providesLocal: {},
+        requiresLocal: { gas_habitat: 0.5},
+        desc: "高效空间利用与生命维持系统，每座可使浮空居民区的人口容量增加0.2。"
     },
     "燃料库": {
         class: "space",

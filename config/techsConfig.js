@@ -16,7 +16,7 @@ const TECHS_CONFIG = {
         prereq: null,
         desc: "⚔️挑战：建筑成本增长率+20%。完成任意重置后获得成就「节俭大师」：所有建筑成本增长率-2%（均为乘算）。",
         challenge: {
-            resetType: "any",
+            resetType: "any", 
             achievementName: "节俭大师",
             permanentEffect: { globalCost: -0.02 },
             duringEffect: { globalCost: 0.20 }
@@ -165,6 +165,16 @@ const TECHS_CONFIG = {
         price: {科学: 40000, 核燃料: 25000},
         prereq: ["燃料储存"],
         desc: "掌握原子核重组技术，可以将核燃料逆向转化为煤炭。"
+    },
+    "悬浮稳定技术": {
+        price: {科学: 50000,核燃料:30000},
+        prereq: ["木星殖民"],
+        desc: "开发反重力悬浮稳定器，大幅提升木星大气中的浮空城稳定性。"
+        },
+    "太空居住规划": {
+        price: {科学: 60000,核燃料:40000},
+        prereq: ["悬浮稳定技术"],
+        desc: "模块化居住舱与人口密集区规划，让浮空居民区容纳更多殖民者。"
     },
     "探索木卫二": {
         price: {科学: 50000, 核燃料: 50000},

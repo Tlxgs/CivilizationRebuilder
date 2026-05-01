@@ -72,7 +72,7 @@ const EVENTS_CONFIG = {
                 type: "addResource", 
                 resource:"电力",
                 amount:(state) =>{
-                    const cap =state.resource["电力"]?.cap ||100;
+                    const cap =state.resources["电力"]?.cap ||100;
                     return Math.floor(cap*0.5+200);
                 }
             }
