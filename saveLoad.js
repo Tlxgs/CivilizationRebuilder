@@ -274,12 +274,35 @@ function refreshGameStateFromSave(saveData) {
     } else {
         GameState.activeChallenges = [];
     }
-    ProductionEngine.refreshEffects();
-    updateBuildingPrices();
-    updateUpgradePrices();
-    computeProductionAndCaps();
-    renderAll();
-}
+    if (saveData.achievements) {
+        GameState.achievements = saveData.achievements;
+    }
+    for (let techId in GameState.techs) {
+    const tech = GameState.techs[techId];
+    if (tech.challengeCompleted && tech.challenge) {
+        const achName = tech.challenge.achievementName;
+            if (achName && !GameState.achievements[achName]) {
+                GameState.achievements[achName] = {
+                    name: achName,
+                    effect: tech.challenge.permanentEffect || {}
+                };
+                addEventLog(`✨ 修复丢失的成就「${achName}」！`);
+            }
+        }
+    }
+    // 如果有修复，刷新效果
+    if (Object.keys(GameState.achievements).length > 0) {
+        ProductionEngine.refreshEffects();
+        computeProductionAndCaps();
+        updateBuildingPrices();
+        updateUpgradePrices();
+    }
+        ProductionEngine.refreshEffects();
+        updateBuildingPrices();
+        updateUpgradePrices();
+        computeProductionAndCaps();
+        renderAll();
+    }
 
 function loadGame() {
     const saved = localStorage.getItem('civilizationRebuilder');

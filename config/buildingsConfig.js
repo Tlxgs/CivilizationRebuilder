@@ -20,7 +20,10 @@ BUILDINGS_CONFIG = {
         unlockCondition: { tech: "搭建帐篷" },
         cost: (s, c) => standardCost({木头: 5}, 1.1, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {}, caps: {},
-        providesLocal: { population: 2 },
+        providesLocal: (state) => {
+            let pop = 2
+            return { population: pop };
+        },
         requiresLocal: {},
         desc: "几根木棍撑起的兽皮帐篷，能为2个人遮风挡雨。"
     },

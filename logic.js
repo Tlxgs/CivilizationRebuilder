@@ -1,7 +1,6 @@
 function softReset(extraRelic = 0, extraDarkEnergy = 0) {
     GameState.gameDays = 0;
     const permBackup = JSON.parse(JSON.stringify(GameState.permanent));
-    const achievementsBackup = JSON.parse(JSON.stringify(GameState.achievements || {}));
     // 备份挑战完成标记
     const challengeCompletedBackup = {};
     for (let techId in GameState.techs) {
@@ -40,7 +39,6 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
     for (let p in GameState.policies) GameState.policies[p].visible = false;
 
     GameState.permanent = permBackup;
-    GameState.achievements = achievementsBackup;
     // 恢复挑战完成标记
     for (let techId in challengeCompletedBackup) {
         if (GameState.techs[techId]) {
@@ -74,7 +72,6 @@ function unlockAchievementsForReset(resetType) {
                 GameState.achievements[achName] = {
                     name: achName,
                     effect: tech.challenge.permanentEffect,
-                    unlockedAt: GameState.gameDays
                 };
                 // 标记该科技挑战已完成，避免下次重置再次触发
                 tech.challengeCompleted = true;
