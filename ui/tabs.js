@@ -29,7 +29,10 @@ function updateTabsVisibility() {
     if (tradeTab) tradeTab.style.display = hasTrade ? '' : 'none';
 
     // 晶体标签
-    const hasCrystalTab = GameState.techs["军事理论"]?.researched || false;
+    const hasMilitaryTech = GameState.techs["军事理论"]?.researched || false;
+    const hasCrystals = (GameState.crystals?.inventory?.length > 0) ||
+                        (GameState.crystals?.equipped?.some(slot => slot !== null) === true);
+    const hasCrystalTab = hasMilitaryTech || hasCrystals;
     const crystalTab = document.querySelector('.tab-btn[data-tab="crystal"]');
     if (crystalTab) crystalTab.style.display = hasCrystalTab ? '' : 'none';
 
