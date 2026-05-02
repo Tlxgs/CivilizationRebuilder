@@ -88,7 +88,7 @@ function performCheat() {
 
     // 然后填充其他所有资源至上限
     for (let r in GameState.resources) {
-        if (r === '遗物' || r === '暗能量' || r === '时间晶体') continue;
+        if (r === '遗物' || r === '暗能量' || r === '时间晶体'||r==='孢子') continue;
         const res = GameState.resources[r];
         if (res.cap > 0) {
             res.amount = res.cap;

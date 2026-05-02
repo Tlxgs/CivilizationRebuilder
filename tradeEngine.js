@@ -194,7 +194,11 @@ const TradeEngine = (function() {
         for (let r in state.resources) {
             const res = state.resources[r];
             if (res.tradeHeat !== undefined && res.tradeHeat !== 0) {
-                res.tradeHeat = res.tradeHeat * Math.pow(1 - 0.005, deltaSec);
+                let decayRate=0.005;
+                if (res.decayRate!==undefined){
+                    decayRate = res.decayRate;
+                }
+                res.tradeHeat = res.tradeHeat * Math.pow(1 - decayRate, deltaSec);
                 if (Math.abs(res.tradeHeat) < 1e-8) res.tradeHeat = 0;
             }
         }

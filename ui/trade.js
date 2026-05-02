@@ -6,7 +6,7 @@ function renderTradePanel() {
     const isUnlocked = market && market.visible;
 
     if (!isUnlocked) {
-        panel.innerHTML = '<p>暂未解锁（需要研究“国际贸易学”并建造市场）</p>';
+        panel.innerHTML = '<p>暂未解锁</p>';
         return;
     }
 
@@ -34,7 +34,7 @@ function renderTradePanel() {
                 <strong>持续贸易吞吐量上限 (单次贸易量上限的1%)</strong><br>
                 上限: ${formatNumber(throughputLimit)} 资源/秒<br>
                 已用: ${formatNumber(usedThroughput)} 资源/秒<br>
-                <span style="font-size: 0.75rem; color: var(--text-dim);">提示：正数=进口，负数=出口。</span>
+                <span style="font-size: 0.75rem; color: var(--text-dim);">提示：正数=进口，负数=出口。持续贸易产生的价格波动幅度比手动交易小。</span>
             </div>
         </div>
         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 0.8rem;">
