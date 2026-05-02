@@ -263,6 +263,8 @@ function discardCrystal(inventoryIndex) {
 }
 function getBuildingsWithProduce() {
     return Object.keys(GameState.buildings).filter(key => {
+        const bld = GameState.buildings[key];
+        if (!bld.visible) return false;
         const cfg = BUILDINGS_CONFIG[key];
         if (!cfg) return false;
         const produces = typeof cfg.produces === 'function' ? cfg.produces(GameState) : (cfg.produces || {});
@@ -272,6 +274,8 @@ function getBuildingsWithProduce() {
 
 function getBuildingsWithConsume() {
     return Object.keys(GameState.buildings).filter(key => {
+        const bld = GameState.buildings[key];
+        if (!bld.visible) return false;
         const cfg = BUILDINGS_CONFIG[key];
         if (!cfg) return false;
         const consumes = typeof cfg.consumes === 'function' ? cfg.consumes(GameState) : (cfg.consumes || {});
@@ -281,6 +285,8 @@ function getBuildingsWithConsume() {
 
 function getBuildingsWithCap() {
     return Object.keys(GameState.buildings).filter(key => {
+        const bld = GameState.buildings[key];
+        if (!bld.visible) return false;
         const cfg = BUILDINGS_CONFIG[key];
         if (!cfg) return false;
         const caps = typeof cfg.caps === 'function' ? cfg.caps(GameState) : (cfg.caps || {});

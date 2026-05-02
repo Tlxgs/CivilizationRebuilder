@@ -58,6 +58,12 @@ const GameLoop = (function() {
                 renderAll();
             }
         }
+        if (GameState.autoWarEnabled) {
+            const arms = GameState.resources["军备"];
+            if (arms && arms.amount >= arms.cap-0.0001 && arms.cap > 100.001&& GameState.crystals.inventory.length < 3) {
+                Core.performAction('war');
+            }
+        }
 
         tryTriggerRandomEvent();
         renderLogPanel();   // 只更新日志区域
@@ -140,6 +146,7 @@ const GameLoop = (function() {
         if (typeof refreshAllDynamicColors === 'function') {
             refreshAllDynamicColors();
         }
+
 
         lastTimestamp = now;
     }

@@ -167,7 +167,7 @@ function initGameData() {
     initPolicies();
     initPermanent();
     initTrade();
-
+    GameState.autoWarEnabled = false; 
     refreshAllVisibility();
 
     for (let b in GameState.buildings) {

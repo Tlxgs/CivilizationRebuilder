@@ -269,6 +269,13 @@ const PERMANENT_CONFIG = {
         desc: "模拟宇宙大爆炸初期条件，太空建筑产量再+20%。",
         effect: { globalSpaceProd: 0.20 },
         prereq: null
+    },
+    "自动战争": {
+        name: "自动战争",
+        price: {暗能量: 1},
+        desc: "军备达到上限时自动发动战争，无需手动点击。",
+        effect: {},
+        prereq: null
     }
 };
 

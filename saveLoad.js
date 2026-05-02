@@ -122,6 +122,7 @@ function getSaveData() {
     saveData.userTradeVolume = GameState.userTradeVolume;
     saveData.maxTradeVolume = GameState.maxTradeVolume;
     saveData.crystals = JSON.parse(JSON.stringify(GameState.crystals));
+    saveData.autoWarEnabled = GameState.autoWarEnabled;
     return saveData;
 }
 
@@ -290,6 +291,7 @@ function refreshGameStateFromSave(saveData) {
             }
         }
     }
+    if (saveData.autoWarEnabled !== undefined) GameState.autoWarEnabled = saveData.autoWarEnabled;
     // 如果有修复，刷新效果
     if (Object.keys(GameState.achievements).length > 0) {
         ProductionEngine.refreshEffects();

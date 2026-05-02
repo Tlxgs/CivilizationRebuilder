@@ -18,13 +18,40 @@ const actionMetaList = [
 function renderActionsPanel() {
     const container = document.getElementById('actions-panel');
     let html = '<h3>行动</h3><div class="action-buttons">';
-    actionMetaList.forEach(meta => {
-        if (meta.condition && !meta.condition()) return;
+    
+    // 手动遍历 meta 列表，以便在 war 后插入额外内容
+    for (let meta of actionMetaList) {
+        if (meta.condition && !meta.condition()) continue;
         const btnText = typeof meta.text === 'function' ? meta.text() : meta.text;
         html += `<button class="action-btn" data-action="${meta.id}">${btnText}</button>`;
-    });
+        
+        // 如果是战争按钮，并且永久升级“自动战争”已研究，则添加复选框
+        if (meta.id === 'war') {
+            const permAutoWar = GameState.permanent["自动战争"]?.researched;
+            if (permAutoWar) {
+                const checked = GameState.autoWarEnabled ? 'checked' : '';
+                html += `<div style="margin: 4px 0 8px 12px; font-size: 0.85rem;">
+                            <label>
+                                <input type="checkbox" id="auto-war-checkbox" ${checked}> 
+                                自动战争（军备满时自动发动）
+                            </label>
+                         </div>`;
+            }
+        }
+    }
     html += '</div>';
     container.innerHTML = html;
+    
+    // 绑定复选框变更事件
+    const autoWarCheck = document.getElementById('auto-war-checkbox');
+    if (autoWarCheck) {
+        autoWarCheck.addEventListener('change', (e) => {
+            GameState.autoWarEnabled = e.target.checked;
+            addEventLog(`自动战争 ${e.target.checked ? '开启' : '关闭'}`);
+            // 可选：立即保存
+            saveGame();
+        });
+    }
     document.querySelectorAll('.action-btn').forEach(btn => {
         const meta = actionMetaList.find(m => m.id === btn.dataset.action);
         if (meta) {
