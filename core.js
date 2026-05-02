@@ -164,6 +164,10 @@ class GameEngine {
                 vacuumDecayReset();
                 return true;
             },
+            symbiote_reset: () => {
+                symbioteReset();
+                return true;
+            },
         };
 
         const handler = handlers[actionId];

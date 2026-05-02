@@ -1,6 +1,10 @@
 const ChangelogData = {
     version: "v0.2",
     logs: [
+        { version: "v0.5.6", date: "2026-05-02", changes: [
+            "增加新的科技和建筑",
+            "现在手动贸易会自动保证获取的资源或金不超出上限，防止浪费"
+        ]},
         { version: "v0.5.5", date: "2026-05-01", changes: [
             "修复成就丢失的问题，如果已经完成挑战没有解锁成就，请联系作者tlxgsgame@163.com，最好能发送您的存档文件"
         ]},

@@ -1,4 +1,4 @@
-function softReset(extraRelic = 0, extraDarkEnergy = 0) {
+function softReset(extraRelic = 0, extraDarkEnergy = 0,extraSpore=0) {
     GameState.gameDays = 0;
     const permBackup = JSON.parse(JSON.stringify(GameState.permanent));
     // 备份挑战完成标记
@@ -11,6 +11,7 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
 
     const relic = GameState.resources["遗物"]?.amount || 0;
     const darkEnergy = GameState.resources["暗能量"]?.amount || 0;
+    const spore = GameState.resources["孢子"]?.amount || 0;
     GameState.speed = 1;
     GameState.activeChallenges = [];
     const timeCrystal = GameState.resources["时间晶体"]?.amount || 0;
@@ -18,6 +19,7 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0) {
         if (r === "时间晶体") GameState.resources[r].amount = timeCrystal;
         else if (r === "遗物") GameState.resources[r].amount = relic + extraRelic;
         else if (r === "暗能量") GameState.resources[r].amount = darkEnergy + extraDarkEnergy;
+        else if (r === "孢子") GameState.resources[r].amount = spore + extraSpore;
         else GameState.resources[r].amount = 0;
         GameState.resources[r].visible = (GameState.resources[r].amount > 0) || (r === "科学");
     }
@@ -110,7 +112,23 @@ function vacuumDecayReset() {
         addEventLog(`真空衰变！获得 ${extraRelic} 遗物和 ${darkMatterCount} 暗能量。`);
     }
 }
+function symbioteReset() {
+    // 计算核弹重置的基础遗物收益
+    const baseRelicGain = Formulas.calcRelicGainFromNuke(
+        GameState.resources["科学"].cap,
+        GameState.buildings["粒子加速器"]?.count || 0,
+        GameState.localResources.population.capacity
+    );
+    const extraRelic = baseRelicGain * 3;               // 三倍遗物
+    const extraSpore = Math.floor(Math.sqrt(extraRelic)); // 孢子 = floor(√遗物)
 
+    if (confirm(`共生重置！\n外星微生物彻底掌控了人类意识，我们……成为了它们的一部分。\n\n获得遗物: ${extraRelic}\n获得孢子: ${extraSpore}\n\n确定要献出人类的未来吗？`)) {
+        // 检查是否有与共生重置关联的挑战成就（如有需要可扩展）
+        unlockAchievementsForReset('symbiote');
+        softReset(extraRelic, 0, extraSpore);
+        addEventLog(`共生重置！获得 ${extraRelic} 遗物和 ${extraSpore} 孢子。人类……以另一种形式延续。`);
+    }
+}
 function hardReset() {
     window._hardResetting = true; 
     localStorage.clear();

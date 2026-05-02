@@ -321,7 +321,7 @@ BUILDINGS_CONFIG = {
         unlockCondition: { tech: "探索遗迹" },
         cost: (s, c) => standardCost({石头: 300, 铜: 150}, 1.4, c, getGlobalCostMultiplier(s)),
         produces: {科学: 0.1, 金: 0.15}, consumes: {}, caps: {科学: 50},
-        happiness: (state) => 0.1 * Math.log(Math.pow(Math.E, 5) + (state.resources["遗物"]?.amount || 0)),
+        happiness: (state) => 0.5 * Math.log(Math.E + (state.resources["遗物"]?.amount || 0)/200),
         providesLocal: {},
         requiresLocal: { population: 1 },
         desc: "陈列远古遗物，同时产出科学和金。幸福感加成随遗物持有数量增长。"
@@ -572,7 +572,21 @@ BUILDINGS_CONFIG = {
         requiresLocal: {  gas_habitat: 1.0, population: 1 },
         desc: "将氚与锂反应生成氦和大量核燃料"
     },
-    
+    "气象卫星": {
+        class: "space", type: "木星",
+        unlockCondition: { tech: "气象观测" },
+        cost: (s, c) => standardCost({钛: 25000, 建材: 40000,核燃料:3000}, 1.25, c, getGlobalCostMultiplier(s)),
+        produces: {}, consumes: {电力: 0.3,核燃料:5.0}, 
+        caps: (s)=>{
+            let scibase=500;
+            const people=s.buildings["浮空居民区"]?.active || 0;
+            let sci = scibase*(1+0.1*people)
+            return {科学:sci}
+        },
+        providesLocal: {},
+        requiresLocal: { gas_habitat: 0.5, population: 1 },
+        desc:"观测木星大气的气象卫星，需要大量核燃料来克服木星的巨大引力。\n每个浮空居民区会增加其10%上限。"
+    },
     "浮空居民区": {
         class: "space",
         type: "木星",
@@ -592,7 +606,7 @@ BUILDINGS_CONFIG = {
     "悬浮稳定器": {
         class: "space", type: "木星",
         unlockCondition: { tech: "悬浮稳定技术" },
-        cost: (s, c) => standardCost({建材:5000, 钛: 6000, 核燃料: 500}, 1.2, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({建材:5000, 钛: 6000, 核燃料: 5000}, 1.2, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.3}, caps: {},
         providesLocal: {},
         requiresLocal: {},
@@ -601,11 +615,21 @@ BUILDINGS_CONFIG = {
     "居住扩展中心": {
         class: "space", type: "木星",
         unlockCondition: { tech: "太空居住规划" },
-        cost: (s, c) => standardCost({钢: 800, 塑料: 10000, 核燃料: 2000}, 1.2, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({钢: 800, 塑料: 10000, 核燃料: 6000}, 1.2, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.4}, caps: {},
         providesLocal: {},
         requiresLocal: { gas_habitat: 0.5},
         desc: "高效空间利用与生命维持系统，每座可使浮空居民区的人口容量增加0.2。"
+    },
+    "孢子烟花": {
+        class: "space", type: "木星",
+        unlockCondition: { tech: "孢子烟花" },
+        cost: (s, c) => standardCost({金属板: 5000, 钛: 5000}, 1.3, c, getGlobalCostMultiplier(s)),
+        produces: {}, consumes: {电力: 0.2}, caps: {},
+        happiness: (state) => 1.0 * Math.log(Math.E + (state.resources["孢子"]?.amount || 0)/200),
+        providesLocal: {},
+        requiresLocal: { gas_habitat: 0.5 },
+        desc:"利用孢子和木星大气制造规模前所未有的烟花，愉悦殖民者。幸福感加成随孢子持有数量增长。"
     },
     "燃料库": {
         class: "space",
@@ -623,7 +647,7 @@ BUILDINGS_CONFIG = {
         class: "space",
         type: "木星",
         unlockCondition: { tech: "核素转化" },
-        cost: (s, c) => standardCost({金属板: 8000, 钢: 6000,}, 1.15, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({金属板: 8000, 钢: 6000,}, 1.2, c, getGlobalCostMultiplier(s)),
         produces: {煤: 2.0},
         consumes: {核燃料: 0.05},
         caps: {},
@@ -636,13 +660,37 @@ BUILDINGS_CONFIG = {
         class: "space",
         type: "木卫二",
         unlockCondition: { tech: "探索木卫二" },
-        cost: (s, c) => standardCost({钛:20000,钢:10000}, 1.15, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({钛:20000,钢:10000}, 1.25, c, getGlobalCostMultiplier(s)),
         produces: {},
-        consumes: {电力:0.6},
+        consumes: {电力:1.0},
         caps: {},
         providesLocal: {europa_habitat:2},
         requiresLocal: {gas_habitat:1},
         desc: "在木卫二上建立前哨，探索这颗冰封的星球"
+    },
+    "冰层钻井": {
+        class: "space",
+        type: "木卫二",
+        unlockCondition: { tech: "外星生物学" },
+        cost: (s, c) => standardCost({钛:50000,碳纤维:40000}, 1.25, c, getGlobalCostMultiplier(s)),
+        produces: {生物质:0.02},
+        consumes: {电力:2.0},
+        caps: {生物质:200},
+        providesLocal: {},
+        requiresLocal: {europa_habitat:1,population:1},
+        desc: "使用钻井捕获冰层下方的微生物"
+    },
+    "生物实验室": {
+        class: "space",
+        type: "木卫二",
+        unlockCondition: { tech: "外星生物学" },
+        cost: (s, c) => standardCost({钢:50000,建材:50000,金属板:30000}, 1.25, c, getGlobalCostMultiplier(s)),
+        produces: {科学:0.1},
+        consumes: {生物质:0.05},
+        caps: {科学:2000,生物质:500},
+        providesLocal: {},
+        requiresLocal: {europa_habitat:1,population:1},
+        desc: "研究外星微生物的具体构造"
     },
     "聚变反应堆": {
         class: "space", type: "月球",
@@ -658,7 +706,7 @@ BUILDINGS_CONFIG = {
         unlockCondition: { tech: "太空剧院" },
         cost: (s, c) => standardCost({金属板: 500, 塑料: 500}, 1.25, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.4, 科学: 2}, caps: {},
-        happiness: (state) => 0.2 * Math.log(Math.pow(2.718, 5) + (state.resources["暗能量"]?.amount || 0)),
+        happiness: (state) => 1.0 * Math.log(Math.E + (state.resources["暗能量"]?.amount || 0)/200),
         providesLocal: {},
         requiresLocal: { space_habitat: 0.5, population: 1 },
         desc:"利用暗能量制造全息幻象，愉悦殖民者。幸福感加成随暗能量持有数量增长。"

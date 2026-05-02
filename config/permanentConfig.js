@@ -39,35 +39,35 @@ const PERMANENT_CONFIG = {
         name: "虚空铸造·入门",
         price: {遗物: 1000, 暗能量: 10},
         desc: "利用暗能量扭曲局部时空，使建造所需物质减少，成本增长率-4%。",
-        effect: { costRatio: 0.95 },
+        effect: { costRatio: 0.96 },
         prereq: ["节约成本V"]
     },
     "节约成本VII": {
         name: "虚空铸造·中阶",
         price: {遗物: 1500, 暗能量: 20},
         desc: "维度折叠技术，让原料体积压缩，成本增长率-4%。",
-        effect: { costRatio: 0.95 },
+        effect: { costRatio: 0.96 },
         prereq: ["节约成本VI"]
     },
     "节约成本VIII": {
         name: "虚空铸造·高阶",
         price: {遗物: 2000, 暗能量: 40},
         desc: "反物质催化建造，原子级重组，成本增长率-3%。",
-        effect: { costRatio: 0.95 },
+        effect: { costRatio: 0.97 },
         prereq: ["节约成本VII"]
     },
     "节约成本IX": {
         name: "虚空铸造·专家",
         price: {遗物: 2500, 暗能量: 80},
         desc: "虚空造物技术，从真空中借取物质来建造，成本增长率-3%。",
-        effect: { costRatio: 0.95 },
+        effect: { costRatio: 0.97 },
         prereq: ["节约成本VIII"]
     },
     "节约成本X": {
         name: "因果重塑",
-        price: {遗物: 3000, 暗能量: 160},
+        price: {遗物: 3000, 暗能量:100,孢子: 50},
         desc: "因果律修改，让建筑所需资源在历史中就不存在，成本增长率-2%。",
-        effect: { costRatio: 0.95 },
+        effect: { costRatio: 0.98 },
         prereq: ["节约成本IX"]
     },
 
@@ -256,6 +256,13 @@ const PERMANENT_CONFIG = {
         effect: { sciCapPerRelicLog: 0.04 },
         prereq: null
     },
+    "技术扩散": {
+        name: "技术扩散",
+        price: {遗物: 500,孢子:20},
+        desc: "从孢子中解析出前代文明痕迹，每持有1个遗物再提升微量科学上限（收益递减）。",
+        effect: { sciCapPerRelicLog: 0.01 },
+        prereq: null
+    },
     "宇宙学": {
         name: "暗能量译码",
         price: {遗物: 50, 暗能量: 1},
@@ -268,7 +275,14 @@ const PERMANENT_CONFIG = {
         price: {遗物: 500, 暗能量: 100},
         desc: "模拟宇宙大爆炸初期条件，太空建筑产量再+20%。",
         effect: { globalSpaceProd: 0.20 },
-        prereq: null
+        prereq: ["宇宙学"]
+    },
+    "宇宙起源II": {
+        name: "宇宙意识",
+        price: {遗物: 1000, 孢子: 50},
+        desc: "宇宙也许是有意识的，提升太空建筑产量20%。",
+        effect: { globalSpaceProd: 0.20 },
+        prereq: ["宇宙起源"]
     },
     "自动战争": {
         name: "自动战争",

@@ -13,6 +13,7 @@ const actionMetaList = [
     { id: 'war', text: '发动战争', tooltip: '消耗所有军备，随机获得晶体。消耗的军备越多，越容易获得高品质晶体', condition: () => GameState.techs["军事理论"]?.researched },
     { id: 'nuke_reset', text: '发射核弹', tooltip: '重置并获遗物', condition: () => GameState.techs["曼哈顿计划"]?.researched },
     { id: 'vacuum_decay', text: '真空衰变', tooltip: '重置获更多遗物与暗能量', condition: () => GameState.techs["真空衰变"]?.researched },
+    { id: 'symbiote_reset', text: '共生重置', tooltip: '与外星微生物共生，获得大量遗物和孢子', condition: () => GameState.techs["生物移植"]?.researched }
 ];
 
 function renderActionsPanel() {
