@@ -50,7 +50,7 @@ function processOfflineTime() {
 
 const CHEAT_SEQUENCE = ['t'];
 let sequenceIndex = 0;
-/*
+
 window.addEventListener('keydown', (e) => {
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     const key = e.key.toLowerCase();
@@ -64,8 +64,10 @@ window.addEventListener('keydown', (e) => {
         sequenceIndex = 0;
     }
 });
-*/
+
 function performCheat() {
+    let DEBUG=false;
+    if(!DEBUG)return;
     const crystal = GameState.resources['时间晶体'];
     const relic = GameState.resources['遗物'];
     const dark = GameState.resources['暗能量'];

@@ -437,6 +437,16 @@ BUILDINGS_CONFIG = {
         requiresLocal: { population: 1 },
         desc: "商业航天企业，通过竞争与创新，每激活一个航天公司可使每个发射井提供的太空承载提升5%。"
     },
+    "金字塔": {
+        class: "ground", type: "其他",
+        unlockCondition: { tech: "奇观" },
+        cost: (s, c) => ({石头: 30000*(2**Math.floor(c/100)), 建材: 1500*(2**Math.floor(c/100))}),
+        produces: {}, consumes: {}, caps: {},
+        happiness: (state) => 0.1*(state.buildings["金字塔"].active>99?1:0),
+        providesLocal: {},
+        requiresLocal: {},
+        desc: "宏伟的金字塔，由100个部件组成（前99次建造无任何作用），建成后，提供幸福度加成。"
+    },
     // ========== 太空==========
     "轨道电梯": {
         class: "space", type: "近地轨道",
