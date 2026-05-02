@@ -20,17 +20,20 @@ function getBuildingTooltip(buildingKey) {
 
     const stats = ProductionEngine.getBuildingStats(buildingKey);
     if (stats) {
-        // 局域资源
+        // 局域资源（提供）
         for (let lrKey in stats.providesLocal) {
             const lrCfg = LOCAL_RESOURCES_CONFIG[lrKey];
             if (lrCfg && stats.providesLocal[lrKey] !== 0) {
-                html += `提供${lrCfg.name}: +${stats.providesLocal[lrKey]}<br>`;
+                const val = stats.providesLocal[lrKey];
+                html += `提供${lrCfg.name}: +${formatLocalNumber(val)}<br>`;
             }
         }
+        // 局域资源（需求）
         for (let lrKey in stats.requiresLocal) {
             const lrCfg = LOCAL_RESOURCES_CONFIG[lrKey];
             if (lrCfg && stats.requiresLocal[lrKey] !== 0) {
-                html += `需求${lrCfg.name}: ${stats.requiresLocal[lrKey]}<br>`;
+                const val = stats.requiresLocal[lrKey];
+                html += `需求${lrCfg.name}: ${formatLocalNumber(val)}<br>`;
             }
         }
         for (let det of stats.details) {

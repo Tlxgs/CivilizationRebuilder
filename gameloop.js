@@ -61,7 +61,10 @@ const GameLoop = (function() {
         if (GameState.autoWarEnabled) {
             const arms = GameState.resources["军备"];
             if (arms && arms.amount >= arms.cap-0.0001 && arms.cap > 100.001&& GameState.crystals.inventory.length < 3) {
-                Core.performAction('war');
+                let success=Core.performAction('war');
+                if (!success){
+                    GameState.autoWarEnabled=false;
+                }
             }
         }
 

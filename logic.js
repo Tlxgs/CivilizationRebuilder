@@ -201,11 +201,11 @@ function generateCrystalFromWar(armsAmount) {
                 break;
         }
         
-        let baseValue = Formulas.calcCrystalEffectBaseValue(quality);
+        let baseValue = Formulas.calcCrystalEffectBaseValue(quality,0.01,0.25);
         
         // 根据类型调整系数
-        if (type === 'happiness') baseValue *= 0.5;
-        if (type === 'cap') baseValue *= 0.3;
+        if (type === 'happiness') baseValue *= 0.4;
+        if (type === 'cap') baseValue *= 0.2;
         
         const positiveChance = Formulas.calcCrystalPositiveChance(quality);
         let isPositive = Math.random() < positiveChance;
