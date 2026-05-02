@@ -460,7 +460,7 @@ BUILDINGS_CONFIG = {
             { target: "月球铜矿", prodFactor: 0.03 },
             { target: "月球钛矿", prodFactor: 0.03 }
         ],
-        desc:"从地面延伸至地球同步轨道的碳纳米管缆绳，大幅提高月球矿物产出，同时每个轨道电梯降低月球基地价格1%。"
+        desc:"从地面延伸至地球同步轨道的碳纳米管缆绳，大幅提高月球矿物产出，同时每个轨道电梯降低月球基地价格2%。"
     },
     "月球基地": {
         class: "space", type: "月球",
@@ -471,7 +471,7 @@ BUILDINGS_CONFIG = {
             const mult = getGlobalCostMultiplier(s);
             const eff = 1 + (growth - 1) * mult;
             const elevator = s.buildings["轨道电梯"]?.active || 0;
-            const discount = Math.pow(0.99, elevator);
+            const discount = Math.pow(0.98, elevator);
             const price = {};
             for (let r in base) price[r] = Math.floor(base[r] * Math.pow(eff, c) * discount);
             return price;
