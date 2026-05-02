@@ -113,8 +113,7 @@ function renderTradePanel() {
             renderAll();
         });
     });
-
-    // 购买按钮：按实际黄金购买尽可能多的资源
+    // 购买按钮：按实际黄金和资源上限购买尽可能多的资源，避免浪费
     document.querySelectorAll('.trade-once-buy-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const resource = btn.dataset.resource;
@@ -128,23 +127,28 @@ function renderTradePanel() {
             if (!res || res.value === undefined || !gold) return;
 
             const effectivePrice = TradeEngine.getEffectivePrice(GameState, resource);
-            const affordableAmount = Math.floor(gold.amount / effectivePrice);
-            const actualAmount = Math.min(requestedAmount, affordableAmount);
-            if (actualAmount <= 0) {
-                alert("黄金不足，无法购买");
-                return;
-            }
+
+            // 限制1：黄金能买得起的数量
+            const maxByGold = Math.floor(gold.amount / effectivePrice);
+            // 限制2：资源剩余容量
+            const remainingCap = Math.max(0, res.cap - res.amount);
+            // 最终实际购买量（不可超过用户设定的单次贸易量）
+            let actualAmount = Math.min(requestedAmount, maxByGold, remainingCap);
+
             const costGold = actualAmount * effectivePrice;
 
+            // 执行交易
             gold.amount -= costGold;
             res.amount = Math.min(res.cap, res.amount + actualAmount);
             if (res.amount > 0) res.visible = true;
 
+            // 更新热度（按实际交易量）
             const maxVolume = GameState.maxTradeVolume;
             let deltaHeat = (actualAmount / maxVolume) * 0.1;
             let newHeat = (res.tradeHeat || 0) + deltaHeat;
-            newHeat = Math.min(5, Math.max(-5, newHeat));
-            res.tradeHeat = newHeat;
+            res.tradeHeat = Math.min(5, Math.max(-5, newHeat));
+
+            addEventLog(`购买 ${formatNumber(actualAmount)} ${resource}，消耗 ${formatNumber(costGold)} 金。`);
             computeProductionAndCaps();
             renderAll();
         });
@@ -152,11 +156,10 @@ function renderTradePanel() {
             const resource = btn.dataset.resource;
             const amount = GameState.userTradeVolume;
             const price = TradeEngine.getEffectivePrice(GameState, resource);
-            showTooltip(btn, `购买 ${formatNumber(amount)} ${resource}<br>消耗 ${formatNumber(amount * price)} 金`);
+            showTooltip(btn, `购买 ${formatNumber(amount)} ${resource}<br>消耗 ${formatNumber(amount * price)} 金<br>`);
         });
     });
 
-    // 出售按钮：按实际资源数量出售
     document.querySelectorAll('.trade-once-sell-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const resource = btn.dataset.resource;
@@ -169,23 +172,31 @@ function renderTradePanel() {
             const gold = GameState.resources["金"];
             if (!res || res.value === undefined || !gold) return;
 
-            const actualAmount = Math.min(requestedAmount, res.amount);
-            if (actualAmount <= 0) {
-                alert(`${resource} 不足，无法出售`);
-                return;
-            }
             const effectivePrice = TradeEngine.getEffectivePrice(GameState, resource);
-            const gainGold = actualAmount * effectivePrice * 0.8;
+            const gainPerUnit = effectivePrice * 0.8;
 
+            // 限制1：自己拥有的资源量
+            const maxByRes = res.amount;
+            // 限制2：黄金剩余容量
+            const goldRemainingCap = Math.max(0, gold.cap - gold.amount);
+            const maxByGoldCap = Math.floor(goldRemainingCap / gainPerUnit);
+
+            let actualAmount = Math.min(requestedAmount, maxByRes, maxByGoldCap);
+
+            const gainGold = actualAmount * gainPerUnit;
+
+            // 执行交易
             res.amount -= actualAmount;
             gold.amount += gainGold;
             if (gold.amount > 0) gold.visible = true;
 
+            // 更新热度（按实际交易量）
             const maxVolume = GameState.maxTradeVolume;
             let deltaHeat = (actualAmount / maxVolume) * 0.1;
             let newHeat = (res.tradeHeat || 0) - deltaHeat;
-            newHeat = Math.min(5, Math.max(-5, newHeat));
-            res.tradeHeat = newHeat;
+            res.tradeHeat = Math.min(5, Math.max(-5, newHeat));
+
+            addEventLog(`出售 ${formatNumber(actualAmount)} ${resource}，获得 ${formatNumber(gainGold)} 金。`);
             computeProductionAndCaps();
             renderAll();
         });
@@ -194,7 +205,7 @@ function renderTradePanel() {
             const amount = GameState.userTradeVolume;
             const price = TradeEngine.getEffectivePrice(GameState, resource);
             const gain = amount * price * 0.8;
-            showTooltip(btn, `出售 ${formatNumber(amount)} ${resource}<br>获得 ${formatNumber(gain)} 金`);
+            showTooltip(btn, `出售 ${formatNumber(amount)} ${resource}<br>获得 ${formatNumber(gain)} 金<br>`);
         });
     });
 }
