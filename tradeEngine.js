@@ -198,7 +198,7 @@ const TradeEngine = (function() {
                 if (res.decayRate!==undefined){
                     decayRate = res.decayRate;
                 }
-                res.tradeHeat = res.tradeHeat * Math.pow(1 - decayRate, deltaSec);
+                res.tradeHeat = res.tradeHeat * Math.pow(1 - decayRate/Math.sqrt(Math.abs(res.tradeHeat)+1), deltaSec);
                 if (Math.abs(res.tradeHeat) < 1e-8) res.tradeHeat = 0;
             }
         }

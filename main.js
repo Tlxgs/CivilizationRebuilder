@@ -47,11 +47,15 @@ function processOfflineTime() {
     let timeStr = `${hours}时${minutes}分${seconds}秒`;
     addEventLog(`离线 ${timeStr}，获得 ${crystalGain} 时间晶体。`);
 }
+const IS_LOCAL = window.location.protocol === 'file:';
 
+// 作弊序列（仅在本地启用监听）
 const CHEAT_SEQUENCE = ['t'];
 let sequenceIndex = 0;
 
 window.addEventListener('keydown', (e) => {
+    // 非本地环境直接忽略所有作弊按键
+    if (!IS_LOCAL) return;
     if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     const key = e.key.toLowerCase();
     if (key === CHEAT_SEQUENCE[sequenceIndex]) {
@@ -66,13 +70,12 @@ window.addEventListener('keydown', (e) => {
 });
 
 function performCheat() {
-    let DEBUG=false;
-    if(!DEBUG)return;
+    // 本地环境下直接执行，无需 DEBUG 变量
+    // 原 DEBUG 检查移除
     const crystal = GameState.resources['时间晶体'];
     const relic = GameState.resources['遗物'];
     const dark = GameState.resources['暗能量'];
 
-    // 先设置特殊资源
     if (relic) {
         relic.amount += 100;
         relic.visible = true;
@@ -82,13 +85,12 @@ function performCheat() {
         dark.visible = true;
     }
     if (crystal) {
-        crystal.amount = 10;           // 强制设为10，不考虑cap
+        crystal.amount = 10;
         crystal.visible = true;
     }
 
-    // 然后填充其他所有资源至上限
     for (let r in GameState.resources) {
-        if (r === '遗物' || r === '暗能量' || r === '时间晶体'||r==='孢子') continue;
+        if (r === '遗物' || r === '暗能量' || r === '时间晶体') continue;
         const res = GameState.resources[r];
         if (res.cap > 0) {
             res.amount = res.cap;
