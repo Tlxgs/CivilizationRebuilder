@@ -1,0 +1,68 @@
+
+const LOCAL_RESOURCES_CONFIG = {
+    population: {
+        id: 'population',
+        name: '人口',
+        buildingFilter: (bKey, cfg, bld) => true,
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: 'global',
+    },
+    space_habitat: {
+        id: 'space_habitat',
+        name: '太空承载',
+        buildingFilter: (bKey, cfg) => cfg.class === 'space',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: 'space',
+    },
+    moon_habitat: {
+        id: 'moon_habitat',
+        name: '月球宜居度',
+        buildingFilter: (bKey, cfg) => cfg.type === '月球',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: '月球',
+    },
+    gas_habitat: {
+        id: 'gas_habitat',
+        name: '木星宜居度',
+        buildingFilter: (bKey, cfg) => cfg.type === '木星',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: '木星',
+    },
+    europa_habitat: {
+        id: 'europa_habitat',
+        name: '木卫二宜居度',
+        buildingFilter: (bKey, cfg) => cfg.type === '木卫二',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: '木卫二',
+    },
+    proxima_centauri_habitat:{
+        id: 'proxima_centarui_habitat',
+        name: '比邻星宜居度',
+        buildingFilter: (bKey, cfg) => cfg.type === '比邻星',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: '比邻星',
+
+    },
+    core_depth:{
+        id: 'core_depth',
+        name: '深度',
+        buildingFilter: (bKey, cfg) => cfg.class === 'earth_core',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: 'earth_core',
+    },
+    thermal_capacity: {
+        id: 'thermal_capacity',
+        name: '冷却能力',
+        buildingFilter: (bKey, cfg) => cfg.type === '地幔',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: '地幔',
+    },
+};

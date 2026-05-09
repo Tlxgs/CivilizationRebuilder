@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>文明重建者</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="game-container">
+        <h2>文明重建者</h2>
+                     <div id="happiness-display">幸福度: 100%</div>
+        <div class="main-layout">
+            <!-- 左侧边栏：资源 + 行动 -->
+
+            <div class="sidebar">
+                <div id="population-info" class="population-info"></div>
+                <div id="resource-bar" class="resource-bar"></div>
+                
+                <div id="actions-panel" class="actions-panel"></div>
+                
+                
+            </div>
+
+            <!-- 右侧主要内容：选项卡 -->
+            <div class="main-content">
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="building">建筑</button>
+                    <button class="tab-btn" data-tab="tech">科技</button>
+                    <button class="tab-btn" data-tab="policy">政策</button>
+                    <button class="tab-btn" data-tab="trade">贸易</button>
+                    <button class="tab-btn" data-tab="crystal">晶体</button>
+                    <button class="tab-btn" data-tab="permanent">永恒</button>
+                    <button class="tab-btn" data-tab="achievements">成就</button>
+                    <button class="tab-btn" data-tab="reset">选项</button>
+                    <button class="tab-btn" data-tab="changelog">更新日志</button>
+                </div>
+
+                <div id="panel-building" class="panel"></div>
+                <div id="panel-tech" class="panel" style="display:none;"></div>
+                <div id="panel-policy" class="panel" style="display:none;"></div>
+                <div id="panel-trade" class="panel" style="display:none;"></div>
+                <div id="panel-crystal" class="panel" style="display:none;"></div>
+                <div id="panel-permanent" class="panel" style="display:none;"></div>
+                <div id="panel-achievements" class="panel" style="display:none;"></div>
+                <div id="panel-reset" class="panel" style="display:none;"></div>
+                <div id="panel-changelog" class="panel" style="display:none;"></div>
+            </div>
+            
+            <div class="log-panel">
+                <div id="queue-container" class="queue-container"></div>
+                <div class="log-header">
+                    <span id="current-date">0年1日</span> 
+                    <span id="current-season">(春)</span>
+                </div>
+            <div id="event-log-list" class="event-log-list"></div>
+        </div>
+        </div>
+    </div>
+
+    <div id="import-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <h3>导入存档</h3>
+            <textarea id="import-text" rows="6" placeholder="粘贴导出的存档代码..."></textarea>
+            <div class="modal-buttons">
+                <button id="confirm-import" class="btn-rect">确认导入</button>
+                <button id="cancel-import" class="btn-rect">取消</button>
+            </div>
+        </div>
+    </div>
+    <!-- 基础数据和工具 -->
+    <script src="config/resourcesConfig.js"></script> 
+    <script src="config/localResourceConfig.js"></script>
+    <script src="config/buildingsConfig.js"></script> 
+    <script src="config/achievementConfig.js"></script>
+    <script src="config/techsConfig.js"></script> 
+    <script src="config/eventsConfig.js"></script>
+    <script src="config/upgradesConfig.js"></script>
+    <script src="config/policiesConfig.js"></script>
+    <script src="config/permanentConfig.js"></script>
+    <script src="effectsManager.js"></script>
+    <script src="recourcesManager.js"></script>
+    <script src="logic.js"></script>
+    <script src="data.js"></script>
+    <script src="utils.js"></script>
+    <script src="core.js"></script>
+    <script src="queue.js"></script>  
+    <script src="formulas.js"></script> 
+    <script src="tradeEngine.js"></script>
+    <script src="gameloop.js"></script> 
+    <script src="saveLoad.js"></script>
+    <script src="debug.js"></script>
+
+    <script src="production.js"></script>
+    <script src="eventEffects.js"></script>
+    <script src="changeLog.js"></script>
+    <!-- UI 模块 -->
+    <script src="ui/common.js"></script>
+    <script src="ui/population.js"></script>
+    <script src="ui/resources.js"></script>
+    <script src="ui/actions.js"></script>
+    <script src="ui/buildings.js"></script>
+    <script src="ui/tech.js"></script>
+    <script src="ui/upgrade.js"></script>
+    <script src="ui/queue.js"></script>
+    <script src="ui/policy.js"></script>
+    <script src="ui/permanent.js"></script>
+    <script src="ui/reset.js"></script>
+    <script src="ui/trade.js"></script>
+    <script src="ui/crystal.js"></script>
+    <script src="ui/changelog.js"></script>
+    <script src="ui/achievements.js"></script>
+    <script src="ui/log.js"></script>
+    <script src="ui/tabs.js"></script>
+
+    <script src="ui/index.js"></script>   <!-- 最后 -->
+
+    <!-- 主入口 -->
+    <script src="main.js"></script>
+    
+    </body>
+</html>
