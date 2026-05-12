@@ -20,7 +20,7 @@ function renderAll() {
 function renderHappiness() {
     const el = document.getElementById('happiness-display');
     const happiness = GameState.happiness;
-    el.textContent = `😊 幸福度: ${happiness.toFixed(1)}%`;
+    el.textContent = `😊 幸福度: ${Formulas.calcHappinessSoftCap(happiness,GameState).toFixed(1)}%`;
 
     const breakdown = EffectsManager.getHappinessBreakdown();
     let tooltipHtml = '<strong>幸福度组成</strong><br>基础: 100%<br>';
@@ -34,13 +34,13 @@ function renderHappiness() {
     const singularityCount = GameState.resources["奇点"]?.amount || 0;
     const softCap = Formulas.calcHappinessSoftCapBase(GameState);
     const effectiveHappiness = Formulas.calcHappinessSoftCap(GameState.happiness, GameState);
-    tooltipHtml += `<br><strong>总计: ${happiness.toFixed(1)}%</strong>(软上限: ${softCap}%)`;
+    tooltipHtml += `<br><strong>总计: ${happiness.toFixed(1)}%</strong>(软上限: ${softCap.toFixed(1)}%)`;
 
     if (happiness > softCap) {
         tooltipHtml += `<br>有效幸福度: ${effectiveHappiness.toFixed(1)}% `;
     }
 
-    el.addEventListener('mouseenter', () => showTooltip(el, tooltipHtml));
+    el.onmouseenter = () => showTooltip(el, tooltipHtml);
 }
 renderAll = renderAll;
 renderHappiness = renderHappiness;

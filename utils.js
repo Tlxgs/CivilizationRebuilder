@@ -75,7 +75,7 @@ function onTechResearched(tech) {
 function formatLocalNumber(n) {
     if (typeof n !== 'number') return '0';
     const fixed = n.toFixed(2);
-    return fixed.endsWith('.0') ? fixed.slice(0, -2) : fixed;
+    return fixed.endsWith('.00') ? fixed.slice(0, -3) : fixed;
 }
 function formatTime(seconds) {
     if (!isFinite(seconds) || seconds < 0) return "∞";
@@ -99,7 +99,21 @@ function randomSeeded() {
 function resetSeed(newSeed) {
     GameState.seed = newSeed;
 }
-
+function getAffordabilityStatus(costMap) {
+    if (!costMap || Object.keys(costMap).length === 0) return 'affordable';
+    let capExceeded = false;
+    for (let r in costMap) {
+        const amount = GameState.resources[r]?.amount || 0;
+        const cap = GameState.resources[r]?.cap || 0;
+        const needed = costMap[r];
+        if (amount < needed) {
+            if (cap !== Infinity && cap < needed) capExceeded = true;
+            return capExceeded ? 'cap-exceeded' : 'insufficient';
+        }
+    }
+    return 'affordable';
+}
+window.getAffordabilityStatus = getAffordabilityStatus
 window.randomSeeded = randomSeeded;
 formatTime = formatTime;          // 全局可用
 formatLocalNumber = formatLocalNumber;

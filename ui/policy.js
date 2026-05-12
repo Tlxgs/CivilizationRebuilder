@@ -15,7 +15,7 @@ function renderPolicyPanel() {
             <div class="policy-title">${p}: <span id="policy-val-${p}">${pol.currentValue}${pol.unit}</span></div>
             <div style="font-size:0.8rem; color: var(--text-secondary); margin-bottom:0.5rem;">${cfg.desc}</div>
             <div style="margin-bottom:0.3rem; font-size:0.75rem;">
-                调整消耗: ${costPerUnit} 政策点/单位 | 当前政策点: ${formatNumber(policyPoints)}
+                调整消耗: ${costPerUnit} 政策点/单位
             </div>
             <div style="display:flex; align-items:center; gap:0.5rem;">
                 <button class="btn-square policy-dec" data-policy="${p}" data-amount="10">-10</button>

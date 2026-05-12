@@ -65,4 +65,12 @@ const LOCAL_RESOURCES_CONFIG = {
         requireKey: 'requiresLocal',
         displayLocation: '地幔',
     },
+    quasar_habitat: {
+        id: 'quasar_habitat',
+        name: '类星体宜居度',
+        buildingFilter: (bKey, cfg) => cfg.type === '类星体',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: '类星体',
+    },
 };

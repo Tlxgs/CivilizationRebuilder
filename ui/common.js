@@ -341,7 +341,7 @@ function refreshAllDynamicColors() {
         
         // 更新价格颜色
         const price = bld.price;
-        const status = getBuildingAffordabilityStatus(price);
+        const status = getAffordabilityStatus(price);
         const nameStrong = card.querySelector('.building-card-info strong');
         if (nameStrong) {
             nameStrong.classList.remove('insufficient-name', 'unaffordable-name');
@@ -373,7 +373,7 @@ function refreshAllDynamicColors() {
         if (!techKey) return;
         const tech = GameState.techs[techKey];
         if (!tech || tech.researched) return;
-        const status = getTechAffordabilityStatus(tech);
+        const status = getAffordabilityStatus(tech.price);
         btn.classList.remove('insufficient-name', 'unaffordable-name');
         if (status === 'insufficient') btn.classList.add('insufficient-name');
         else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
@@ -385,7 +385,7 @@ function refreshAllDynamicColors() {
         if (!upKey) return;
         const up = GameState.upgrades[upKey];
         if (!up) return;
-        const status = getUpgradeAffordabilityStatus(up);
+        const status = getAffordabilityStatus(up.price);
         btn.classList.remove('insufficient-name', 'unaffordable-name');
         if (status === 'insufficient') btn.classList.add('insufficient-name');
         else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
@@ -397,7 +397,7 @@ function refreshAllDynamicColors() {
         if (!permKey) return;
         const perm = GameState.permanent[permKey];
         if (!perm || perm.researched) return;
-        const status = getPermanentAffordabilityStatus(perm);
+        const status = getAffordabilityStatus(perm.price);
         btn.classList.remove('insufficient-name', 'unaffordable-name');
         if (status === 'insufficient') btn.classList.add('insufficient-name');
         else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
@@ -408,23 +408,6 @@ function refreshAllDynamicColors() {
     refreshLocalResourcesDisplay();
 }
 
-// 辅助：判断建筑价格是否买得起（基于价格对象）
-function getBuildingAffordabilityStatus(price) {
-    let capExceeded = false;
-    let canAfford = true;
-    for (let res in price) {
-        const amount = GameState.resources[res]?.amount || 0;
-        const cap = GameState.resources[res]?.cap || 0;
-        const needed = price[res];
-        if (amount < needed) {
-            canAfford = false;
-            if (cap !== Infinity && cap < needed) capExceeded = true;
-        }
-    }
-    if (canAfford) return 'affordable';
-    if (capExceeded) return 'cap-exceeded';
-    return 'insufficient';
-}
 function refreshResourceBars() {
     for (let r in GameState.resources) {
         const res = GameState.resources[r];

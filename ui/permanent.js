@@ -1,23 +1,4 @@
 // ui/permanent.js
-function getPermanentAffordabilityStatus(perm) {
-    const price = perm.price;
-    let hasUnlimitedCapIssue = false;
-    let canAffordNow = true;
-    for (let res in price) {
-        const amount = GameState.resources[res]?.amount || 0;
-        const cap = GameState.resources[res]?.cap || 0;
-        const needed = price[res];
-        if (amount < needed) {
-            canAffordNow = false;
-            if (cap !== Infinity && cap < needed) {
-                hasUnlimitedCapIssue = true;
-            }
-        }
-    }
-    if (canAffordNow) return 'affordable';
-    if (hasUnlimitedCapIssue) return 'cap-exceeded';
-    return 'insufficient';
-}
 
 function renderPermanentPanel() {
     const panel = document.getElementById('panel-permanent');
@@ -54,7 +35,7 @@ function renderPermanentPanel() {
     let html = '<div class="grid-list">';
     for (let p of notResearched) {
         const perm = GameState.permanent[p];
-        const status = getPermanentAffordabilityStatus(perm);
+        const status = getAffordabilityStatus(perm.price);
         let colorClass = '';
         if (status === 'insufficient') colorClass = 'insufficient-name';
         else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';

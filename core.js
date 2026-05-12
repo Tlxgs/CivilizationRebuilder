@@ -127,7 +127,6 @@ class GameEngine {
             },
             collect_wood: () => {return ResourcesManager.add({"木头":1})},
             collect_stone: () => {return ResourcesManager.add({"石头":1})},
-            research_tech: () => {return ResourcesManager.add({"科学":1})},
             war: () => {
                 const armsAmount = ResourcesManager.getAmount("军备");
                 if (armsAmount < 100) {

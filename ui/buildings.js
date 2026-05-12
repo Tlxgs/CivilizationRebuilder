@@ -56,7 +56,7 @@ function getBuildingTooltip(buildingKey) {
             if (mod.capFactor) html += `${mod.target} 上限 +${(mod.capFactor * 100).toFixed(0)}%<br>`;
         }
     }
-    const status = getAffordabilityStatus(bd);
+    const status = getAffordabilityStatus(bd.price);
     if (status === 'insufficient') {
         const timeText = ResourcesManager.getAffordabilityTimeText(bd.price);
         if (timeText) html += `<br><span>${timeText}</span>`;
@@ -64,23 +64,9 @@ function getBuildingTooltip(buildingKey) {
     return html;
 }
 
-function getAffordabilityStatus(building) {
-    const price = building.price;
-    let canAffordNow = true, capIssue = false;
-    for (let res in price) {
-        const amount = GameState.resources[res]?.amount || 0;
-        const cap = GameState.resources[res]?.cap || 0;
-        if (amount < price[res]) {
-            canAffordNow = false;
-            if (cap !== Infinity && cap < price[res]) capIssue = true;
-        }
-    }
-    if (canAffordNow) return 'affordable';
-    return capIssue ? 'cap-exceeded' : 'insufficient';
-}
 
 function getClassName(cls) {
-    const map = { ground: '地面', space: '太阳系', galaxy: '银河系', earth_core: '地心' };
+    const map = { ground: '地面', space: '太阳系', galaxy: '银河系', earth_core: '地心',wormhole:"虫洞" };
     return map[cls] || cls;
 }
 
@@ -170,7 +156,7 @@ function switchBuildingClass(cls) {
         for (let b of buildings) {
             const bd = GameState.buildings[b];
             const cfg = BUILDINGS_CONFIG[b];
-            const status = getAffordabilityStatus(bd);
+            const status = getAffordabilityStatus(bd.price);
             let nameClass = '';
             if (status === 'insufficient') nameClass = 'insufficient-name';
             else if (status === 'cap-exceeded') nameClass = 'unaffordable-name';

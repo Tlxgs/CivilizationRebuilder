@@ -13,19 +13,7 @@ function getTotalActiveChallengeStars() {
     return stars;
 }
 
-function getTechAffordabilityStatus(tech) {
-    const price = tech.price;
-    for (let res in price) {
-        const current = ResourcesManager.getAmount(res);
-        const cap = ResourcesManager.getCap(res);
-        const needed = price[res];
-        
-        if (current < needed) {
-            return (cap < needed) ? 'cap-exceeded' : 'insufficient';
-        }
-    }
-    return 'affordable';
-}
+
 
 function hasAnyChallenge() {
     for (let t in GameState.techs) {
@@ -155,7 +143,7 @@ function renderTechPanel() {
     } else {
         for (let t of unresearched) {
             const tech = GameState.techs[t];
-            const status = getTechAffordabilityStatus(tech);
+            const status = getAffordabilityStatus(tech.price);
             let colorClass = '';
             if (status === 'insufficient') colorClass = 'insufficient-name';
             else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
@@ -230,4 +218,3 @@ function renderTechPanel() {
 }
 
 renderTechPanel = renderTechPanel;
-getTechAffordabilityStatus = getTechAffordabilityStatus;

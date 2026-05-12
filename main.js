@@ -22,7 +22,7 @@ onload = () => {
 };
 
 addEventListener('beforeunload', () => {
-    if (_hardResetting) return;          // 硬重置时不再保存
+    if (_hardResetting) return;
     GameState.lastSaveTime = Date.now();
     saveGame();
     GameLoop.stop();
@@ -33,7 +33,7 @@ function processOfflineTime() {
     if (!lastTime) return;
     const now = Date.now();
     const elapsed = Math.floor((now - lastTime) / 1000);
-    if (elapsed <= 1) return;   // 至少1秒才算离线
+    if (elapsed <= 1) return;
     const maxOffline = 36000;
     const crystalGain = 0.5*Math.min(elapsed, maxOffline);
     ResourcesManager.add({"时间晶体":crystalGain});
@@ -46,12 +46,10 @@ function processOfflineTime() {
 }
 const IS_LOCAL = location.protocol === 'file:';
 
-// 作弊序列（仅在本地启用监听）
 const CHEAT_SEQUENCE = ['t'];
 let sequenceIndex = 0;
 
 addEventListener('keydown', (e) => {
-    // 非本地环境直接忽略所有作弊按键
     if (e.key === 'F12' && !GameState.achievements["不道德的巅峰"]) {
         GameState.achievements["不道德的巅峰"] = {
             name: "不道德的巅峰",
@@ -78,8 +76,6 @@ addEventListener('keydown', (e) => {
 });
 
 function performCheat() {
-    // 本地环境下直接执行，无需 DEBUG 变量
-    // 原 DEBUG 检查移除
     const crystal = GameState.resources['时间晶体'];
     const relic = GameState.resources['遗物'];
     const dark = GameState.resources['暗能量'];

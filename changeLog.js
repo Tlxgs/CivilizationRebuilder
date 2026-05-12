@@ -1,6 +1,9 @@
 const ChangelogData = {
     version: "v0.2",
     logs: [
+        { version: "v0.6.2", date: "2026-05-10", changes: [
+            "增加新的科技",
+        ]},
         { version: "v0.6.1", date: "2026-05-08", changes: [
             "增加新的重置",
             "修复已知bug，增加未知bug"

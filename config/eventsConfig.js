@@ -28,17 +28,6 @@ const EVENTS_CONFIG = {
             { type: "resourceMultiplier", resource: "科学", multiplier: 0.8 }
         ]
     },
-    "小猫珂学家": {
-        id: "小猫珂学家",
-        name: "小猫珂学家",
-        desc: "科学家们沉迷于一个叫《猫国建设者》的游戏而荒废了工作！",
-        durationDays: (state) => 20 + Math.floor(Math.random() * 30),  
-        baseProbability: 0.8,
-        prereqTech: "相对论",
-        effects: [
-            { type: "resourceMultiplier", resource: "科学", multiplier: 0.6 }
-        ]
-    },
     "铁陨石坠落": {
         id: "铁陨石坠落",
         name: "铁陨石坠落",

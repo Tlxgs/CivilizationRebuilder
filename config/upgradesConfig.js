@@ -62,7 +62,7 @@ const UPGRADES_CONFIG = {
     },
     "高效戴森球": {
         unlockCondition: { tech: "高效戴森球" },
-        cost: (state, level) => standardUpgradeCost({生物合金:50000, 科学:50000}, 1.05, level, getGlobalCostMultiplier(state)),
+        cost: (state, level) => standardUpgradeCost({生物合金:40000, 科学:50000}, 1.05, level, getGlobalCostMultiplier(state)),
         effect: {戴森球:0.01}, level: 0,
         desc: "使用生物合金提高戴森球效率1%/级。" 
     },
