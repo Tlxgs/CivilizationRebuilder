@@ -165,6 +165,10 @@ class GameEngine {
                 singularityReset();
                 return true;
             },
+            conscious_reset:()=>{
+                consciousReset();
+                return true;
+            },
         };
 
         const handler = handlers[actionId];

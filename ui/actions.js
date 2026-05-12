@@ -13,7 +13,8 @@ const actionMetaList = [
     { id: 'nuke_reset', text: '发射核弹', tooltip: '重置并获遗物', condition: () => GameState.techs["曼哈顿计划"]?.researched },
     { id: 'vacuum_decay', text: '真空衰变', tooltip: '重置获更多遗物与暗能量', condition: () => GameState.techs["真空衰变"]?.researched },
     { id: 'symbiote_reset', text: '共生重置', tooltip: '与外星微生物共生，获得大量遗物和孢子', condition: () => GameState.techs["生物移植"]?.researched },
-    { id: 'singularity_reset', text: '奇点重置', tooltip: '巨大的能量撕裂了时空，重置获取遗物、暗物质和奇点', condition: () => GameState.techs["奇点转换"]?.researched }
+    { id: 'singularity_reset', text: '奇点重置', tooltip: '巨大的能量撕裂了时空，重置获取遗物、暗物质和奇点', condition: () => GameState.techs["奇点转换"]?.researched },
+    { id: 'conscious_reset', text: '意识上传', tooltip: '将全人类的意识上传到高维计算机中。', condition: () => GameState.techs["意识上传"]?.researched }
 ];
 
 function renderActionsPanel() {

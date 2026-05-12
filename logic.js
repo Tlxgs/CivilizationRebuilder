@@ -1,4 +1,4 @@
-function softReset(extraRelic = 0, extraDarkEnergy = 0,extraSpore=0,extraSingularity=0) {
+function softReset(extraRelic = 0, extraDarkEnergy = 0,extraSpore=0,extraSingularity=0,extraWisdom=0) {
     clearQueue();
     GameState.gameDays = 0;
     GameState.speed = 1;
@@ -8,6 +8,7 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0,extraSpore=0,extraSingula
         else if (r === "暗能量") ResourcesManager.add({"暗能量":extraDarkEnergy});
         else if (r === "孢子") ResourcesManager.add({"孢子":extraSpore});
         else if (r === "奇点") ResourcesManager.add({"奇点":extraSingularity});
+        else if (r === "智慧") ResourcesManager.add({"智慧":extraWisdom});
         else GameState.resources[r].amount = 0;
         if (GameState.achievements&&GameState.achievements["低效"]){
             if (r=="木头"||r=="石头"||r=="科学") GameState.resources[r].amount += 100;
@@ -170,6 +171,27 @@ function singularityReset() {
         unlockAchievementsForReset('singularity');  // 可添加对应成就（若需要）
         softReset(extraRelic, extraDarkEnergy, 0, extraSingularity);
         addEventLog(`奇点转换！获得 ${extraRelic} 遗物, ${extraDarkEnergy}暗物质, ${extraSingularity} 奇点。`);
+    }
+}
+
+function consciousReset() {
+    const baseRelicGain = Formulas.calcRelicGainFromNuke(
+        GameState.resources["科学"].cap,
+        GameState.buildings["粒子加速器"]?.count || 0,
+        GameState.localResources.population.capacity
+    );
+    const stars = getTotalActiveChallengeStars();
+    const multiplier = 1 + stars * 0.05;
+    const extraRelic = Math.floor(baseRelicGain * 10 * multiplier);  // 基础倍数较高
+    const extraDarkEnergy = Math.floor(Math.sqrt(1 + extraRelic)*multiplier);
+    const extraSpore = Math.floor(Math.sqrt(1+baseRelicGain * 3)*multiplier);
+    const extraSingularity = Math.floor((Math.log(300 + extraRelic)-Math.log(300)) * 10 * multiplier);
+    const extraWisdom = 1*multiplier;
+    
+    if (confirm(`将全人类意识上传到计算机中！\n获得遗物: ${extraRelic}\n获得暗物质: ${extraDarkEnergy}\n获得孢子: ${extraSpore}\n获得奇点: ${extraSingularity}\n获得智慧: ${extraWisdom}\n确定吗？`)) {
+        unlockAchievementsForReset('singularity');  // 可添加对应成就（若需要）
+        softReset(extraRelic, extraDarkEnergy, extraSpore, extraSingularity,extraWisdom);
+        addEventLog(`奇点转换！获得 ${extraRelic} 遗物, ${extraDarkEnergy}暗物质,${extraDarkEnergy}\n孢子, ${extraSingularity} 奇点,${extraWisdom}智慧。`);
     }
 }
 function hardReset() {
@@ -348,4 +370,5 @@ function getTotalActiveChallengeStars() {
     }
     return stars;
 }
-window.addEventLog=addEventLog
+window.getTotalActiveChallengeStars=getTotalActiveChallengeStars;
+window.addEventLog=addEventLog;

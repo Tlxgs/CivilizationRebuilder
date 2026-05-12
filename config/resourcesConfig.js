@@ -30,6 +30,7 @@ const RESOURCES_CONFIG = {
     "暗能量":     { baseCap: 1000000000 },
     "孢子":       { baseCap: 1000000000 }, 
     "奇点":       { baseCap: 1000000000 }, 
+    "智慧":       { baseCap: 1000000000 }, 
     "时间晶体":   { baseCap: 36000 }
 };
 window.RESOURCES_CONFIG=RESOURCES_CONFIG;

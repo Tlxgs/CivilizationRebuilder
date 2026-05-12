@@ -327,6 +327,13 @@ const PERMANENT_CONFIG = {
         effect: {},
         prereq: ["贸易II"],
     },
+    "智慧I": {
+        name: "形而上学",
+        price: { 遗物:5000,奇点:10,智慧:0.1},
+        desc: "解锁一个新的科技：哲学，该科技将解锁新的建筑：哲学院。",
+        effect: {},
+        prereq: ["宇宙起源III"],
+    },
 
 };
 

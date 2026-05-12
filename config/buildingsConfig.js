@@ -18,14 +18,6 @@ function standardCost(baseCostMap, growthRate, count, costMultiplier = 1.0) {
     }
     return price;
 }
-/**
- * 
- * @param {Object} state 
- * @returns 
- */
-function getGlobalCostMultiplier(state) {
-    return 1 + (EffectsManager?.getAdditiveValue?.('global.cost') || 0);
-}
 
 /**
  * @callback BuildingCostCallback
@@ -512,6 +504,20 @@ const BUILDINGS_CONFIG = {
         providesLocal: {},
         requiresLocal: { population: 1 },
         desc: "研究远古遗物，提供科学上限。幸福感加成随遗物持有数量增长。"
+    },
+    "哲学院": {
+        class: "ground", type: "科学",
+        unlockCondition: { tech: "哲学" },
+        cost: (s, c) => {return {建材: 50*Math.pow(2,c)}},
+        produces: {}, consumes: {}, caps: {},
+        providesLocal: {},
+        requiresLocal: {},
+        desc:(state)=>{ 
+            base=0.0002;
+            base*=Math.sqrt(1+ResourcesManager.getAmount("智慧"));
+            return `每个激活的哲学院降低所有建筑(除自己和金字塔等特殊建筑)和升级的成本蠕变${(base*100).toFixed(3)}%,该效果取决于你持有的智慧数量。`
+            
+        },
     },
     "科学院": {
         class: "ground", type: "科学",
@@ -1398,11 +1404,32 @@ const BUILDINGS_CONFIG = {
     "等离子工厂": {
         class: "wormhole", type: "镜像大陆",
         unlockCondition: { tech: "虫洞工厂" },
-        cost: (s, c) => standardCost({金属板: 1000000,铝:1000000,建材:1000000,金:1000000}, 1.15, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({金属板: 1000000,铝:1000000,建材:1000000,金:1000000}, 1.05, c, getGlobalCostMultiplier(s)),
         produces: {等离子体:0.03},
         consumes: {电力:40,核燃料:15,氚:4}, caps: {},
         providesLocal: {},
         requiresLocal: { population: 2 },
         desc: "你用值钱的地球货说服了虫洞人帮你建立工厂,将廉价的常规能源转换成等离子体。"
+    },
+    "微型仓库": {
+        class: "wormhole", type: "镜像大陆",
+        unlockCondition: { tech: "微型存储" },
+        cost: (s, c) => standardCost({木头: 2000000,石头:2000000,建材:1000000,铁:1000000,铜:1000000,等离子体:1000}, 1.04, c, getGlobalCostMultiplier(s)),
+        produces: {},
+        consumes: {电力:5}, caps: {},
+        providesLocal: {},
+        requiresLocal: {},
+        modifiers:[{target:"比邻星物流中心",capFactor:0.05},{target:"离子收集卫星",capFactor:0.1}],
+        desc: "利用高维空间存储货物，这使得仓库三维空间中几乎不占据体积。"
+    },
+    "高维计算机": {
+        class: "wormhole", type: "镜像大陆",
+        unlockCondition: { tech: "高维计算" },
+        cost: (s, c) => standardCost({钢:1000000,金属板:1000000,金刚石:1000000,镍:1000000,等离子体:100000}, 1.02, c, getGlobalCostMultiplier(s)),
+        produces: {},
+        consumes: {电力:5}, caps: {科学:10000},
+        providesLocal: {},
+        requiresLocal: {},
+        desc: "在高维空间中进行计算，再将计算结果返回到三维空间。"
     },
 };

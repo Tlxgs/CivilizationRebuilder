@@ -10,7 +10,11 @@ function standardUpgradeCost(baseCostMap, growth, level, globalCostMult = 1.0) {
 }
 
 function getGlobalCostMultiplier(state) {
-    return 1 + (EffectsManager?.getAdditiveValue?.('global.cost') || 0);
+    const count=state.buildings["哲学院"]?.active;   
+    const eff=0.0002*Math.sqrt(1+ResourcesManager.getAmount("智慧"));
+    const allEff=Math.pow((1-eff),count);
+    console.log(allEff);
+    return allEff*(1 + (EffectsManager?.getAdditiveValue?.('global.cost') || 0));
 }
 
 const UPGRADES_CONFIG = {
