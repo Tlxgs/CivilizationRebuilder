@@ -20,6 +20,7 @@ function renderResetPanel() {
         </div>
         <p>每10秒自动保存</p>
         <p>按住shift键可以每次购买/加减10个建筑,按住ctrl以100为单位操作，shift+ctrl以1000为单位操作</p>
+        <p>Bug、建议反馈:tlxgsgame@163.com
         <br>
         <hr>
         <br>
