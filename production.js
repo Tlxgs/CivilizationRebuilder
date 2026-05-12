@@ -386,6 +386,7 @@ const ProductionEngine = (function() {
             if (bld.active === 0) continue;
             const cfg = BUILDINGS_CONFIG[b];
             if (!cfg) continue;
+            const effActive = (bld.efficiency ?? 1) * bld.active;
 
             let prodMult = EffectsManager.getBuildingProdMultiplier(b);
             prodMult *= (1 + EffectsManager.getAdditiveValue('global.prod'));
@@ -402,11 +403,11 @@ const ProductionEngine = (function() {
             const baseCons = typeof modeCfg.consumes === 'function' ? modeCfg.consumes(GameState) : (modeCfg.consumes || {});
             if (baseProd[resourceName]) {
                 const eventMult = EffectsManager.getResourceMultiplier(resourceName);
-                const val = baseProd[resourceName] * bld.active * prodMult * eventMult;
+                const val = baseProd[resourceName] * effActive * prodMult * eventMult;
                 contributions.push({ building: b, value: val });
             }
             if (baseCons[resourceName]) {
-                const val = -baseCons[resourceName] * bld.active * consMult;
+                const val = -baseCons[resourceName] * effActive * consMult;
                 contributions.push({ building: b, value: val });
             }
         }
