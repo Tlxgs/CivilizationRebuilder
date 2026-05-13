@@ -2,6 +2,7 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0,extraSpore=0,extraSingula
     clearQueue();
     GameState.gameDays = 0;
     GameState.speed = 1;
+    GameState.activeRandomEvents = [];
     for (let r in GameState.resources) {
         if (r === "时间晶体") continue;
         else if (r === "遗物") ResourcesManager.add({"遗物":extraRelic});
