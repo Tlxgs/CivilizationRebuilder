@@ -190,9 +190,9 @@ function consciousReset() {
     const extraWisdom = 1*multiplier;
     
     if (confirm(`将全人类意识上传到计算机中！\n获得遗物: ${extraRelic}\n获得暗物质: ${extraDarkEnergy}\n获得孢子: ${extraSpore}\n获得奇点: ${extraSingularity}\n获得智慧: ${extraWisdom}\n确定吗？`)) {
-        unlockAchievementsForReset('singularity');  // 可添加对应成就（若需要）
+        unlockAchievementsForReset('singularity');
         softReset(extraRelic, extraDarkEnergy, extraSpore, extraSingularity,extraWisdom);
-        addEventLog(`奇点转换！获得 ${extraRelic} 遗物, ${extraDarkEnergy}暗物质,${extraDarkEnergy}\n孢子, ${extraSingularity} 奇点,${extraWisdom}智慧。`);
+        addEventLog(`意识上传！获得 ${extraRelic} 遗物, ${extraDarkEnergy}暗物质,${extraDarkEnergy}\n孢子, ${extraSingularity} 奇点,${extraWisdom}智慧。`);
     }
 }
 function hardReset() {
