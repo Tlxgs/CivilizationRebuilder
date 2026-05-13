@@ -249,7 +249,7 @@ const BUILDINGS_CONFIG = {
     },
     "工具加工站": {
         class: "ground", type: "生产",
-        unlockCondition: { tech: "铁制工具" },
+        unlockCondition: { tech: "铁斧" },
         cost: (s, c) => standardCost({铁: 500, 石头: 500}, 1.4, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {电力: 0.4}, caps: {},
         providesLocal: {},
@@ -515,8 +515,7 @@ const BUILDINGS_CONFIG = {
         desc:(state)=>{ 
             base=0.0002;
             base*=Math.sqrt(1+ResourcesManager.getAmount("智慧"));
-            return `每个激活的哲学院降低所有建筑(除自己和金字塔等特殊建筑)和升级的成本蠕变${(base*100).toFixed(3)}%,该效果取决于你持有的智慧数量。`
-            
+            return `每个激活的哲学院降低所有建筑(除自己和金字塔等特殊建筑)和升级的成本增长率(乘算)${(base*100).toFixed(3)}%,该效果取决于你持有的智慧数量。`
         },
     },
     "科学院": {
