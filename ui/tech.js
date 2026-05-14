@@ -206,5 +206,26 @@ function renderTechPanel() {
         });
     });
 }
+function refreshTechPanel() {
+    const panel = document.getElementById('panel-tech');
+    if (!panel) return;
 
-renderTechPanel = renderTechPanel;
+    // 更新未研究科技按钮的颜色状态
+    document.querySelectorAll('.tech-btn:not(.researched-item)').forEach(btn => {
+        const techKey = btn.dataset.tech;
+        if (!techKey) return;
+        const tech = GameState.techs[techKey];
+        if (!tech || tech.researched) {
+            // 如果科技已研究但按钮还在未研究区域，需要完全重绘
+            if (tech && tech.researched) {
+                renderTechPanel();
+                return;
+            }
+            return;
+        }
+        const status = getAffordabilityStatus(tech.price);
+        btn.classList.remove('insufficient-name', 'unaffordable-name');
+        if (status === 'insufficient') btn.classList.add('insufficient-name');
+        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
+    });
+}

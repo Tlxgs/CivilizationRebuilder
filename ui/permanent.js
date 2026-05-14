@@ -81,5 +81,19 @@ function renderPermanentPanel() {
         el.addEventListener('mouseenter', () => showTooltip(el, text));
     });
 }
+function refreshPermanentPanel() {
+    const panel = document.getElementById('panel-permanent');
+    if (!panel) return;
 
-renderPermanentPanel = renderPermanentPanel;
+    // 更新永恒升级按钮的颜色状态（仅未研究的）
+    document.querySelectorAll('.perm-btn').forEach(btn => {
+        const permKey = btn.dataset.permanent;
+        if (!permKey) return;
+        const perm = GameState.permanent[permKey];
+        if (!perm || perm.researched) return;
+        const status = getAffordabilityStatus(perm.price);
+        btn.classList.remove('insufficient-name', 'unaffordable-name');
+        if (status === 'insufficient') btn.classList.add('insufficient-name');
+        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
+    });
+}

@@ -619,7 +619,7 @@ html, body {
     z-index: 2000;
     pointer-events: none;
     white-space: pre-line;
-    max-width: 300px;
+    max-width: 250px;
     border: 1px solid var(--border-card-hover);
     box-shadow: 0 8px 20px var(--shadow-lg);
     line-height: 1.5;
@@ -1103,9 +1103,6 @@ body.dark-theme .trade-status-export {
 .log-empty-msg {
     color: var(--text-dim);
 }
-
-/* ===== 资源栏等宽数字字体 ===== */
-/* 无需额外类，但为进度条提供过渡已在根样式 */
 
 /* ===== 默认文本 ===== */
 .text-muted {

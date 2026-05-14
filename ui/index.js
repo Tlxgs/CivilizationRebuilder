@@ -43,4 +43,3 @@ function renderHappiness() {
     el.onmouseenter = () => showTooltip(el, tooltipHtml);
 }
 renderAll = renderAll;
-renderHappiness = renderHappiness;

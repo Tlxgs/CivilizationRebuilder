@@ -186,12 +186,12 @@ function consciousReset() {
     const extraDarkEnergy = Math.floor(Math.sqrt(1 + extraRelic)*multiplier);
     const extraSpore = Math.floor(Math.sqrt(1+baseRelicGain * 3)*multiplier);
     const extraSingularity = Math.floor((Math.log(300 + extraRelic)-Math.log(300)) * 10 * multiplier);
-    const extraWisdom = 1*multiplier;
+    const extraWisdom = Math.floor(Math.sqrt(extraRelic/200)*multiplier);
     
-    if (confirm(`将全人类意识上传到计算机中！\n获得遗物: ${extraRelic}\n获得暗物质: ${extraDarkEnergy}\n获得孢子: ${extraSpore}\n获得奇点: ${extraSingularity}\n获得智慧: ${formatNumber(extraWisdom)}\n确定吗？`)) {
+    if (confirm(`将全人类意识上传到计算机中！\n获得遗物: ${extraRelic}\n获得暗物质: ${extraDarkEnergy}\n获得孢子: ${extraSpore}\n获得奇点: ${extraSingularity}\n获得智慧: ${extraWisdom}\n确定吗？`)) {
         unlockAchievementsForReset('singularity');
         softReset(extraRelic, extraDarkEnergy, extraSpore, extraSingularity,extraWisdom);
-        addEventLog(`意识上传！获得 ${extraRelic} 遗物, ${extraDarkEnergy}暗物质,${extraDarkEnergy}\n孢子, ${extraSingularity} 奇点,${formatNumber(extraWisdom)}智慧。`);
+        addEventLog(`意识上传！获得 ${extraRelic} 遗物, ${extraDarkEnergy}暗物质,${extraDarkEnergy}\n孢子, ${extraSingularity} 奇点,${extraWisdom}智慧。`);
     }
 }
 function hardReset() {

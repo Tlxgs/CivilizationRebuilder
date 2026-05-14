@@ -27,7 +27,7 @@ class GameEngine {
             updateBuildingPrices();
             computeProductionAndCaps();
             renderAll();
-            refreshAllDynamicColors();
+            refreshUI();
         }
         return successCount > 0;
     }

@@ -237,3 +237,46 @@ function renderBuildingPanel() {
         });
     });
 }
+function refreshBuildingPanel() {
+    const panel = document.getElementById('panel-building');
+    if (!panel) return;
+
+    // 获取当前可见建筑列表
+    const visibleBuildings = Object.keys(GameState.buildings).filter(
+        bKey => GameState.buildings[bKey].visible
+    );
+    const cardCount = panel.querySelectorAll('.building-card').length;
+    panel.querySelectorAll('.building-card').forEach(card => {
+        const buildingKey = card.dataset.building;
+        if (!buildingKey) return;
+        const bld = GameState.buildings[buildingKey];
+        if (!bld) return;
+
+        // 更新价格颜色
+        const price = bld.price;
+        const status = getAffordabilityStatus(price);
+        const nameStrong = card.querySelector('.building-card-info strong');
+        if (nameStrong) {
+            nameStrong.classList.remove('insufficient-name', 'unaffordable-name');
+            if (status === 'insufficient') nameStrong.classList.add('insufficient-name');
+            else if (status === 'cap-exceeded') nameStrong.classList.add('unaffordable-name');
+        }
+
+        // 更新效率显示
+        const infoDiv = card.querySelector('.building-card-info');
+        const effSpan = infoDiv ? infoDiv.querySelector('.building-efficiency') : null;
+        if (bld.active > 0 && bld.efficiency !== undefined && bld.efficiency < 0.995) {
+            const percent = (bld.efficiency * 100).toFixed(0);
+            if (effSpan) {
+                effSpan.textContent = `效率: ${percent}%`;
+            } else if (infoDiv) {
+                const newSpan = document.createElement('span');
+                newSpan.className = 'building-efficiency';
+                newSpan.textContent = `效率: ${percent}%`;
+                infoDiv.appendChild(newSpan);
+            }
+        } else {
+            if (effSpan) effSpan.remove();
+        }
+    });
+}

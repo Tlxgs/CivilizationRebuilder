@@ -98,7 +98,7 @@ function processQueue() {
     ProductionEngine.computeProductionAndCaps();
     updateBuildingPrices();
     updateUpgradePrices();
-    refreshAllDynamicColors();
+    refreshUI();
     renderQueue();
     renderLogPanel();
 

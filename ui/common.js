@@ -74,7 +74,7 @@ function bindEvents() {
                 const panelEl = document.getElementById(`panel-${p}`);
                 if (panelEl) panelEl.style.display = p === tab ? 'block' : 'none';
             });
-            refreshAllDynamicColors();
+            refreshUI();
             
         });
     });
@@ -329,81 +329,12 @@ function refreshLocalResourcesDisplay() {
     }
 }
 // 全局刷新动态颜色（每 tick 调用）
-function refreshAllDynamicColors() {
+function refreshUI() {
     renderHappiness();
-    
-    // 刷新建筑卡片
-    document.querySelectorAll('.building-card').forEach(card => {
-        const buildingKey = card.dataset.building;
-        if (!buildingKey) return;
-        const bld = GameState.buildings[buildingKey];
-        if (!bld) return;
-        
-        // 更新价格颜色
-        const price = bld.price;
-        const status = getAffordabilityStatus(price);
-        const nameStrong = card.querySelector('.building-card-info strong');
-        if (nameStrong) {
-            nameStrong.classList.remove('insufficient-name', 'unaffordable-name');
-            if (status === 'insufficient') nameStrong.classList.add('insufficient-name');
-            else if (status === 'cap-exceeded') nameStrong.classList.add('unaffordable-name');
-        }
-
-        // 更新效率显示（实时刷新百分比）
-        const infoDiv = card.querySelector('.building-card-info');
-        const effSpan = infoDiv ? infoDiv.querySelector('.building-efficiency') : null;
-        if (bld.active > 0 && bld.efficiency !== undefined && bld.efficiency < 0.995) {
-            const percent = (bld.efficiency * 100).toFixed(0);
-            if (effSpan) {
-                effSpan.textContent = `效率: ${percent}%`;
-            } else if (infoDiv) {
-                const newSpan = document.createElement('span');
-                newSpan.className = 'building-efficiency';
-                newSpan.textContent = `效率: ${percent}%`;
-                infoDiv.appendChild(newSpan);
-            }
-        } else {
-            if (effSpan) effSpan.remove();
-        }
-    });
-
-    // 2. 刷新科技按钮
-    document.querySelectorAll('.tech-btn:not(.researched-item)').forEach(btn => {
-        const techKey = btn.dataset.tech;
-        if (!techKey) return;
-        const tech = GameState.techs[techKey];
-        if (!tech || tech.researched) return;
-        const status = getAffordabilityStatus(tech.price);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-
-    // 3. 刷新升级按钮
-    document.querySelectorAll('.upgrade-btn').forEach(btn => {
-        const upKey = btn.dataset.upgrade;
-        if (!upKey) return;
-        const up = GameState.upgrades[upKey];
-        if (!up) return;
-        const status = getAffordabilityStatus(up.price);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-
-    // 4. 刷新永恒升级按钮
-    document.querySelectorAll('.perm-btn').forEach(btn => {
-        const permKey = btn.dataset.permanent;
-        if (!permKey) return;
-        const perm = GameState.permanent[permKey];
-        if (!perm || perm.researched) return;
-        const status = getAffordabilityStatus(perm.price);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-
-    // 5. 刷新资源数值和进度条（轻量）
+    if (typeof refreshBuildingPanel === 'function') refreshBuildingPanel();
+    if (typeof refreshTechPanel === 'function') refreshTechPanel();
+    if (typeof refreshUpgradePanel === 'function') refreshUpgradePanel();
+    if (typeof refreshPermanentPanel === 'function') refreshPermanentPanel();
     refreshResourceBars();
     refreshLocalResourcesDisplay();
 }
@@ -446,7 +377,7 @@ function refreshResourceBars() {
     }
 }
 // 确保这些函数全局可用
-refreshAllDynamicColors = refreshAllDynamicColors;
+refreshUI = refreshUI;
 bindEvents = bindEvents;
 showTooltip = showTooltip;
 // shiftPressed 作为全局变量可直接访问，无需挂载

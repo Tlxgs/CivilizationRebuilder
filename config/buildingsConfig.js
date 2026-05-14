@@ -513,7 +513,7 @@ const BUILDINGS_CONFIG = {
         providesLocal: {},
         requiresLocal: {},
         desc:(state)=>{ 
-            base=0.0002;
+            base=0.0001;
             base*=Math.sqrt(1+ResourcesManager.getAmount("智慧"));
             return `每个激活的哲学院降低所有建筑(除自己和金字塔等特殊建筑)和升级的成本增长率(乘算)${(base*100).toFixed(3)}%,该效果取决于你持有的智慧数量。`
         },

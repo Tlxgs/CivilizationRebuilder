@@ -145,8 +145,8 @@ const GameLoop = (function() {
         }
 
         // 刷新动态颜色
-        if (typeof refreshAllDynamicColors === 'function') {
-            refreshAllDynamicColors();
+        if (typeof refreshUI === 'function') {
+            refreshUI();
         }
 
 

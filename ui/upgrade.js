@@ -21,5 +21,22 @@ function getUpgradePanelHTML() {
     html += '</div>';
     return html;
 }
+function refreshUpgradePanel() {
+    const panel = document.getElementById('panel-tech');
+    if (!panel) return;
 
-getUpgradePanelHTML = getUpgradePanelHTML;
+    // 检查当前是否在升级子标签页，如果不是则跳过
+    const upgradeTab = panel.querySelector('.sub-tab-btn[data-subtab="upgrade"]');
+    if (!upgradeTab || !upgradeTab.classList.contains('active')) return;
+
+    document.querySelectorAll('.upgrade-btn').forEach(btn => {
+        const upKey = btn.dataset.upgrade;
+        if (!upKey) return;
+        const up = GameState.upgrades[upKey];
+        if (!up) return;
+        const status = getAffordabilityStatus(up.price);
+        btn.classList.remove('insufficient-name', 'unaffordable-name');
+        if (status === 'insufficient') btn.classList.add('insufficient-name');
+        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
+    });
+}
