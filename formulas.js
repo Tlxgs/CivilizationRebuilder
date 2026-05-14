@@ -17,6 +17,7 @@ const Formulas = (function() {
         return Math.floor((baseGain + populationBonus)*multiplier);
     }
 
+
     /**
      * 计算真空衰变获得的额外遗物（核弹的两倍）
      * @param {number} scienceCap - 当前科学上限
@@ -26,6 +27,7 @@ const Formulas = (function() {
     function calcRelicGainFromVacuum(scienceCap, acceleratorCount = 0, populationCap = 0) {
         return calcRelicGainFromNuke(scienceCap, acceleratorCount, populationCap) * 2;
     }
+
 
     // ========== 贸易 ==========
     /**

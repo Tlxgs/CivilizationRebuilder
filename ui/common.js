@@ -335,6 +335,7 @@ function refreshUI() {
     if (typeof refreshTechPanel === 'function') refreshTechPanel();
     if (typeof refreshUpgradePanel === 'function') refreshUpgradePanel();
     if (typeof refreshPermanentPanel === 'function') refreshPermanentPanel();
+    if (typeof refreshTradePanel === 'function') refreshTradePanel();
     refreshResourceBars();
     refreshLocalResourcesDisplay();
 }
