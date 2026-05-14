@@ -5,6 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>文明重建者</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* 右下角 GitHub 链接样式 */
+        .github-corner {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            z-index: 2000;
+            background: var(--bg-card);
+            border-radius: 40px;
+            box-shadow: 0 2px 8px var(--shadow-lg);
+            backdrop-filter: blur(4px);
+            transition: transform 0.2s ease, background 0.2s;
+            border: 1px solid var(--border-card);
+        }
+        .github-corner:hover {
+            transform: scale(1.05);
+            background: var(--bg-card-hover);
+            border-color: var(--accent);
+        }
+        .github-corner a {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 16px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-decoration: none;
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+        }
+        .github-corner svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--accent);
+        }
+        .github-corner span {
+            letter-spacing: 0.3px;
+        }
+        /* 移动端稍微调整位置避免遮挡 */
+        @media (max-width: 600px) {
+            .github-corner a {
+                padding: 6px 12px;
+                font-size: 0.75rem;
+            }
+            .github-corner svg {
+                width: 18px;
+                height: 18px;
+            }
+        }
+        /* 确保深色主题下图标颜色依然醒目 */
+        body.dark-theme .github-corner svg {
+            fill: #58a6ff;
+        }
+    </style>
 </head>
 <body>
     <div class="game-container">
@@ -56,6 +110,16 @@
             <div id="event-log-list" class="event-log-list"></div>
         </div>
         </div>
+    </div>
+
+    <!-- 右下角 GitHub 链接 (纯文本超链接 + 图标) -->
+    <div class="github-corner">
+        <a href="https://github.com/Tlxgs/CivilizationRebuilder" target="_blank" rel="noopener noreferrer" aria-label="GitHub仓库">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24">
+                <path d="M12 0C5.37 0 0 5.37 0 12c0 5.302 3.438 9.8 8.205 11.387.6.113.82-.26.82-.58 0-.287-.01-1.05-.015-2.06-3.338.726-4.042-1.61-4.042-1.61-.546-1.387-1.333-1.756-1.333-1.756-1.09-.745.082-.73.082-.73 1.205.085 1.84 1.237 1.84 1.237 1.07 1.834 2.807 1.304 3.492.997.108-.776.418-1.306.762-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.468-2.38 1.235-3.22-.123-.3-.535-1.52.117-3.16 0 0 1.008-.322 3.3 1.23.96-.267 1.98-.4 3-.405 1.02.005 2.04.138 3 .405 2.29-1.552 3.297-1.23 3.297-1.23.653 1.64.24 2.86.118 3.16.768.84 1.233 1.91 1.233 3.22 0 4.61-2.804 5.62-5.476 5.92.43.37.823 1.1.823 2.22 0 1.602-.015 2.894-.015 3.287 0 .322.216.698.83.578C20.565 21.795 24 17.3 24 12c0-6.63-5.37-12-12-12z"/>
+            </svg>
+            <span>GitHub</span>
+        </a>
     </div>
 
     <div id="import-modal" class="modal" style="display:none;">
