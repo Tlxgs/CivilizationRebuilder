@@ -2,7 +2,7 @@
 const TECHS_CONFIG = {
     "低效": {
         unlockCondition:(state)=>{
-            return (state.resources["遗物"].amount>0.1) &&(!state.techs["印刷术"]?.researched) 
+            return (state.resources["遗物"]?.visible||false) &&(!state.techs["印刷术"]?.researched) 
         },
         price: {},
         prereq: null,
@@ -16,7 +16,7 @@ const TECHS_CONFIG = {
     "技术封锁": {
         unlockCondition:(state)=>{
 
-            return (state.resources["遗物"].amount>0.1) &&(!state.techs["印刷术"]?.researched) 
+            return (state.resources["暗能量"]?.visible||false) &&(!state.techs["印刷术"]?.researched) 
         },
         price: {},
         prereq: null,
@@ -28,7 +28,7 @@ const TECHS_CONFIG = {
         }
     },
     "资源匮乏": {
-        unlockCondition:(state)=>{return (state.resources["遗物"].amount>0.1)&&(!state.techs["印刷术"]?.researched)},
+        unlockCondition:(state)=>{return (state.resources["遗物"]?.visible||false)&&(!state.techs["印刷术"]?.researched)},
         price: {},
         prereq: null,
         desc: "⚔️⭐⭐⭐挑战：建筑成本增长率+20%。完成任意重置后获得成就「资源匮乏」：所有建筑成本增长率-2%（均为乘算）。",
@@ -39,7 +39,7 @@ const TECHS_CONFIG = {
         }
     },
     "冰河时期": {
-        unlockCondition:(state)=>{return (state.resources["遗物"].amount>0.1)&&(!state.techs["印刷术"]?.researched)},
+        unlockCondition:(state)=>{return (state.resources["暗能量"]?.visible||false)&&(!state.techs["印刷术"]?.researched)},
         price: {},
         prereq: null,
         desc: "⚔️⭐⭐⭐挑战：你的文明一年四季都是冬天，太阳能板始终处于最低效率，而且你必须建造取暖炉来维持温暖。完成真空衰变后获得成就「冰河时期」:太阳能板在冬天效率更高。",
@@ -51,7 +51,7 @@ const TECHS_CONFIG = {
     },
     "天花": {
         unlockCondition: (state) => {
-            return (state.resources["遗物"].amount > 0.1) && (!state.techs["印刷术"]?.researched)
+            return (state.resources["遗物"]?.visible||false) && (!state.techs["印刷术"]?.researched)
         },
         price: {},
         prereq: null,
