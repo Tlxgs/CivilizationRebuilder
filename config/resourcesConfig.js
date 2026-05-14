@@ -22,7 +22,7 @@ const RESOURCES_CONFIG = {
     "生物质":     { baseCap: 100,  value: 100,decayRate:0.006,changeRate:6,taxRate:0.2},
     "生物合金":    { baseCap: 100,  value:300,decayRate:0.0006,changeRate:15,taxRate:0.2},
     "金刚石":        { baseCap: 100,  value: 500, decayRate:0.0006,changeRate:25,taxRate:0.2 },
-    "镍":           { baseCap: 100,  value: 60, decayRate:0.0003,changeRate:10,taxRate:0.2 },
+    "镍":           { baseCap: 100,  value: 100, decayRate:0.0003,changeRate:10,taxRate:0.2 },
     "等离子体":     {baseCap:1000000},
     "政策点":     { baseCap: 100 },
     "军备":       { baseCap: 100 },

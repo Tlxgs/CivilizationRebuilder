@@ -267,7 +267,7 @@ const PERMANENT_CONFIG = {
     "宇宙学": {
         name: "暗能量译码",
         price: { 遗物: 50, 暗能量: 1 },
-        desc: "研究暗能量与宇宙膨胀的关系，所有太空建筑产量+10%（不增消耗）。",
+        desc: "研究暗能量与宇宙膨胀的关系，所有太阳系建筑产量+10%（不增消耗）。",
         effect: { globalSpaceProd: 0.10 },
         prereq: null
     },
@@ -292,6 +292,7 @@ const PERMANENT_CONFIG = {
         effect: { globalGalaxyProd: 0.20 },
         prereq: ["宇宙起源II"]
     },
+
     "自动战争": {
         name: "自动战争",
         price: { 暗能量: 1 },

@@ -1163,15 +1163,23 @@ const BUILDINGS_CONFIG = {
         requiresLocal: {population:2,quasar_habitat:5},
         desc: "研究等离子体的实验室。"
     },
-    "等离子体钻":{
+    "等离子体钻I型":{
         class: "galaxy", type: "类星体",
-        unlockCondition: { tech: "等离子体钻" },
-        cost: (s, c) => standardCost({科学: 5000, 等离子体: 10000,金属板:500000,核燃料:400000}, 1.05, c, getGlobalCostMultiplier(s)),
-        produces: {}, consumes: {电力:8,等离子体:0.008}, caps: {},
+        unlockCondition: { tech: "等离子体钻I" },
+        cost: (s, c) => standardCost({科学: 5000, 等离子体: 10000,铜:1000000,金属板:500000,核燃料:400000}, 1.05, c, getGlobalCostMultiplier(s)),
+        produces: {钛:2.5,镍:0.5}, consumes: {电力:8,等离子体:0.008}, caps: {},
         providesLocal: {},
         requiresLocal: {population:2,quasar_habitat:1},
-        modifiers:[{target:"深空矿船",prodFactor:0.02}],
-        desc: "使用等离子体的能量加快采矿。"
+        desc: "使用等离子体的能量采集稀有坚硬的矿物。"
+    },
+    "等离子体钻II型":{
+        class: "galaxy", type: "类星体",
+        unlockCondition: { tech: "等离子体钻II" },
+        cost: (s, c) => standardCost({科学: 5000, 等离子体: 10000,铁:1000000,金属板:500000,核燃料:400000}, 1.05, c, getGlobalCostMultiplier(s)),
+        produces: {钢:4,金刚石:0.2}, consumes: {电力:8,等离子体:0.008}, caps: {},
+        providesLocal: {},
+        requiresLocal: {population:2,quasar_habitat:1},
+        desc: "使用等离子体的能量采集稀有坚硬的矿物。"
     },
     "离子反应堆":{
         class: "galaxy", type: "类星体",
