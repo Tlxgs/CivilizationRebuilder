@@ -498,9 +498,9 @@ const BUILDINGS_CONFIG = {
     "遗物研究所": {
         class: "ground", type: "科学",
         unlockCondition: { tech: "秘密研究遗物" },
-        cost: (s, c) => standardCost({石头: 300, 铜: 150}, 1.4, c, getGlobalCostMultiplier(s)),
+        cost: (s, c) => standardCost({石头: 300,木头:200, 铜: 150}, 1.4, c, getGlobalCostMultiplier(s)),
         produces: {}, consumes: {}, caps: {科学: 100},
-        happiness: (state) => 0.2 * Math.log(Math.E + (state.resources["遗物"]?.amount || 0)/200),
+        happiness: (state) => 0.4 * Math.log(Math.E + (state.resources["遗物"]?.amount || 0)/200),
         providesLocal: {},
         requiresLocal: { population: 1 },
         desc: "研究远古遗物，提供科学上限。幸福感加成随遗物持有数量增长。"
