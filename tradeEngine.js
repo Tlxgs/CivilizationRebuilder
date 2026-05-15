@@ -4,9 +4,9 @@ const TradeEngine = (function() {
     
     // 获取当前最大单次贸易量（资源数量），基于市场/星际交易站
     function getMaxTradeVolume(state) {
-        const marketActive = state.buildings["市场"]?.active || 0;
-        const starMarketActive = state.buildings["星际交易站"]?.active || 0;
-        const aMarketActive = state.buildings["比邻星物流中心"]?.active || 0 ;
+        const marketActive = state.buildings["市场"]?.count || 0;
+        const starMarketActive = state.buildings["星际交易站"]?.count || 0;
+        const aMarketActive = state.buildings["比邻星物流中心"]?.count || 0 ;
         let maxVolume=marketActive * 50 + starMarketActive * 10000 + aMarketActive*25000;
         if (state.permanent["贸易III"]?.researched){
             maxVolume=maxVolume*1.5;
