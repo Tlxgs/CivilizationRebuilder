@@ -73,4 +73,12 @@ const LOCAL_RESOURCES_CONFIG = {
         requireKey: 'requiresLocal',
         displayLocation: '类星体',
     },
+    galaxycore_habitat: {
+        id: 'galaxycore_habitat',
+        name: '银心宜居度',
+        buildingFilter: (bKey, cfg) => cfg.type === '银河中心',
+        provideKey: 'providesLocal',
+        requireKey: 'requiresLocal',
+        displayLocation: '银河中心',
+    },
 };

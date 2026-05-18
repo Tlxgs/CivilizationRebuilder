@@ -200,8 +200,8 @@ function hardReset() {
 }
 
 function getMarketTradeVolume() {
-    const marketActive = GameState.buildings["市场"]?.active || 0;
-    const starMarketActive = GameState.buildings["星际交易站"]?.active || 0;
+    const marketActive = GameState.buildings["市场"]?.count || 0;
+    const starMarketActive = GameState.buildings["星际交易站"]?.count || 0;
     return Formulas.calcMarketTradeVolume(marketActive, starMarketActive);
 }
 

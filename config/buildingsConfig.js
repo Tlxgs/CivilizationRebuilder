@@ -1191,6 +1191,40 @@ const BUILDINGS_CONFIG = {
         modifiers:[{target:"聚变反应堆",prodFactor:0.02}],
         desc: "使用等离子体的能量加快聚变反应堆效率。"
     },
+    "中转站":{
+        class: "galaxy", type: "银河中心",
+        unlockCondition: { tech: "探索银河中心" },
+        cost: (s, c) => standardCost({钢:500000,钛:500000,金属板:800000,等离子体:500}, 1.05, c, getGlobalCostMultiplier(s)),
+        produces: {}, consumes: {电力:5}, caps: {},
+        providesLocal: {galaxycore_habitat:1},
+        requiresLocal: {population:1},
+        desc: "建立起从太阳系到银心之间的交通体系。"
+    },
+    "霍金辐射收集站":{
+        class: "galaxy", type: "银河中心",
+        unlockCondition: { tech: "霍金辐射" },
+        cost: (s, c) => standardCost({金刚石:666666,生物合金:666666}, 1.3, c, getGlobalCostMultiplier(s)),
+        produces:(state)=>{
+            if (state.techs["辐射发电"]?.researched){
+                return {电力 :0.1};
+            }
+            return {};
+        },
+        consumes: {}, caps: {},
+        providesLocal: {},
+        requiresLocal: {population:1,galaxycore_habitat:1},
+        modifiers:[{target:"离子收集卫星",prodFactor:0.01}],
+        desc: "利用霍金辐射促进等离子产生。"
+    },
+    "霍金辐射研究站":{
+        class: "galaxy", type: "银河中心",
+        unlockCondition: { tech: "霍金辐射" },
+        cost: (s, c) => standardCost({钢:666666,钛:666666,等离子体:66666}, 1.3, c, getGlobalCostMultiplier(s)),
+        produces: {科学:0.15}, consumes: {电力:10}, caps: {科学:2000},
+        providesLocal: {},
+        requiresLocal: {population:1,galaxycore_habitat:1},
+        desc: "研究霍金辐射。"
+    },
 
 
 
