@@ -1127,3 +1127,28 @@ body.dark-theme .building-card.highlight {
         width: 220px !important;
     }
 }
+/* 窄屏下缩小标题和顶部辅助信息 */
+@media (max-width: 800px) {
+    /* 主标题更紧凑 */
+    .game-container > h2 {
+        font-size: 1rem !important;
+        padding: 0 0.8rem !important;
+        height: 40px !important;
+    }
+    /* 幸福度显示块缩小并调整位置 */
+    #happiness-display {
+        margin: 0.2rem 1rem !important;
+        padding: 0.2rem 0.8rem !important;
+        font-size: 0.75rem !important;
+        align-self: stretch !important;
+        text-align: center !important;
+    }
+}
+
+/* 如果屏幕非常窄，进一步调小标题 */
+@media (max-width: 500px) {
+    .game-container > h2 {
+        font-size: 0.9rem !important;
+        padding: 0 0.5rem !important;
+    }
+}
