@@ -1152,3 +1152,27 @@ body.dark-theme .building-card.highlight {
         padding: 0 0.5rem !important;
     }
 }
+/* 手机屏幕整体缩放（宽度 ≤ 800px 时缩小至 85%） */
+@media (max-width: 800px) {
+    .game-container {
+        zoom: 0.9;          /* 标准浏览器支持 */
+        -moz-transform: scale(0.9); /* Firefox 兼容 */
+        -moz-transform-origin: top center;
+        transform: scale(0.9);
+        transform-origin: top center;
+        /* 为了保证容器不出现额外空白，重新设置宽度 */
+        width: 111.11%;
+        max-width: 111.11%;
+    }
+}
+
+/* 极窄屏进一步缩小 */
+@media (max-width: 600px) {
+    .game-container {
+        zoom: 0.8;
+        -moz-transform: scale(0.8);
+        transform: scale(0.8);
+        width: 125%;
+        max-width: 125%;
+    }
+}
