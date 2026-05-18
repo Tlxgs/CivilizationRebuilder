@@ -1163,6 +1163,8 @@ body.dark-theme .building-card.highlight {
         /* 为了保证容器不出现额外空白，重新设置宽度 */
         width: 111.11%;
         max-width: 111.11%;
+        height: 111.11%; 
+        min-height: 111.11%;
     }
 }
 
@@ -1174,5 +1176,7 @@ body.dark-theme .building-card.highlight {
         transform: scale(0.8);
         width: 125%;
         max-width: 125%;
+        height: 125%;        
+        min-height: 125%;
     }
 }
