@@ -109,7 +109,7 @@ body.dark-theme {
 
 html, body {
     height: 100%;
-    overflow: hidden;
+    overflow: auto;
     font-family: 'Segoe UI', 'Roboto', -apple-system, sans-serif;
     color: var(--text);
     background: var(--bg-body);
@@ -124,7 +124,7 @@ html, body {
     flex-direction: column;
     background: var(--bg-container);
     box-shadow: 0 0 20px var(--shadow);
-    overflow: hidden;
+    overflow: auto;
     transition: background 0.3s;
 }
 
@@ -165,8 +165,8 @@ html, body {
     display: flex;
     gap: 0.8rem;
     padding: 0.8rem 1rem 0.8rem 1.5rem;
-    min-height: 0;   /* flex child 允许收缩 */
-    overflow: hidden;
+    min-height: 250;   /* flex child 允许收缩 */
+    overflow: auto;
 }
 
 .sidebar {
@@ -182,7 +182,7 @@ html, body {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    min-width: 0;
+    min-width: 200 !important;
     overflow-y: auto;
     padding-right: 0.3rem;
 }
@@ -1051,4 +1051,79 @@ body.dark-theme .resource-item.highlight,
 body.dark-theme .building-card.highlight {
     background-color: rgba(88, 166, 255, 0.091) !important;
     outline-color: #58a6ff75 !important;
+}
+/* ========== 手机窄屏水平滚动支持 ========== */
+@media (max-width: 800px) {
+    /* 主布局改为水平滚动容器 */
+    .main-layout {
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        gap: 0.8rem;
+        scroll-snap-type: x mandatory;  /* 可选：滑动时自然停靠 */
+        -webkit-overflow-scrolling: touch; /* 提升滚动流畅度 */
+    }
+
+    /* 三列都禁止收缩，并设置最小宽度（保证可读性） */
+    .sidebar {
+        flex: 0 0 auto !important;
+        min-width: 260px !important;
+        width: 260px !important;
+        scroll-snap-align: start;
+    }
+
+    .main-content {
+        flex: 0 0 auto !important;
+        min-width: 320px !important;
+        width: 320px !important;
+        scroll-snap-align: start;
+    }
+
+    .log-panel {
+        flex: 0 0 auto !important;
+        min-width: 240px !important;
+        width: 240px !important;
+        scroll-snap-align: start;
+    }
+
+    /* 让建筑卡片在有限宽度内正常显示，避免额外溢出 */
+    .building-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .building-card {
+        min-width: 0;
+        flex-wrap: wrap;
+    }
+
+    /* 资源项内部文字稍微紧凑但不会换行破坏布局 */
+    .res-name {
+        min-width: 60px !important;
+        font-size: 0.75rem;
+    }
+    .res-prod {
+        min-width: 50px !important;
+        font-size: 0.75rem;
+    }
+
+    /* 可选：缩小标题栏内边距，释放更多横向空间 */
+    .game-container > h2 {
+        padding: 0 0.8rem;
+        font-size: 1.1rem;
+    }
+}
+
+/* 对于极窄设备（如小于 600px），略微降低各列最小宽度，但仍保证可滑动 */
+@media (max-width: 600px) {
+    .sidebar {
+        min-width: 240px !important;
+        width: 240px !important;
+    }
+    .main-content {
+        min-width: 280px !important;
+        width: 280px !important;
+    }
+    .log-panel {
+        min-width: 220px !important;
+        width: 220px !important;
+    }
 }
