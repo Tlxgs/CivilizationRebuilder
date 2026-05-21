@@ -330,7 +330,6 @@ function refreshLocalResourcesDisplay() {
 }
 // 全局刷新动态颜色（每 tick 调用）
 function refreshUI() {
-    renderHappiness();
     if (typeof refreshBuildingPanel === 'function') refreshBuildingPanel();
     if (typeof refreshTechPanel === 'function') refreshTechPanel();
     if (typeof refreshUpgradePanel === 'function') refreshUpgradePanel();
@@ -377,8 +376,3 @@ function refreshResourceBars() {
         if (progressDiv) progressDiv.style.width = `${percent}%`;
     }
 }
-// 确保这些函数全局可用
-refreshUI = refreshUI;
-bindEvents = bindEvents;
-showTooltip = showTooltip;
-// shiftPressed 作为全局变量可直接访问，无需挂载

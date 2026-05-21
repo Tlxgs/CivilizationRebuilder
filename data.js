@@ -318,4 +318,7 @@ function initGameData() {
         bd.count = bd.count || 0;
         bd.active = bd.active || 0;
     }
+    if (typeof initAllReactive === 'function') {
+        initAllReactive();
+    }
 }
