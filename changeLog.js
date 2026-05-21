@@ -1,6 +1,11 @@
 const ChangelogData = {
     version: "v0.2",
     logs: [
+        { version: "v0.7.0b", date: "2026-05-21", changes: [
+            "幸福度和资源条改成响应式",
+            "市场交易量应该和建筑数量相关而非激活数量，防止玩家开关市场刷钱",
+            "bug修复",
+        ]},
         { version: "v0.7.0", date: "2026-05-12", changes: [
             "增加新的区域",
             "平衡性调整"

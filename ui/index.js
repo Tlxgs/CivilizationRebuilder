@@ -105,7 +105,7 @@ function createResourceElement(resourceName) {
                 const rightCol = contributions.slice(mid);
                 
                 tooltipHtml += `<div style="display: flex; gap: 1rem; margin-top: 0.25rem;">`;
-                tooltipHtml += `<div style="min-width: 120px;">`;
+                tooltipHtml += `<div style="min-width: 150px;">`;
                 for (let contrib of leftCol) {
                     const sign = contrib.value > 0 ? '+' : '';
                     tooltipHtml += `${contrib.building}: ${sign}${formatNumber(contrib.value)}/s<br>`;

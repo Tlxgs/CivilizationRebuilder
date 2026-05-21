@@ -619,7 +619,7 @@ html, body {
     z-index: 2000;
     pointer-events: none;
     white-space: pre-line;
-    max-width: 250px;
+    max-width: 320px;
     border: 1px solid var(--border-card-hover);
     box-shadow: 0 8px 20px var(--shadow-lg);
     line-height: 1.5;
