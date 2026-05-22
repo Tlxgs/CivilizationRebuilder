@@ -45,10 +45,10 @@ function makeReactive(obj, prop, onUpdate) {
 function createResourceElement(resourceName) {
     const bar = document.getElementById('resource-bar');
     if (!bar) return;
-    
+
     // 检查是否已存在
     if (document.querySelector(`.resource-item[data-resource="${resourceName}"]`)) return;
-    
+
     const resData = GameState.resources[resourceName];
     const amount = resData.amount;
     const cap = resData.cap;
@@ -89,21 +89,19 @@ function createResourceElement(resourceName) {
     item.appendChild(progressDiv);
     item.appendChild(contentDiv);
 
-    // 绑定 tooltip
+    // 绑定 tooltip（含资源贡献列表 + 预计满仓/耗尽时间）
     item.addEventListener('mouseenter', () => {
         const contributions = getResourceContributions(resourceName);
         let tooltipHtml = `<strong>${resourceName}</strong><hr>`;
-        
+
         if (contributions.length === 0) {
             tooltipHtml += `无`;
         } else {
-            const THRESHOLD = 30; // 超过10项时分成两列
-            
+            const THRESHOLD = 30;
             if (contributions.length > THRESHOLD) {
                 const mid = Math.ceil(contributions.length / 2);
                 const leftCol = contributions.slice(0, mid);
                 const rightCol = contributions.slice(mid);
-                
                 tooltipHtml += `<div style="display: flex; gap: 1rem; margin-top: 0.25rem;">`;
                 tooltipHtml += `<div style="min-width: 150px;">`;
                 for (let contrib of leftCol) {
@@ -123,7 +121,57 @@ function createResourceElement(resourceName) {
                 }
             }
         }
-        
+
+        // ---- 新增：预计满仓/耗尽时间 ----
+        const res = GameState.resources[resourceName];
+        if (res) {
+            const prod = res.production;
+            const curAmount = res.amount;
+            const curCap = res.cap;
+            let timeInfo = '';
+
+            if (Math.abs(prod) > 1e-9) {
+                if (prod > 0) {
+                    if (curCap !== Infinity && curAmount < curCap - 1e-9) {
+                        const deficit = curCap - curAmount;
+                        const seconds = deficit / prod;
+                        if (isFinite(seconds) && seconds > 0) {
+                            timeInfo = `<hr>预计充满: ${formatTime(seconds)}`;
+                        } else {
+                            timeInfo = `<hr>正在增长`;
+                        }
+                    } else if (curCap === Infinity) {
+                        timeInfo = `<hr>无上限`;
+                    } else if (curAmount >= curCap - 1e-9) {
+                        timeInfo = `<hr>已满`;
+                    } else {
+                        timeInfo = `<hr>正在增长`;
+                    }
+                } else if (prod < 0) {
+                    if (curAmount > 1e-9) {
+                        const seconds = curAmount / Math.abs(prod);
+                        if (isFinite(seconds) && seconds > 0) {
+                            timeInfo = `<hr>预计耗尽: ${formatTime(seconds)}`;
+                        } else {
+                            timeInfo = `<hr>正在消耗`;
+                        }
+                    } else {
+                        timeInfo = `<hr>已耗尽`;
+                    }
+                }
+            } else {
+                // 生产/消耗为 0
+                if (curCap !== Infinity && curAmount >= curCap - 1e-9) {
+                    timeInfo = `<hr>已满`;
+                } else if (curAmount <= 1e-9) {
+                    timeInfo = `<hr>已耗尽`;
+                } else {
+                    timeInfo = `<hr>`;
+                }
+            }
+            tooltipHtml += timeInfo;
+        }
+
         showTooltip(item, tooltipHtml);
     });
 
