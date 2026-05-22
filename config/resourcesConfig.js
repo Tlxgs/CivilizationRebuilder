@@ -26,10 +26,31 @@ const RESOURCES_CONFIG = {
     "等离子体":     {baseCap:1000000},
     "政策点":     { baseCap: 100 },
     "军备":       { baseCap: 100 },
-    "遗物":       { baseCap: 1000000000 },
-    "暗能量":     { baseCap: 1000000000 },
-    "孢子":       { baseCap: 1000000000 }, 
-    "奇点":       { baseCap: 1000000000 }, 
+    "遗物":       { baseCap: 1000000000 ,
+        getDescription:(state)=>{
+            let percent=((Math.log(Math.E + (state.resources["遗物"]?.amount || 0)/200)-1)*100).toFixed(1);
+            return `博物馆幸福度效果+${percent}%`
+        },
+    },
+    "暗能量":     { baseCap: 1000000000 ,
+        getDescription:(state)=>{
+            let percent=((Math.log(Math.E + (state.resources["暗能量"]?.amount || 0)/200)-1)*100).toFixed(1);
+            return `太空剧院幸福度效果+${percent}%`
+        },
+    },
+    "孢子":       { baseCap: 1000000000 ,
+        getDescription:(state)=>{
+            let percent=((Math.log(Math.E + (state.resources["孢子"]?.amount || 0)/200)-1)*100).toFixed(1);
+            return `孢子烟花幸福度效果+${percent}%`
+        },
+        
+    }, 
+    "奇点":       { baseCap: 1000000000,
+        getDescription:(state)=>{
+            let percent=((Math.log(Math.E + (state.resources["奇点"]?.amount || 0)/200)-1)*100).toFixed(1);
+            return `奇点炸弹幸福度效果+${percent}%`
+        },
+    }, 
     "智慧":       { baseCap: 1000000000 }, 
     "时间晶体":   { baseCap: 36000 }
 };

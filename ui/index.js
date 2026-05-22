@@ -93,7 +93,14 @@ function createResourceElement(resourceName) {
     item.addEventListener('mouseenter', () => {
         const contributions = getResourceContributions(resourceName);
         let tooltipHtml = `<strong>${resourceName}</strong><hr>`;
-
+                // ---- 新增：调用资源配置的自定义描述函数 ----
+        const resCfg = RESOURCES_CONFIG[resourceName];
+        if (resCfg && typeof resCfg.getDescription === 'function') {
+            const customDesc = resCfg.getDescription(GameState);
+            if (customDesc) {
+                tooltipHtml += `<div style="margin-bottom: 0.5rem;">${customDesc}</div><hr>`;
+            }
+        }
         if (contributions.length === 0) {
             tooltipHtml += `无`;
         } else {
