@@ -51,7 +51,13 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0,extraSpore=0,extraSingula
         GameState.upgrades[u].level = 0;
         GameState.upgrades[u].visible = false;
     }
-    for (let p in GameState.policies) GameState.policies[p].visible = false;
+    for (let p in GameState.policies) {
+        GameState.policies[p].visible = false;
+        const cfg = POLICIES_CONFIG[p];
+        if (cfg && cfg.defaultValue !== undefined) {
+            GameState.policies[p].currentValue = cfg.defaultValue;
+        }
+    }
 
     // 重置贸易系统和热度
     TradeEngine.updateMaxTradeVolume(GameState);
