@@ -69,7 +69,6 @@ const GameLoop = (function() {
         }
 
         tryTriggerRandomEvent();
-        renderLogPanel(); // 只更新日志区域
         processQueue();
     }
 

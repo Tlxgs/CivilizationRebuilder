@@ -28,8 +28,26 @@ const RESOURCES_CONFIG = {
     "军备":       { baseCap: 100 },
     "遗物":       { baseCap: 1000000000 ,
         getDescription:(state)=>{
-            let percent=((Math.log(Math.E + (state.resources["遗物"]?.amount || 0)/200)-1)*100).toFixed(1);
-            return `博物馆幸福度效果+${percent}%`
+            let amount=state.resources["遗物"]?.amount || 0;
+            let percent=((Math.log(Math.E + (amount)/200)-1)*100).toFixed(1);
+            let html=``;
+            html +=`博物馆幸福度效果+${percent}%`;
+            let capPerRelic = 0
+            let sciCapPerRelicLog = 0;
+            
+            for (let permId in state.permanent) {
+                const perm = state.permanent[permId];
+                if (!perm.researched || !perm.effect) continue;
+                if (perm.effect.capPerRelic) capPerRelic += perm.effect.capPerRelic;
+                if (perm.effect.sciCapPerRelicLog) sciCapPerRelicLog += perm.effect.sciCapPerRelicLog;
+            }
+            let capPercent = (amount*capPerRelic*100).toFixed(1);
+            let sciCapPercent = (Math.log(1 + amount)*sciCapPerRelicLog*100).toFixed(1);
+            if (capPerRelic>0)
+                html+=`\n普通资源上限+${capPercent}%`;
+            if (sciCapPerRelicLog>0)
+                html+=`\n科学上限+${sciCapPercent}%`;
+            return html;
         },
     },
     "暗能量":     { baseCap: 1000000000 ,

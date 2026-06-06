@@ -1,152 +1,6 @@
-// data.js - 重构后的 initGameData
-/**
- * @typedef {Object} ResourceState
- * @property {number} amount
- * @property {number} production
- * @property {boolean} visible
- * @property {number} baseCap
- * @property {number} cap
- * @property {number} tradeHeat
- * @property {number} [value]
- * @property {number} [decayRate]
- */
-
-/**
- * @typedef {Object} BuildingState
- * @property {number} count
- * @property {number} active
- * @property {boolean} visible
- * @property {Object.<string, number>} price
- * @property {number} [mode]
- * @property {number} [efficiency]
- */
-
-/**
- * @typedef {Object} TechState
- * @property {Object.<string, number>} price
- * @property {string[] | null} prereq
- * @property {string} desc
- * @property {Object | null} effect
- * @property {boolean} researched
- * @property {Object | null} challenge
- * @property {boolean} challengeCompleted
- * @property {Function | null} unlockCondition
- */
-
-/**
- * @typedef {Object} UpgradeState
- * @property {Object | null} unlockCondition
- * @property {Object.<string, number>} price
- * @property {Object | null} effect
- * @property {number} level
- * @property {boolean} visible
- * @property {string} desc
- * @property {Function} costFunc
- */
-
-/**
- * @typedef {Object} PolicyOption
- * @property {number} price
- * @property {Object.<string, number>} prodFactor
- * @property {Object.<string, number>} consFactor
- * @property {Object.<string, number>} capFactor
- */
-
-/**
- * @typedef {Object} PolicyState
- * @property {Object | null} unlockCondition
- * @property {string} activePolicy
- * @property {boolean} visible
- * @property {Object.<string, PolicyOption>} options
- */
-
-/**
- * @typedef {Object} PermanentState
- * @property {string} name
- * @property {Object.<string, number>} price
- * @property {string} desc
- * @property {Object | null} effect
- * @property {string[] | null} prereq
- * @property {boolean} researched
- */
-
-/**
- * @typedef {Object} CrystalEffect
- * @property {string} type
- * @property {string} target
- * @property {number} value
- */
-
-/**
- * @typedef {Object} Crystal
- * @property {number} id
- * @property {string} name
- * @property {CrystalEffect[]} effects
- */
-
-/**
- * @typedef {Object} CrystalsState
- * @property {(Crystal | null)[]} equipped
- * @property {Crystal[]} inventory
- */
-
-/**
- * @typedef {Object} AchievementState
- * @property {string} name
- * @property {Object} effect
- * @property {string} effectText
- */
-
-/**
- * @typedef {Object} RandomEvent
- * @property {string} id
- * @property {string} name
- * @property {string} desc
- * @property {number} endDay
- * @property {Object[]} effects
- */
-
-/**
- * @typedef {Object} EventLog
- * @property {string} dateStr
- * @property {string} text
- */
-
-/**
- * @typedef {Object} LocalResourceState
- * @property {number} capacity
- * @property {number} used
- */
-
-/**
- * @typedef {Object} GameState
- * @property {Object.<string, ResourceState>} resources
- * @property {Object.<string, BuildingState>} buildings
- * @property {Object.<string, number>} buildingEfficiency
- * @property {Object.<string, TechState>} techs
- * @property {Object.<string, UpgradeState>} upgrades
- * @property {Object.<string, PolicyState>} policies
- * @property {Object.<string, PermanentState>} permanent
- * @property {Object.<string, AchievementState>} achievements
- * @property {number} gameDays
- * @property {number} happiness
- * @property {number} speed
- * @property {Object.<string, number>} tradeRates
- * @property {number} maxTradeVolume
- * @property {number} userTradeVolume
- * @property {number} season
- * @property {number} seasonDayCounter
- * @property {number} lastSaveTime
- * @property {RandomEvent[]} activeRandomEvents
- * @property {EventLog[]} eventLogs
- * @property {Object[]} happinessContributions
- * @property {CrystalsState} crystals
- * @property {boolean} autoWarEnabled
- * @property {Object.<string, LocalResourceState>} localResources
- */
-
-/** @type {GameState} */
-let GameState = {
+// data.js - 初始化数据并转为 Vue 响应式对象
+// 定义原始数据容器
+const rawGameState = {
     resources: {},
     buildings: {},
     techs: {},
@@ -154,14 +8,29 @@ let GameState = {
     policies: {},
     permanent: {},
     achievements: {},
-    gameTime: 0
+    gameDays: 0,
+    happiness: 100,
+    speed: 1,
+    tradeRates: {},
+    maxTradeVolume: 0,
+    userTradeVolume: 0,
+    activeRandomEvents: [],
+    eventLogs: [],
+    happinessContributions: [],
+    crystals: { equipped: [null, null, null], inventory: [] },
+    queue: [],
+    autoWarEnabled: false,
+    localResources: {},
+    buildingEfficiency: {},
+    seed: null,
+    lastSaveTime: null,
 };
-// ---------- 辅助初始化函数 ----------
+
+// 原有的初始化函数（保持不变，只是操作 rawGameState）
 function initResources() {
-    GameState.resources = {};
     for (let rKey in RESOURCES_CONFIG) {
         const cfg = RESOURCES_CONFIG[rKey];
-        GameState.resources[rKey] = {
+        rawGameState.resources[rKey] = {
             amount: 0,
             production: 0,
             visible: false,
@@ -171,47 +40,42 @@ function initResources() {
         };
         for (let prop in cfg) {
             if (prop === 'heat') continue;
-            if (!GameState.resources[rKey].hasOwnProperty(prop)) {
-                GameState.resources[rKey][prop] = cfg[prop];
+            if (!rawGameState.resources[rKey].hasOwnProperty(prop)) {
+                rawGameState.resources[rKey][prop] = cfg[prop];
             }
         }
     }
 }
 
 function initLocalResources() {
-    GameState.localResources = {};
+    rawGameState.localResources = {};
     for (let lrKey in LOCAL_RESOURCES_CONFIG) {
-        GameState.localResources[lrKey] = {
-            capacity: 0,
-            used: 0
-        };
+        rawGameState.localResources[lrKey] = { capacity: 0, used: 0 };
     }
 }
 
 function initBuildings() {
-    GameState.buildings = {};
-    GameState.buildingEfficiency = {}
+    rawGameState.buildings = {};
+    rawGameState.buildingEfficiency = {};
     for (let bKey in BUILDINGS_CONFIG) {
         const cfg = BUILDINGS_CONFIG[bKey];
-        const initialPrice = cfg.cost(GameState, 0);
-        GameState.buildings[bKey] = {
+        const initialPrice = cfg.cost(rawGameState, 0);
+        rawGameState.buildings[bKey] = {
             count: 0,
             active: 0,
             visible: false,
-            price: {...initialPrice },
+            price: { ...initialPrice },
             mode: (cfg.modes && cfg.modes.length > 0) ? 0 : undefined,
-            providesLocal: cfg.providesLocal || {},
-            requiresLocal: cfg.requiresLocal || {},
         };
     }
 }
 
 function initTechs() {
-    GameState.techs = {};
+    rawGameState.techs = {};
     for (let techKey in TECHS_CONFIG) {
         const config = TECHS_CONFIG[techKey];
-        GameState.techs[techKey] = {
-            price: {...config.price },
+        rawGameState.techs[techKey] = {
+            price: { ...config.price },
             prereq: config.prereq ? [...config.prereq] : null,
             desc: config.desc,
             effect: config.effect ? JSON.parse(JSON.stringify(config.effect)) : null,
@@ -224,14 +88,14 @@ function initTechs() {
 }
 
 function initUpgrades() {
-    GameState.upgrades = {};
+    rawGameState.upgrades = {};
     for (let uKey in UPGRADES_CONFIG) {
         const cfg = UPGRADES_CONFIG[uKey];
-        const initialPrice = cfg.cost(GameState, 0);
-        GameState.upgrades[uKey] = {
-            unlockCondition: cfg.unlockCondition ? {...cfg.unlockCondition } : null,
-            price: {...initialPrice },
-            effect: cfg.effect ? {...cfg.effect } : null,
+        const initialPrice = cfg.cost(rawGameState, 0);
+        rawGameState.upgrades[uKey] = {
+            unlockCondition: cfg.unlockCondition ? { ...cfg.unlockCondition } : null,
+            price: { ...initialPrice },
+            effect: cfg.effect ? { ...cfg.effect } : null,
             level: cfg.level || 0,
             visible: false,
             desc: cfg.desc,
@@ -241,11 +105,11 @@ function initUpgrades() {
 }
 
 function initPolicies() {
-    GameState.policies = {};
+    rawGameState.policies = {};
     for (let pKey in POLICIES_CONFIG) {
         const cfg = POLICIES_CONFIG[pKey];
-        GameState.policies[pKey] = {
-            unlockCondition: cfg.unlockCondition ? {...cfg.unlockCondition} : null,
+        rawGameState.policies[pKey] = {
+            unlockCondition: cfg.unlockCondition ? { ...cfg.unlockCondition } : null,
             currentValue: cfg.defaultValue,
             visible: false,
             min: cfg.min,
@@ -257,14 +121,14 @@ function initPolicies() {
 }
 
 function initPermanent() {
-    GameState.permanent = {};
+    rawGameState.permanent = {};
     for (let permKey in PERMANENT_CONFIG) {
         const cfg = PERMANENT_CONFIG[permKey];
-        GameState.permanent[permKey] = {
+        rawGameState.permanent[permKey] = {
             name: cfg.name || permKey,
-            price: {...cfg.price },
+            price: { ...cfg.price },
             desc: cfg.desc,
-            effect: cfg.effect ? {...cfg.effect } : null,
+            effect: cfg.effect ? { ...cfg.effect } : null,
             prereq: cfg.prereq ? [...cfg.prereq] : null,
             researched: false
         };
@@ -272,35 +136,28 @@ function initPermanent() {
 }
 
 function initTrade() {
-    GameState.tradeRates = {};
-    GameState.maxTradeVolume = 0;
-    GameState.userTradeVolume = 0;
+    rawGameState.tradeRates = {};
+    rawGameState.maxTradeVolume = 0;
+    rawGameState.userTradeVolume = 0;
     for (let r in RESOURCES_CONFIG) {
         if (RESOURCES_CONFIG[r].value !== undefined && r !== "金") {
-            GameState.tradeRates[r] = 0;
+            rawGameState.tradeRates[r] = 0;
         }
     }
 }
 
 function initGameData() {
-    GameState.happiness = 100;
-    if (!GameState.seed) {
-        GameState.seed = Date.now() >>> 0;
-    }
-    GameState.season = 0;
-    GameState.seasonDayCounter = 0;
-    GameState.gameDays = 0;
-    GameState.activeRandomEvents = [];
-    GameState.eventLogs = [];
-    GameState.happinessContributions = [];
-    GameState.speed = 1;
-    GameState.lastSaveTime = null;
-    GameState.crystals = {
-        equipped: [null, null, null],
-        inventory: []
-    };
-    GameState.queue = [];
-    GameState.achievements = GameState.achievements || {};
+    rawGameState.happiness = 100;
+    if (!rawGameState.seed) rawGameState.seed = Date.now() >>> 0;
+    rawGameState.gameDays = 0;
+    rawGameState.activeRandomEvents = [];
+    rawGameState.eventLogs = [];
+    rawGameState.happinessContributions = [];
+    rawGameState.speed = 1;
+    rawGameState.lastSaveTime = null;
+    rawGameState.crystals = { equipped: [null, null, null], inventory: [] };
+    rawGameState.queue = [];
+    rawGameState.achievements = {};
 
     initResources();
     initLocalResources();
@@ -310,15 +167,15 @@ function initGameData() {
     initPolicies();
     initPermanent();
     initTrade();
-    GameState.autoWarEnabled = false;
-    refreshAllVisibility();
-
-    for (let b in GameState.buildings) {
-        let bd = GameState.buildings[b];
-        bd.count = bd.count || 0;
-        bd.active = bd.active || 0;
-    }
-    if (typeof initAllReactive === 'function') {
-        initAllReactive();
-    }
+    rawGameState.autoWarEnabled = false;
+    if (typeof refreshAllVisibility === 'function') refreshAllVisibility();
 }
+
+// 关键：将原始对象转为 Vue 响应式对象
+const GameState = Vue.reactive(rawGameState);
+window.GameState = GameState;
+
+// 执行初始化
+initGameData();
+
+// 如果没有定义 getTotalActiveChallengeStars 等，补充默认（你的 logic.js 应该有）

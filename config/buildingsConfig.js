@@ -1271,7 +1271,7 @@ const BUILDINGS_CONFIG = {
         produces: {}, consumes: {},caps:{科学:1},
         requiresLocal: {},
         providesLocal:{core_depth:1},
-        desc:"向地球中心挖1公里,挖到足够深也许会解锁新技术。在此之前它可以给科学上限提供高达1点的惊人提升。"
+        desc:"向地球中心挖1公里,挖到足够深会解锁新技术。在此之前它可以给科学上限提供高达1点的惊人提升。"
     },
     "地心电梯": {
         class: "earth_core", type: "地壳",

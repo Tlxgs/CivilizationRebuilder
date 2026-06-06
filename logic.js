@@ -65,7 +65,6 @@ function softReset(extraRelic = 0, extraDarkEnergy = 0,extraSpore=0,extraSingula
     ProductionEngine.updateBuildingPrices();
     ProductionEngine.updateUpgradePrices();
     ProductionEngine.computeProductionAndCaps();
-    renderAll();
 }
 
 function unlockAchievementsForReset(resetType) {
@@ -97,7 +96,6 @@ function unlockAchievementsForReset(resetType) {
             };
             addEventLog(`✨ 解锁成就「${achCfg.name}」！`);
             ProductionEngine.refreshEffects();
-            renderAll();
         }
     }
 }
@@ -201,7 +199,7 @@ function consciousReset() {
     }
 }
 function hardReset() {
-    localStorage.clear();
+    localStorage.removeItem('civilizationRebuilder');
     location.reload();
 }
 
@@ -214,14 +212,27 @@ function getMarketTradeVolume() {
 
 // 日志
 function addEventLog(text) {
+    if (!GameState.eventLogs) GameState.eventLogs = [];
+    
     const totalDays = GameState.gameDays;
     const year = Math.floor(totalDays / 360);
     const day = (totalDays % 360) + 1;
     const dateStr = `${year}年${day}日`;
-    GameState.eventLogs.unshift({ dateStr, text });
-    if (GameState.eventLogs.length > 20) GameState.eventLogs.pop();
+    
+    // 最新消息插入到数组开头（索引0）
+    GameState.eventLogs.unshift({
+        id: Date.now() + Math.random(),
+        dateStr: dateStr,
+        text: text,
+        gameDays: totalDays,
+        timestamp: Date.now()
+    });
+    
+    // 保持最多 50 条，超过则删除最旧的（数组末尾）
+    while (GameState.eventLogs.length > 50) {
+        GameState.eventLogs.pop();
+    }
 }
-
 function generateCrystalFromWar(armsAmount) {
     const quality = Formulas.calcCrystalQuality(armsAmount);
     const numEffects = Formulas.calcCrystalEffectCount(quality);
@@ -313,7 +324,6 @@ function equipCrystal(inventoryIndex) {
     GameState.crystals.equipped[emptySlot] = crystal;
     GameState.crystals.inventory.splice(inventoryIndex, 1);
     computeProductionAndCaps();
-    renderAll();
 }
 
 function unequipCrystal(slotIndex) {
@@ -326,12 +336,10 @@ function unequipCrystal(slotIndex) {
     GameState.crystals.equipped[slotIndex] = null;
     GameState.crystals.inventory.push(crystal);
     computeProductionAndCaps();
-    renderAll();
 }
 
 function discardCrystal(inventoryIndex) {
     GameState.crystals.inventory.splice(inventoryIndex, 1);
-    renderAll();
 }
 function getBuildingsWithProduce() {
     return Object.keys(GameState.buildings).filter(key => {
@@ -378,3 +386,10 @@ function getTotalActiveChallengeStars() {
 }
 window.getTotalActiveChallengeStars=getTotalActiveChallengeStars;
 window.addEventLog=addEventLog;
+window.hardReset=hardReset;
+window.softReset=softReset;
+window.nukeReset=nukeReset;
+window.vacuumDecayReset=vacuumDecayReset;
+window.symbioteReset=symbioteReset;
+window.singularityReset=singularityReset;
+window.consciousReset=consciousReset;

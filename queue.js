@@ -41,8 +41,6 @@ function addToQueue(type, id) {
     }
     GameState.queue.push({ type, id });
     addEventLog(`已加入队列：${getQueueItemDisplayName({ type, id })}`);
-    renderQueue();
-    renderLogPanel();
     return true;
 }
 
@@ -50,8 +48,6 @@ function removeFromQueue(index) {
     const item = GameState.queue[index];
     GameState.queue.splice(index, 1);
     addEventLog(`已从队列移除：${getQueueItemDisplayName(item)}`);
-    renderQueue();
-    renderLogPanel();
 }
 function clearQueue() {
     if (!Array.isArray(GameState.queue)) {
@@ -59,7 +55,6 @@ function clearQueue() {
         return;
     }
     GameState.queue = [];
-    renderAll();
 }
 function processQueue() {
     if (!GameState.queue || GameState.queue.length === 0) return;
@@ -99,8 +94,6 @@ function processQueue() {
     updateBuildingPrices();
     updateUpgradePrices();
     refreshUI();
-    renderQueue();
-    renderLogPanel();
 
     // 若有完成的项目，汇总记录
     if (completedItems.length > 0) {

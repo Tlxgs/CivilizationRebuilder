@@ -185,3 +185,4 @@ class GameEngine {
 }
 
 const Core = new GameEngine();
+window.Core =Core;

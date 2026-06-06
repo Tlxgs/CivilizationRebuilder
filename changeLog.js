@@ -88,3 +88,4 @@ const ChangelogData = {
         ]}
     ]
 };
+window.ChangelogData=ChangelogData;

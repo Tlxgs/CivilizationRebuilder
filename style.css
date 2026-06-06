@@ -109,23 +109,24 @@ body.dark-theme {
 
 html, body {
     height: 100%;
-    overflow: auto;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;      /* 禁止根滚动 */
     font-family: 'Segoe UI', 'Roboto', -apple-system, sans-serif;
     color: var(--text);
     background: var(--bg-body);
-    transition: background 0.3s, color 0.3s;
 }
 
 .game-container {
-    height: 100%;
+    height: 100vh;         /* 使用视口高度而非百分比 */
     max-width: 95%;
     margin: 0 auto;
     display: flex;
     flex-direction: column;
     background: var(--bg-container);
     box-shadow: 0 0 20px var(--shadow);
-    overflow: auto;
-    transition: background 0.3s;
+    overflow: hidden;      /* 关键：禁止整体滚动 */
+    position: relative;
 }
 
 /* 标题区域 */
@@ -165,37 +166,44 @@ html, body {
     display: flex;
     gap: 0.8rem;
     padding: 0.8rem 1rem 0.8rem 1.5rem;
-    min-height: 250;   /* flex child 允许收缩 */
-    overflow: auto;
+    min-height: 0;           /* 必须：允许flex子项收缩 */
+    overflow: hidden;        /* 禁止整体滚动 */
+    position: relative;
 }
-
 .sidebar {
     flex: 0 0 280px;
     display: flex;
     flex-direction: column;
     gap: 0.6rem;
-    overflow-y: auto;
-    padding-right: 0.3rem;
+    overflow-y: auto;        /* 独立滚动 */
+    overflow-x: hidden;
+    min-height: 0;           /* 必须 */
+    height: 100%;            /* 明确高度 */
 }
 
+/* 主内容区 - 独立滚动 */
 .main-content {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    min-width: 200 !important;
-    overflow-y: auto;
-    padding-right: 0.3rem;
+    min-width: 0;
+    overflow-y: auto;        /* 独立滚动 */
+    overflow-x: hidden;
+    min-height: 0;           /* 必须 */
+    height: 100%;            /* 明确高度 */
 }
 
+/* 日志面板 - 独立滚动 */
 .log-panel {
     flex: 0 0 250px;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
-    overflow-y: auto;
-    padding-right: 0.3rem;
+    overflow-y: auto;        /* 独立滚动 */
+    overflow-x: hidden;
+    min-height: 0;           /* 必须 */
+    height: 100%;            /* 明确高度 */
 }
-
 /* 美化滚动条 */
 .sidebar::-webkit-scrollbar,
 .main-content::-webkit-scrollbar,
@@ -256,7 +264,14 @@ html, body {
     overflow: hidden;
     line-height: 1.4;
 }
+.resource-item .res-value.near-cap-text {
+    color: #9e7609 !important;
+}
 
+/* 深色主题适配 */
+body.dark-theme .resource-item .res-value.near-cap-text {
+    color: #ffd966 !important;
+}
 .resource-content {
     position: relative;
     z-index: 2;
@@ -270,7 +285,7 @@ html, body {
     flex: 0 0 auto;
     text-align: left;
     font-weight: 500;
-    min-width: 70px;  /* 可根据需要调整 */
+    min-width: 70px;
 }
 
 .res-value {
@@ -310,6 +325,20 @@ html, body {
     text-align: center;
     width: 100%;
     display: block;
+}
+
+/* 产量正负号颜色（补充） */
+.positive {
+    color: #2c7a4d;
+}
+.negative {
+    color: #c0392b;
+}
+body.dark-theme .positive {
+    color: #6fcf97;
+}
+body.dark-theme .negative {
+    color: #e06c75;
 }
 
 /* 行动面板 */
@@ -389,23 +418,26 @@ html, body {
     box-shadow: 0 -2px 6px var(--shadow);
 }
 
+/* 确保面板内的内容也能正确滚动 */
 .panel {
     background: var(--bg-container);
     border-radius: 0 0.8rem 0.8rem 0.8rem;
     padding: 0.8rem;
     border: 1px solid var(--border-light);
     flex: 1 1 auto;
-    overflow-y: auto;
+    overflow-y: auto;        /* 让面板内部也能滚动 */
+    min-height: 0;           /* 必须 */
     box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
     color: var(--text);
-    min-height: 200px;  /* 保证至少可见 */
 }
 
-/* 建筑网格 */
+/* 建筑网格允许滚动 */
 .building-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     gap: 0.6rem;
+    overflow-y: auto;        /* 网格内滚动 */
+    max-height: 100%;
 }
 
 .building-card {
@@ -1052,50 +1084,63 @@ body.dark-theme .building-card.highlight {
     background-color: rgba(88, 166, 255, 0.091) !important;
     outline-color: #58a6ff75 !important;
 }
-/* ========== 手机窄屏水平滚动支持 ========== */
 @media (max-width: 800px) {
-    /* 主布局改为水平滚动容器 */
+    /* 启用全局滚动 */
+    html, body {
+        overflow: auto !important;
+        height: auto !important;
+        min-height: 100%;
+    }
+    
+    .game-container {
+        height: auto !important;
+        min-height: 100vh;
+        overflow: visible !important;
+        max-width: 100% !important;
+    }
+    
+    /* 主布局改为水平滚动 */
     .main-layout {
         overflow-x: auto !important;
-        overflow-y: hidden !important;
+        overflow-y: visible !important;
         gap: 0.8rem;
-        scroll-snap-type: x mandatory;  /* 可选：滑动时自然停靠 */
-        -webkit-overflow-scrolling: touch; /* 提升滚动流畅度 */
+        scroll-snap-type: x mandatory;
+        -webkit-overflow-scrolling: touch;
+        flex: none !important;
+        padding: 0.8rem 1rem;
     }
 
-    /* 三列都禁止收缩，并设置最小宽度（保证可读性） */
-    .sidebar {
-        flex: 0 0 auto !important;
-        min-width: 260px !important;
-        width: 260px !important;
-        scroll-snap-align: start;
-    }
-
-    .main-content {
-        flex: 0 0 auto !important;
-        min-width: 320px !important;
-        width: 320px !important;
-        scroll-snap-align: start;
-    }
-
+    /* 三列水平排列，禁止垂直滚动 */
+    .sidebar,
+    .main-content,
     .log-panel {
         flex: 0 0 auto !important;
-        min-width: 240px !important;
-        width: 240px !important;
+        max-height: none !important;
+        overflow-y: visible !important;
         scroll-snap-align: start;
     }
+    
+    .sidebar {
+        min-width: 260px !important;
+        width: 260px !important;
+    }
+    
+    .main-content {
+        min-width: 320px !important;
+        width: 320px !important;
+    }
+    
+    .log-panel {
+        min-width: 240px !important;
+        width: 240px !important;
+    }
 
-    /* 让建筑卡片在有限宽度内正常显示，避免额外溢出 */
+    /* 建筑卡片单列显示 */
     .building-grid {
         grid-template-columns: 1fr !important;
     }
 
-    .building-card {
-        min-width: 0;
-        flex-wrap: wrap;
-    }
-
-    /* 资源项内部文字稍微紧凑但不会换行破坏布局 */
+    /* 资源项紧凑 */
     .res-name {
         min-width: 60px !important;
         font-size: 0.75rem;
@@ -1105,14 +1150,23 @@ body.dark-theme .building-card.highlight {
         font-size: 0.75rem;
     }
 
-    /* 可选：缩小标题栏内边距，释放更多横向空间 */
+    /* 标题栏缩小 */
     .game-container > h2 {
         padding: 0 0.8rem;
-        font-size: 1.1rem;
+        font-size: 1rem;
+        height: 40px;
+    }
+    
+    #happiness-display {
+        margin: 0.2rem 1rem !important;
+        padding: 0.2rem 0.8rem !important;
+        font-size: 0.75rem !important;
+        align-self: stretch !important;
+        text-align: center !important;
     }
 }
 
-/* 对于极窄设备（如小于 600px），略微降低各列最小宽度，但仍保证可滑动 */
+/* 极窄设备 */
 @media (max-width: 600px) {
     .sidebar {
         min-width: 240px !important;
@@ -1126,57 +1180,7 @@ body.dark-theme .building-card.highlight {
         min-width: 220px !important;
         width: 220px !important;
     }
-}
-/* 窄屏下缩小标题和顶部辅助信息 */
-@media (max-width: 800px) {
-    /* 主标题更紧凑 */
-    .game-container > h2 {
-        font-size: 1rem !important;
-        padding: 0 0.8rem !important;
-        height: 40px !important;
-    }
-    /* 幸福度显示块缩小并调整位置 */
-    #happiness-display {
-        margin: 0.2rem 1rem !important;
-        padding: 0.2rem 0.8rem !important;
-        font-size: 0.75rem !important;
-        align-self: stretch !important;
-        text-align: center !important;
-    }
-}
-
-/* 如果屏幕非常窄，进一步调小标题 */
-@media (max-width: 500px) {
     .game-container > h2 {
         font-size: 0.9rem !important;
-        padding: 0 0.5rem !important;
-    }
-}
-/* 手机屏幕整体缩放（宽度 ≤ 800px 时缩小至 85%） */
-@media (max-width: 800px) {
-    .game-container {
-        zoom: 0.9;          /* 标准浏览器支持 */
-        -moz-transform: scale(0.9); /* Firefox 兼容 */
-        -moz-transform-origin: top center;
-        transform: scale(0.9);
-        transform-origin: top center;
-        /* 为了保证容器不出现额外空白，重新设置宽度 */
-        width: 111.11%;
-        max-width: 111.11%;
-        height: 111.11%; 
-        min-height: 111.11%;
-    }
-}
-
-/* 极窄屏进一步缩小 */
-@media (max-width: 600px) {
-    .game-container {
-        zoom: 0.8;
-        -moz-transform: scale(0.8);
-        transform: scale(0.8);
-        width: 125%;
-        max-width: 125%;
-        height: 125%;        
-        min-height: 125%;
     }
 }

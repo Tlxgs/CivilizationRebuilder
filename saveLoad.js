@@ -1,6 +1,12 @@
 // ==================== 加密相关 ====================
 const ENCRYPT_KEY = "CivilizationRebuilder2026";
-
+window.saveGame = saveGame;
+window.loadGame = loadGame;
+window.exportGame = exportGame;
+window.copyGameExportText = copyGameExportText;
+window.importGame = importGame;
+window.importGameFromFile = importGameFromFile;
+window.getGameExportText = getGameExportText;
 function strToUtf8Bytes(str) {
     return new TextEncoder().encode(str);
 }
@@ -289,7 +295,6 @@ function refreshGameStateFromSave(saveData) {
     ProductionEngine.computeProductionAndCaps();
     ProductionEngine.updateBuildingPrices();
     ProductionEngine.updateUpgradePrices();
-    renderAll();
 }
 function loadGame() {
     const saved = localStorage.getItem('civilizationRebuilder');
@@ -352,7 +357,9 @@ function importGame(encryptedText) {
         const data = JSON.parse(decryptedJson);
         if (data.resources && data.buildings && data.techs) {
             refreshGameStateFromSave(data);
+            saveGame();
             alert('导入成功！');
+            location.reload();
             return true;
         }
         throw new Error('无效存档格式');

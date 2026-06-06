@@ -454,3 +454,4 @@ window.updateUpgradePrices = ProductionEngine.updateUpgradePrices;
 window.getResourceContributions = ProductionEngine.getResourceContributions;
 window.refreshEffects = ProductionEngine.refreshEffects;
 window.getBuildingStats = ProductionEngine.getBuildingStats;
+window.ProductionEngine = ProductionEngine
