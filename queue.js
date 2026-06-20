@@ -26,13 +26,11 @@ function addToQueue(type, id) {
         addEventLog('该科技已研究，无法加入队列');
         return false;
     }
-    if (type === 'tech')
-    {
-        let i = 0;
-        while(i<GameState.queue.length){
-            const item = GameState.queue[i];
-            if (item.id == id)return false;
-            i++;
+    if (type === 'tech') {
+        for (let item of GameState.queue) {
+            if (item.type === 'tech' && item.id === id) {
+                return false;
+            }
         }
     }
     if (type === 'permanent' && GameState.permanent[id] && GameState.permanent[id].researched) {
