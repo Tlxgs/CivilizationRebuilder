@@ -4,10 +4,6 @@ function renderPermanentPanel() {
     const panel = document.getElementById('panel-permanent');
     const relicAmount = GameState.resources["遗物"]?.amount || 0;
     
-    if (relicAmount <= 0 &&GameState.resources["遗物"]?.visible==false) {
-        panel.innerHTML = '<p>暂未解锁</p>';
-        return;
-    }
     
     let notResearched = [];
     let researched = [];
