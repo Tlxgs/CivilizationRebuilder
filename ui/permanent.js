@@ -1,13 +1,28 @@
 // ui/permanent.js
+function getPermanentAffordabilityStatus(perm) {
+    const price = perm.price;
+    let hasUnlimitedCapIssue = false;
+    let canAffordNow = true;
+    for (let res in price) {
+        const amount = GameState.resources[res]?.amount || 0;
+        const cap = GameState.resources[res]?.cap || 0;
+        const needed = price[res];
+        if (amount < needed) {
+            canAffordNow = false;
+            if (cap !== Infinity && cap < needed) {
+                hasUnlimitedCapIssue = true;
+            }
+        }
+    }
+    if (canAffordNow) return 'affordable';
+    if (hasUnlimitedCapIssue) return 'cap-exceeded';
+    return 'insufficient';
+}
 
 function renderPermanentPanel() {
     const panel = document.getElementById('panel-permanent');
     const relicAmount = GameState.resources["遗物"]?.amount || 0;
     
-    if (relicAmount <= 0 &&GameState.resources["遗物"]?.visible==false) {
-        panel.innerHTML = '<p>暂未解锁</p>';
-        return;
-    }
     
     let notResearched = [];
     let researched = [];
@@ -35,7 +50,7 @@ function renderPermanentPanel() {
     let html = '<div class="grid-list">';
     for (let p of notResearched) {
         const perm = GameState.permanent[p];
-        const status = getAffordabilityStatus(perm.price);
+        const status = getPermanentAffordabilityStatus(perm);
         let colorClass = '';
         if (status === 'insufficient') colorClass = 'insufficient-name';
         else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
@@ -81,19 +96,5 @@ function renderPermanentPanel() {
         el.addEventListener('mouseenter', () => showTooltip(el, text));
     });
 }
-function refreshPermanentPanel() {
-    const panel = document.getElementById('panel-permanent');
-    if (!panel) return;
 
-    // 更新永恒升级按钮的颜色状态（仅未研究的）
-    document.querySelectorAll('.perm-btn').forEach(btn => {
-        const permKey = btn.dataset.permanent;
-        if (!permKey) return;
-        const perm = GameState.permanent[permKey];
-        if (!perm || perm.researched) return;
-        const status = getAffordabilityStatus(perm.price);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-}
+renderPermanentPanel = renderPermanentPanel;

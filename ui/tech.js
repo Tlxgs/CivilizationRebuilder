@@ -2,8 +2,30 @@
 
 let currentTechSubTab = 'tech';    // 'tech', 'challenge', 'upgrade'
 
+function getTotalActiveChallengeStars() {
+    let stars = 0;
+    for (let techId in GameState.techs) {
+        const tech = GameState.techs[techId];
+        if (tech.researched && tech.challenge && tech.challenge.star) {
+            stars += tech.challenge.star;
+        }
+    }
+    return stars;
+}
 
-
+function getTechAffordabilityStatus(tech) {
+    const price = tech.price;
+    for (let res in price) {
+        const current = ResourcesManager.getAmount(res);
+        const cap = ResourcesManager.getCap(res);
+        const needed = price[res];
+        
+        if (current < needed) {
+            return (cap < needed) ? 'cap-exceeded' : 'insufficient';
+        }
+    }
+    return 'affordable';
+}
 
 function hasAnyChallenge() {
     for (let t in GameState.techs) {
@@ -33,52 +55,56 @@ function renderTechPanel() {
     const showChallenge = hasAnyChallenge();
     const showUpgrade = hasAnyUpgrade();
 
+    // 如果当前选中的子标签因条件消失而不可用，则自动切换到默认
     if (!showChallenge && currentTechSubTab === 'challenge') currentTechSubTab = 'tech';
     if (!showUpgrade && currentTechSubTab === 'upgrade') currentTechSubTab = 'tech';
 
+    // 构建子标签
     let html = '<div class="sub-tabs">';
     if (showChallenge) {
         html += `<button class="sub-tab-btn${currentTechSubTab === 'challenge' ? ' active' : ''}" data-subtab="challenge">挑战</button>`;
     }
     html += `<button class="sub-tab-btn${currentTechSubTab === 'tech' ? ' active' : ''}" data-subtab="tech">技术</button>`;
+
     if (showUpgrade) {
         html += `<button class="sub-tab-btn${currentTechSubTab === 'upgrade' ? ' active' : ''}" data-subtab="upgrade">升级</button>`;
     }
     html += '</div>';
 
+    // ========== 根据当前子标签生成内容 ==========
     if (currentTechSubTab === 'upgrade') {
+        // 直接嵌入升级面板的 HTML
         html += getUpgradePanelHTML();
         panel.innerHTML = html;
 
-        // 升级工具提示：动态生成
+        // 为升级按钮绑定 tooltip（与原 upgrade.js 逻辑一致）
         document.querySelectorAll('#panel-tech .upgrade-btn').forEach(btn => {
             const upName = btn.dataset.upgrade;
-            btn.addEventListener('mouseenter', () => {
-                const up = GameState.upgrades[upName];
-                if (!up) return;
+            const up = GameState.upgrades[upName];
+            if (!up) return;
 
-                let priceHtml = Object.entries(up.price).map(([r, amt]) => {
-                    const amount = GameState.resources[r]?.amount || 0;
-                    const enough = amount >= amt;
-                    const color = enough ? '' : 'red';
-                    let text = `${r} ${formatNumber(amt)}`;
-                    if (enough && amt > 0 && amount > 0) {
-                        const percent = ((amt / amount) * 100).toFixed(1);
-                        const cleanPercent = percent.endsWith('.0') ? percent.slice(0, -2) : percent;
-                        text += ` (${cleanPercent}%)`;
-                    }
-                    return `<span style="color: ${color};">${text}</span>`;
-                }).join('\n');
+        let priceHtml = Object.entries(up.price).map(([r, amt]) => {
+            const amount = GameState.resources[r]?.amount || 0;
+            const enough = amount >= amt;
+            const color = enough ? '' : 'red';
+            let text = `${r} ${formatNumber(amt)}`;
+            if (enough && amt > 0 && amount > 0) {
+                const percent = ((amt / amount) * 100).toFixed(1);
+                const cleanPercent = percent.endsWith('.0') ? percent.slice(0, -2) : percent;
+                text += ` (${cleanPercent}%)`;
+            }
+            return `<span style="color: ${color};">${text}</span>`;
+        }).join('\n');
 
-                let effectText = '';
-                for (let b in up.effect) {
-                    effectText += `${b} 效率 +${(up.effect[b]*100).toFixed(0)}%<br>`;
-                }
-                let text = `${up.desc}<hr> ${priceHtml}<hr>${effectText}`;
-                showTooltip(btn, text);
-            });
+            let effectText = '';
+            for (let b in up.effect) {
+                effectText += `${b} 效率 +${(up.effect[b]*100).toFixed(0)}%<br>`;
+            }
+            let text = `${up.desc}<hr> ${priceHtml}<hr>${effectText}`;
+            btn.addEventListener('mouseenter', () => showTooltip(btn, text));
         });
 
+        // 绑定子标签点击事件
         panel.querySelectorAll('.sub-tab-btn').forEach(btn => {
             btn.addEventListener('click', () => {
                 const subtab = btn.dataset.subtab;
@@ -90,15 +116,18 @@ function renderTechPanel() {
     }
 
     // ------ 技术和挑战分支 ------
+    // 收集未研究科技
     const unresearched = [];
     for (let t in GameState.techs) {
         const tech = GameState.techs[t];
         if (tech.researched) continue;
+        // 特殊解锁条件
         if (tech.unlockCondition != null) {
             if (typeof tech.unlockCondition === 'function') {
                 if (!tech.unlockCondition(GameState)) continue;
             }
         }
+        // 前置检查
         let canResearch = true;
         if (tech.prereq) {
             for (let p of tech.prereq) {
@@ -126,7 +155,7 @@ function renderTechPanel() {
     } else {
         for (let t of unresearched) {
             const tech = GameState.techs[t];
-            const status = getAffordabilityStatus(tech.price);
+            const status = getTechAffordabilityStatus(tech);
             let colorClass = '';
             if (status === 'insufficient') colorClass = 'insufficient-name';
             else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
@@ -135,6 +164,7 @@ function renderTechPanel() {
     }
     html += '</div>';
 
+    // 已研究科技
     const researched = [];
     for (let t in GameState.techs) {
         if (GameState.techs[t].researched) {
@@ -157,7 +187,7 @@ function renderTechPanel() {
 
     panel.innerHTML = html;
 
-    // 子标签绑定
+    // 绑定子标签点击事件
     panel.querySelectorAll('.sub-tab-btn').forEach(btn => {
         btn.addEventListener('click', () => {
             const subtab = btn.dataset.subtab;
@@ -166,66 +196,38 @@ function renderTechPanel() {
         });
     });
 
-    // 未研究科技 tooltip（动态生成）
+    // 未研究科技 tooltip
     document.querySelectorAll('#panel-tech .tech-btn').forEach(el => {
         const techName = el.dataset.tech;
-        el.addEventListener('mouseenter', () => {
-            const tech = GameState.techs[techName];
-            if (!tech) return;
-
-            let priceHtml = '';
-            if (tech.price && Object.keys(tech.price).length > 0) {
-                priceHtml = Object.entries(tech.price).map(([r, amt]) => {
-                    const amount = GameState.resources[r]?.amount || 0;
-                    const enough = amount + 1e-6 >= amt;
-                    const color = enough ? '' : 'red';
-                    let text = `${r} ${formatNumber(amt)}`;
-                    if (enough && amt > 0 && amount > 0) {
-                        const percent = ((amt / amount) * 100).toFixed(1);
-                        const cleanPercent = percent.endsWith('.0') ? percent.slice(0, -2) : percent;
-                        text += ` (${cleanPercent}%)`;
-                    }
-                    return `<span style="color: ${color};">${text}</span>`;
-                }).join('\n');
-                priceHtml = '<hr>' + priceHtml;
+        const tech = GameState.techs[techName];
+        if (!tech) return;
+        let priceHtml = Object.entries(tech.price).map(([r, amt]) => {
+            const amount = GameState.resources[r]?.amount || 0;
+            const enough = amount + 1e-6 >= amt;
+            const color = enough ? '' : 'red';
+            let text = `${r} ${formatNumber(amt)}`;
+            if (enough && amt > 0 && amount > 0) {
+                const percent = ((amt / amount) * 100).toFixed(1);
+                const cleanPercent = percent.endsWith('.0') ? percent.slice(0, -2) : percent;
+                text += ` (${cleanPercent}%)`;
             }
-
-            let text = `${tech.desc}${priceHtml}`;
-            showTooltip(el, text);
-        });
+            return `<span style="color: ${color};">${text}</span>`;
+        }).join('\n');
+        
+        let text = `${tech.desc}<hr> ${priceHtml}`;
+        if(priceHtml=='')text=`${tech.desc}`;
+        el.addEventListener('mouseenter', () => showTooltip(el, text));
     });
 
     // 已研究科技 tooltip
     document.querySelectorAll('#panel-tech .researched-item').forEach(el => {
         const techName = el.dataset.tech;
-        el.addEventListener('mouseenter', () => {
-            const tech = GameState.techs[techName];
-            if (!tech) return;
-            let text = `${tech.desc}<br>✓ 已研究`;
-            showTooltip(el, text);
-        });
+        const tech = GameState.techs[techName];
+        if (!tech) return;
+        let text = `${tech.desc}<br>✓ 已研究`;
+        el.addEventListener('mouseenter', () => showTooltip(el, text));
     });
 }
-function refreshTechPanel() {
-    const panel = document.getElementById('panel-tech');
-    if (!panel) return;
 
-    // 更新未研究科技按钮的颜色状态
-    document.querySelectorAll('.tech-btn:not(.researched-item)').forEach(btn => {
-        const techKey = btn.dataset.tech;
-        if (!techKey) return;
-        const tech = GameState.techs[techKey];
-        if (!tech || tech.researched) {
-            // 如果科技已研究但按钮还在未研究区域，需要完全重绘
-            if (tech && tech.researched) {
-                renderTechPanel();
-                return;
-            }
-            return;
-        }
-        const status = getAffordabilityStatus(tech.price);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-}
+renderTechPanel = renderTechPanel;
+getTechAffordabilityStatus = getTechAffordabilityStatus;
