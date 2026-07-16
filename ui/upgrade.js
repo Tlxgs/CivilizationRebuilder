@@ -1,25 +1,5 @@
 // ui/upgrade.js
 
-function getUpgradeAffordabilityStatus(upgrade) {
-    const price = upgrade.price;
-    let hasUnlimitedCapIssue = false;
-    let canAffordNow = true;
-    for (let res in price) {
-        const amount = ResourcesManager.getAmount(res);
-        const cap = ResourcesManager.getCap(res);
-        const needed = price[res];
-        if (amount < needed) {
-            canAffordNow = false;
-            if (cap !== Infinity && cap < needed) {
-                hasUnlimitedCapIssue = true;
-            }
-        }
-    }
-    if (canAffordNow) return 'affordable';
-    if (hasUnlimitedCapIssue) return 'cap-exceeded';
-    return 'insufficient';
-}
-
 function getUpgradePanelHTML() {
     let html = '<div class="grid-list">';
     let hasAny = false;
@@ -28,7 +8,7 @@ function getUpgradePanelHTML() {
         if (!up.visible) continue;
         hasAny = true;
 
-        const status = getUpgradeAffordabilityStatus(up);
+        const status = getAffordabilityStatus(up.price);
         let colorClass = '';
         if (status === 'insufficient') colorClass = 'insufficient-name';
         else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
@@ -41,12 +21,22 @@ function getUpgradePanelHTML() {
     html += '</div>';
     return html;
 }
+function refreshUpgradePanel() {
+    const panel = document.getElementById('panel-tech');
+    if (!panel) return;
 
-// 保留全局渲染函数用于兼容（如果需要独立调用，可留空实现）
-function renderUpgradePanel() {
-    // 这个函数不再直接操作 DOM，但为了兼容可能的外部调用，留空
+    // 检查当前是否在升级子标签页，如果不是则跳过
+    const upgradeTab = panel.querySelector('.sub-tab-btn[data-subtab="upgrade"]');
+    if (!upgradeTab || !upgradeTab.classList.contains('active')) return;
+
+    document.querySelectorAll('.upgrade-btn').forEach(btn => {
+        const upKey = btn.dataset.upgrade;
+        if (!upKey) return;
+        const up = GameState.upgrades[upKey];
+        if (!up) return;
+        const status = getAffordabilityStatus(up.price);
+        btn.classList.remove('insufficient-name', 'unaffordable-name');
+        if (status === 'insufficient') btn.classList.add('insufficient-name');
+        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
+    });
 }
-
-getUpgradeAffordabilityStatus = getUpgradeAffordabilityStatus;
-getUpgradePanelHTML = getUpgradePanelHTML;
-renderUpgradePanel = renderUpgradePanel;

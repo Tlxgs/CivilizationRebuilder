@@ -74,7 +74,7 @@ function bindEvents() {
                 const panelEl = document.getElementById(`panel-${p}`);
                 if (panelEl) panelEl.style.display = p === tab ? 'block' : 'none';
             });
-            refreshAllDynamicColors();
+            refreshUI();
             
         });
     });
@@ -329,102 +329,16 @@ function refreshLocalResourcesDisplay() {
     }
 }
 // 全局刷新动态颜色（每 tick 调用）
-function refreshAllDynamicColors() {
-    renderHappiness();
-    
-    // 刷新建筑卡片
-    document.querySelectorAll('.building-card').forEach(card => {
-        const buildingKey = card.dataset.building;
-        if (!buildingKey) return;
-        const bld = GameState.buildings[buildingKey];
-        if (!bld) return;
-        
-        // 更新价格颜色
-        const price = bld.price;
-        const status = getBuildingAffordabilityStatus(price);
-        const nameStrong = card.querySelector('.building-card-info strong');
-        if (nameStrong) {
-            nameStrong.classList.remove('insufficient-name', 'unaffordable-name');
-            if (status === 'insufficient') nameStrong.classList.add('insufficient-name');
-            else if (status === 'cap-exceeded') nameStrong.classList.add('unaffordable-name');
-        }
-
-        // 更新效率显示（实时刷新百分比）
-        const infoDiv = card.querySelector('.building-card-info');
-        const effSpan = infoDiv ? infoDiv.querySelector('.building-efficiency') : null;
-        if (bld.active > 0 && bld.efficiency !== undefined && bld.efficiency < 0.995) {
-            const percent = (bld.efficiency * 100).toFixed(0);
-            if (effSpan) {
-                effSpan.textContent = `效率: ${percent}%`;
-            } else if (infoDiv) {
-                const newSpan = document.createElement('span');
-                newSpan.className = 'building-efficiency';
-                newSpan.textContent = `效率: ${percent}%`;
-                infoDiv.appendChild(newSpan);
-            }
-        } else {
-            if (effSpan) effSpan.remove();
-        }
-    });
-
-    // 2. 刷新科技按钮
-    document.querySelectorAll('.tech-btn:not(.researched-item)').forEach(btn => {
-        const techKey = btn.dataset.tech;
-        if (!techKey) return;
-        const tech = GameState.techs[techKey];
-        if (!tech || tech.researched) return;
-        const status = getTechAffordabilityStatus(tech);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-
-    // 3. 刷新升级按钮
-    document.querySelectorAll('.upgrade-btn').forEach(btn => {
-        const upKey = btn.dataset.upgrade;
-        if (!upKey) return;
-        const up = GameState.upgrades[upKey];
-        if (!up) return;
-        const status = getUpgradeAffordabilityStatus(up);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-
-    // 4. 刷新永恒升级按钮
-    document.querySelectorAll('.perm-btn').forEach(btn => {
-        const permKey = btn.dataset.permanent;
-        if (!permKey) return;
-        const perm = GameState.permanent[permKey];
-        if (!perm || perm.researched) return;
-        const status = getPermanentAffordabilityStatus(perm);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-
-    // 5. 刷新资源数值和进度条（轻量）
+function refreshUI() {
+    if (typeof refreshBuildingPanel === 'function') refreshBuildingPanel();
+    if (typeof refreshTechPanel === 'function') refreshTechPanel();
+    if (typeof refreshUpgradePanel === 'function') refreshUpgradePanel();
+    if (typeof refreshPermanentPanel === 'function') refreshPermanentPanel();
+    if (typeof refreshTradePanel === 'function') refreshTradePanel();
     refreshResourceBars();
     refreshLocalResourcesDisplay();
 }
 
-// 辅助：判断建筑价格是否买得起（基于价格对象）
-function getBuildingAffordabilityStatus(price) {
-    let capExceeded = false;
-    let canAfford = true;
-    for (let res in price) {
-        const amount = GameState.resources[res]?.amount || 0;
-        const cap = GameState.resources[res]?.cap || 0;
-        const needed = price[res];
-        if (amount < needed) {
-            canAfford = false;
-            if (cap !== Infinity && cap < needed) capExceeded = true;
-        }
-    }
-    if (canAfford) return 'affordable';
-    if (capExceeded) return 'cap-exceeded';
-    return 'insufficient';
-}
 function refreshResourceBars() {
     for (let r in GameState.resources) {
         const res = GameState.resources[r];
@@ -462,8 +376,3 @@ function refreshResourceBars() {
         if (progressDiv) progressDiv.style.width = `${percent}%`;
     }
 }
-// 确保这些函数全局可用
-refreshAllDynamicColors = refreshAllDynamicColors;
-bindEvents = bindEvents;
-showTooltip = showTooltip;
-// shiftPressed 作为全局变量可直接访问，无需挂载
