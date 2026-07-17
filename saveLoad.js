@@ -202,6 +202,9 @@ function restoreField(category, targetState, savedData, mapping) {
 }
 
 function refreshGameStateFromSave(saveData) {
+    // 清除旧的资源DOM，避免导入后残留
+    const bar = document.getElementById('resource-bar');
+    if (bar) bar.innerHTML = '';
     // 1. 备份永恒升级状态
     const permBackup = {};
     if (saveData.permanent) {
@@ -225,6 +228,7 @@ function refreshGameStateFromSave(saveData) {
         if (category === 'achievements') continue; // 单独处理
         restoreField(category, GameState, saveData, SAVE_FIELD_MAPPINGS[category]);
     }
+    
 
     // 5. 特殊处理成就（兼容旧格式）
     let unlockedAchievementIds = [];
