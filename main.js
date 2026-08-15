@@ -1,4 +1,7 @@
 // main.js — 主入口：初始化游戏数据 → 加载存档 → 包装响应式 → 挂载 Vue UI → 启动游戏循环
+// 硬重置标志：为 true 时（hardReset 进行中）跳过 beforeunload 自动保存，避免清档后又被写回
+let _hardResetting = false;
+
 (function () {
     const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'dark') {

@@ -222,7 +222,15 @@ function assertSoon(fn, msg, timeout = 3000) {
         assert(false, 'computeProductionAndCaps 异常: ' + e.message);
     }
 
-    console.log('== 14. 无渲染报错 ==');
+    console.log('== 14. beforeunload 自动保存（_hardResetting 修复验证） ==');
+    assert(vm.runInContext('typeof _hardResetting !== "undefined"', context), '_hardResetting 已定义');
+    G().gameDays = 777;
+    window.dispatchEvent(new window.Event('beforeunload'));
+    const savedAfter = window.localStorage.getItem('civilizationRebuilder');
+    const parsedAfter = savedAfter ? JSON.parse(savedAfter) : null;
+    assert(parsedAfter && parsedAfter.gameDays === 777, 'beforeunload 自动保存生效（gameDays=777 已写入，无 ReferenceError）');
+
+    console.log('== 15. 无渲染报错 ==');
     assert(errors.length === 0, '全过程无 jsdom/console 错误' + (errors.length ? '：' + errors.join(' | ') : ''));
 
     console.log(`\n==== 结果: ${passed} 通过, ${failed} 失败 ====`);

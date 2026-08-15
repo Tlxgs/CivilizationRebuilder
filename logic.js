@@ -201,6 +201,7 @@ function consciousReset() {
     }
 }
 function hardReset() {
+    _hardResetting = true;   // 阻止 beforeunload 自动保存把清掉的存档写回
     localStorage.clear();
     location.reload();
 }
