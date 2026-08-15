@@ -230,7 +230,103 @@ function assertSoon(fn, msg, timeout = 3000) {
     const parsedAfter = savedAfter ? JSON.parse(savedAfter) : null;
     assert(parsedAfter && parsedAfter.gameDays === 777, 'beforeunload 自动保存生效（gameDays=777 已写入，无 ReferenceError）');
 
-    console.log('== 15. 无渲染报错 ==');
+    console.log('== 15. 回归：setPolicyValue 超范围按裁剪后差值计费 ==');
+    window.debugSetResource('政策点', 100);
+    G().policies['税收政策'].currentValue = 25;
+    const ppBefore = G().resources['政策点'].amount;
+    Core().setPolicyValue('税收政策', 100);   // max=50，应只收 25 点而非 75
+    const ppAfter = G().resources['政策点'].amount;
+    assert(ppBefore - ppAfter === 25, `超范围请求只扣 ${ppBefore - ppAfter} 政策点（应为 25）`);
+    assert(G().policies['税收政策'].currentValue === 50, '政策值被裁剪到上限 50');
+
+    console.log('== 16. 回归：switchPolicy 死代码已移除 ==');
+    assert(Core().switchPolicy === undefined, 'Core 上不存在 switchPolicy');
+
+    console.log('== 17. 回归：consciousReset 成就类型与日志孢子数量 ==');
+    vm.runInContext('window.__capturedResetType = null; window.__origUnlock = unlockAchievementsForReset; unlockAchievementsForReset = function(t) { window.__capturedResetType = t; window.__origUnlock(t); }', context);
+    vm.runInContext('confirm = () => true', context);
+    window.debugUnlockTech('意识上传');
+    vm.runInContext('GameState.resources["科学"].cap = 100000', context);
+    // 按 consciousReset 的公式计算预期值（星级=0，倍率=1）
+    const baseRelicGain = vm.runInContext('Formulas.calcRelicGainFromNuke(GameState.resources["科学"].cap, 0, GameState.localResources.population.capacity)', context);
+    const expRelic = Math.floor(baseRelicGain * 10);
+    const expDark = Math.floor(Math.sqrt(1 + expRelic));
+    const expSpore = Math.floor(Math.sqrt(1 + baseRelicGain * 3));
+    const expSing = Math.floor((Math.log(300 + expRelic) - Math.log(300)) * 10);
+    const expWisdom = Math.floor(Math.sqrt(expRelic / 200));
+    vm.runInContext('consciousReset()', context);
+    await wait(100);
+    assert(vm.runInContext('window.__capturedResetType', context) === 'conscious', 'unlockAchievementsForReset 收到重置类型 conscious');
+    const resetLog = G().eventLogs[0].text;
+    assert(resetLog.includes(`获得 ${expRelic} 遗物, ${expDark} 暗能量, ${expSpore} 孢子, ${expSing} 奇点, ${expWisdom} 智慧`),
+        '日志显示正确的孢子数量（不再重复暗能量）: ' + resetLog);
+    assert(G().resources['孢子'].amount === expSpore, '重置后孢子数量正确: ' + G().resources['孢子'].amount);
+    assert(G().gameDays === 0, '重置后天数清零');
+    vm.runInContext('unlockAchievementsForReset = window.__origUnlock', context);
+
+    console.log('== 18. 晶体面板 ==');
+    window.debugUnlockTech('军事理论');
+    vm.runInContext(`GameState.crystals.inventory.push({ id: 12345, name: '测试水晶', effects: [{ type: 'prod', target: 'global', value: 0.1 }] })`, context);
+    await wait(100);
+    const crystalTab = $('.tab-btn[data-tab="crystal"]');
+    assert(!!crystalTab, '军事理论解锁后晶体标签出现');
+    crystalTab.click();
+    await wait(100);
+    assert($$('#panel-crystal .crystal-slot').length === 9, '晶体面板渲染 3 装备槽 + 6 库存槽');
+    $('.equip-crystal').click();
+    await wait(50);
+    assert(G().crystals.equipped[0]?.name === '测试水晶' && G().crystals.inventory.length === 0, '点击装备后晶体进入槽位 0');
+    $('.unequip-crystal').click();
+    await wait(50);
+    assert(G().crystals.equipped[0] === null && G().crystals.inventory.length === 1, '点击卸下后晶体回到库存');
+
+    console.log('== 19. 永恒面板 ==');
+    const permTab = $('.tab-btn[data-tab="permanent"]');
+    assert(!!permTab, '拥有遗物后永恒标签出现');
+    permTab.click();
+    await wait(100);
+    const permBtn = $('#panel-permanent .perm-btn[data-permanent="节约成本I"]');
+    assert(!!permBtn, '永恒面板显示节约成本I（成本优化·入门）');
+    permBtn.click();
+    await wait(50);
+    assert(G().permanent['节约成本I'].researched === true, '购买永恒升级成功');
+
+    console.log('== 20. 成就面板（F12 彩蛋） ==');
+    window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'F12' }));
+    await wait(50);
+    assert(!!G().achievements['不道德的巅峰'], 'F12 解锁彩蛋成就');
+    const achTab = $('.tab-btn[data-tab="achievements"]');
+    achTab.click();
+    await wait(100);
+    assert($('#panel-achievements').textContent.includes('已完成 1/7'), '成就面板显示 1/7');
+    assert($$('#panel-achievements .achievement-card').length === 1, '成就卡片渲染');
+
+    console.log('== 21. 软重置 ==');
+    window.debugBuild('帐篷', 5);
+    vm.runInContext('softReset(0, 0)', context);
+    await wait(100);
+    assert(G().buildings['帐篷'].count === 0, '软重置清空建筑数量');
+    assert(G().gameDays <= 1, '软重置清零游戏天数（循环可能已推进 1 天）');
+
+    console.log('== 22. 离线时间结算 ==');
+    vm.runInContext('GameState.lastSaveTime = Date.now() - 10000', context);
+    vm.runInContext('processOfflineTime()', context);
+    assert(G().resources['时间晶体'].amount >= 4.9, '离线 10 秒获得约 5 时间晶体: ' + G().resources['时间晶体'].amount);
+    assert(G().resources['时间晶体'].visible === true, '时间晶体变为可见');
+    assert(G().eventLogs[0].text.includes('离线'), '日志记录离线结算');
+
+    console.log('== 23. Tooltip 指令 ==');
+    const tipTarget = $('.resource-item');
+    assert(!!tipTarget, '存在可见资源项作为 Tooltip 目标');
+    tipTarget.dispatchEvent(new window.MouseEvent('mouseenter', { bubbles: false }));
+    await wait(80);
+    const tip = $('#game-tooltip');
+    assert(!!tip && tip.style.display !== 'none' && tip.innerHTML.length > 0, '鼠标悬停资源显示 Tooltip');
+    tipTarget.dispatchEvent(new window.MouseEvent('mouseleave', { bubbles: false }));
+    await wait(50);
+    assert(tip.style.display === 'none', '移出后 Tooltip 隐藏');
+
+    console.log('== 24. 无渲染报错 ==');
     assert(errors.length === 0, '全过程无 jsdom/console 错误' + (errors.length ? '：' + errors.join(' | ') : ''));
 
     console.log(`\n==== 结果: ${passed} 通过, ${failed} 失败 ====`);

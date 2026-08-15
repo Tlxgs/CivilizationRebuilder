@@ -371,10 +371,6 @@ const ProductionEngine = (function() {
     function getResourceContributions(resourceName) {
         const contributions = [];
         refreshEffects();
-        const happinessFactor = Formulas.calcHappinessSoftCap(
-            Math.max(0, GameState.happiness),
-            GameState
-        ) / 100;
 
         for (let b in GameState.buildings) {
             const bld = GameState.buildings[b];
@@ -383,19 +379,13 @@ const ProductionEngine = (function() {
             if (!cfg) continue;
             const effActive = (bld.efficiency ?? 1) * bld.active;
 
-            let prodMult = EffectsManager.getBuildingProdMultiplier(b);
-            prodMult *= (1 + EffectsManager.getAdditiveValue('global.prod'));
-            prodMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
-            if (cfg.class === 'space') prodMult *= (1 + EffectsManager.getAdditiveValue('global.spaceProd'));
-            if (cfg.class === 'galaxy') prodMult *= (1 + EffectsManager.getAdditiveValue('global.galaxyProd'));
-            prodMult *= happinessFactor;
+            // 复用公共乘数计算（与 computeProductionAndCaps 一致）
+            const mults = _getBuildingMultipliers(b);
+            if (!mults) continue;
+            const { prodMult, consMult } = mults;
 
-            let consMult = EffectsManager.getBuildingConsMultiplier(b);
-            consMult *= (1 + EffectsManager.getAdditiveValue('global.speed'));
-
-            const modeCfg = getActiveModeConfig(cfg, bld, GameState);
-            const baseProd = typeof modeCfg.produces === 'function' ? modeCfg.produces(GameState) : (modeCfg.produces || {});
-            const baseCons = typeof modeCfg.consumes === 'function' ? modeCfg.consumes(GameState) : (modeCfg.consumes || {});
+            const baseProd = getBaseProduces(cfg, bld, GameState);
+            const baseCons = getBaseConsumes(cfg, bld, GameState);
             if (baseProd[resourceName]) {
                 const eventMult = EffectsManager.getResourceMultiplier(resourceName);
                 const val = baseProd[resourceName] * effActive * prodMult * eventMult;
