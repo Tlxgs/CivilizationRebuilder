@@ -1,5 +1,13 @@
 {
-  "dependencies": {
+  "name": "civilization-rebuilder",
+  "version": "0.7.0",
+  "private": true,
+  "description": "《文明重建者》— 文明模拟放置游戏（纯静态，无构建步骤；本 package.json 仅用于开发辅助工具）",
+  "scripts": {
+    "check:ui": "node tools/check-templates.js",
+    "test:smoke": "node tools/smoke/smoke.js"
+  },
+  "devDependencies": {
     "jsdom": "^30.0.1"
   }
 }
