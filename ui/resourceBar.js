@@ -10,9 +10,9 @@
          v-tooltip="() => resourceTooltip(r)">
         <div class="resource-progress" :style="{ width: progressPercent(r) + '%' }"></div>
         <div class="resource-content">
-            <span class="res-name">{{ r }}</span>
-            <span class="res-value">{{ valueText(r) }}</span>
-            <span class="res-prod" :style="prodStyle(r)">{{ prodText(r) }}</span>
+            <span class="res-name" :style="prodColor(r)">{{ r }}</span>
+            <span class="res-value" :style="prodColor(r)">{{ valueText(r) }}</span>
+            <span class="res-prod" :style="prodColor(r)">{{ prodText(r) }}</span>
         </div>
     </div>
 </div>
@@ -45,9 +45,9 @@
                 }
                 return '';
             },
-            prodStyle(r) {
+            // 与原版 refreshResourceBars 一致：产量绝对值较大且为负时，名称/数值/产量均标红
+            prodColor(r) {
                 const prod = this.GS.resources[r].production;
-                // 与原版一致：产量绝对值较大且为负时标红
                 if (prod < 0 && Math.abs(prod) > 1e-3) {
                     return { color: 'var(--red)' };
                 }
