@@ -90,13 +90,17 @@
                     (G.buildings["星际交易站"]?.count || 0) +
                     (G.buildings["比邻星物流中心"]?.count || 0);
             },
+            // 贸易III 永久升级（研究后单次贸易量上限 ×1.5）
+            trade3Researched() {
+                return this.GS.permanent["贸易III"]?.researched || false;
+            },
         },
         watch: {
             // 市场/星际交易站数量或贸易III永久升级变化时同步最大贸易量（原版在每次渲染时更新）
             marketBuildingsCount() {
                 TradeEngine.updateMaxTradeVolume(this.GS);
             },
-            'GS.permanent["贸易III"].researched'() {
+            trade3Researched() {
                 TradeEngine.updateMaxTradeVolume(this.GS);
             },
         },
