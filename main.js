@@ -1,5 +1,5 @@
-// main.js
-(function() {
+// main.js — 主入口：初始化游戏数据 → 加载存档 → 包装响应式 → 挂载 Vue UI → 启动游戏循环
+(function () {
     const savedTheme = localStorage.getItem('theme') || 'light';
     if (savedTheme === 'dark') {
         document.body.classList.add('dark-theme');
@@ -12,13 +12,18 @@ setInterval(() => {
 onload = () => {
     initGameData();
     loadGame();
-    
+
     // 处理离线时间
     processOfflineTime();
-    
-    bindEvents();
+
+    // 将 GameState 包装为 Vue 响应式代理。
+    // 引擎代码仍然通过全局 GameState 读写数据，所有修改都会被 Vue 追踪并驱动 UI 更新。
+    GameState = Vue.reactive(GameState);
+
+    // 挂载 Vue UI
+    mountGameUI();
+
     GameLoop.start();
-    renderAll();
 };
 
 addEventListener('beforeunload', () => {

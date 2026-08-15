@@ -1,57 +1,65 @@
-// ui/tabs.js
-function updateTabsVisibility() {
+// ui/tabs.js — 主选项卡组件
+(function () {
+    // 选项卡定义（顺序与原版一致）
+    const TAB_DEFS = [
+        { id: 'building', label: '建筑' },
+        { id: 'tech', label: '科技' },
+        { id: 'policy', label: '政策' },
+        { id: 'trade', label: '贸易' },
+        { id: 'crystal', label: '晶体' },
+        { id: 'permanent', label: '永恒' },
+        { id: 'achievements', label: '成就' },
+        { id: 'reset', label: '选项' },
+        { id: 'changelog', label: '更新日志' },
+    ];
 
-    // 政策标签
-    let hasPolicy = false;
-    for (let p in GameState.policies) {
-        if (GameState.policies[p].visible) {
-            hasPolicy = true;
-            break;
-        }
-    }
-    const policyTab = document.querySelector('.tab-btn[data-tab="policy"]');
-    if (policyTab) policyTab.style.display = hasPolicy ? '' : 'none';
+    const TabBar = {
+        template: `
+<div class="tabs">
+    <button v-for="t in visibleTabs" :key="t.id" class="tab-btn"
+            :class="{ active: ui.currentTab === t.id }" :data-tab="t.id"
+            @click="ui.currentTab = t.id">{{ t.label }}</button>
+</div>
+`,
+        computed: {
+            // 按解锁状态计算可见选项卡（复刻原版 updateTabsVisibility 规则）
+            visibleTabs() {
+                const G = this.GS;
 
-    // 贸易标签
-    const market = GameState.buildings["市场"];
-    const hasTrade = market && market.visible;
-    const tradeTab = document.querySelector('.tab-btn[data-tab="trade"]');
-    if (tradeTab) tradeTab.style.display = hasTrade ? '' : 'none';
+                // 政策：存在任一可见政策
+                const hasPolicy = Object.values(G.policies).some(p => p.visible);
+                // 贸易：市场建筑可见
+                const market = G.buildings["市场"];
+                const hasTrade = market && market.visible;
+                // 晶体：研究军事理论或拥有晶体
+                const hasMilitaryTech = G.techs["军事理论"]?.researched || false;
+                const hasCrystals = (G.crystals?.inventory?.length > 0) ||
+                    (G.crystals?.equipped?.some(slot => slot !== null) === true);
+                const hasCrystalTab = hasMilitaryTech || hasCrystals;
+                // 永恒：拥有遗物或已研究任一永恒升级
+                const relicAmount = G.resources["遗物"]?.amount || 0;
+                const hasResearchedPermanent = Object.values(G.permanent).some(p => p.researched);
+                const hasPermanent = (relicAmount > 0) || hasResearchedPermanent;
 
-    // 晶体标签
-    const hasMilitaryTech = GameState.techs["军事理论"]?.researched || false;
-    const hasCrystals = (GameState.crystals?.inventory?.length > 0) ||(GameState.crystals?.equipped?.some(slot => slot !== null) === true);
-    const hasCrystalTab = hasMilitaryTech || hasCrystals;
-    const crystalTab = document.querySelector('.tab-btn[data-tab="crystal"]');
-    if (crystalTab) crystalTab.style.display = hasCrystalTab ? '' : 'none';
-
-    // 永恒标签
-    const relicAmount = GameState.resources["遗物"]?.amount || 0;
-    let hasResearchedPermanent = false;
-    for (let p in GameState.permanent) {
-        if (GameState.permanent[p].researched) {
-            hasResearchedPermanent = true;
-            break;
-        }
-    }
-    const hasPermanent = (relicAmount > 0) || hasResearchedPermanent;
-    const permanentTab = document.querySelector('.tab-btn[data-tab="permanent"]');
-    if (permanentTab) permanentTab.style.display = hasPermanent ? '' : 'none';
-
-    const changelogTab = document.querySelector('.tab-btn[data-tab="changelog"]');
-    if (changelogTab) changelogTab.style.display = '';
-    const achievementsTab = document.querySelector('.tab-btn[data-tab="achievements"]');
-    if (achievementsTab) achievementsTab.style.display = ''; // 始终显示
-    // 如果当前激活的标签被隐藏，自动切换到第一个可见标签
-    const activeTab = document.querySelector('.tab-btn.active');
-    if (activeTab && activeTab.style.display === 'none') {
-        const firstVisibleTab = document.querySelector('.tab-btn:not([style*="display: none"])');
-        if (firstVisibleTab) {
-            firstVisibleTab.click();
-        } else {
-            const buildingTab = document.querySelector('.tab-btn[data-tab="building"]');
-            if (buildingTab) buildingTab.click();
-        }
-    }
-}
-updateTabsVisibility = updateTabsVisibility;
+                return TAB_DEFS.filter(t => {
+                    switch (t.id) {
+                        case 'policy': return hasPolicy;
+                        case 'trade': return hasTrade;
+                        case 'crystal': return hasCrystalTab;
+                        case 'permanent': return hasPermanent;
+                        default: return true; // 建筑/科技/成就/选项/更新日志 始终显示
+                    }
+                });
+            },
+        },
+        watch: {
+            // 如果当前激活的标签被隐藏，自动切换到第一个可见标签
+            visibleTabs(ids) {
+                if (!ids.some(t => t.id === this.ui.currentTab)) {
+                    this.ui.currentTab = (ids[0] && ids[0].id) || 'building';
+                }
+            },
+        },
+    };
+    UI.registerComponent('TabBar', TabBar);
+})();

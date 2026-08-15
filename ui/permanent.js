@@ -1,94 +1,70 @@
-// ui/permanent.js
-
-function renderPermanentPanel() {
-    const panel = document.getElementById('panel-permanent');
-    const relicAmount = GameState.resources["遗物"]?.amount || 0;
-    
-    let notResearched = [];
-    let researched = [];
-    
-    for (let p in GameState.permanent) {
-        const perm = GameState.permanent[p];
-        if (perm.researched) {
-            researched.push(p);
-        } else {
-            let canShow = true;
-            if (perm.prereq) {
-                for (let prereq of perm.prereq) {
-                    if (!GameState.permanent[prereq]?.researched) {
-                        canShow = false;
-                        break;
+// ui/permanent.js — 永恒升级面板组件
+(function () {
+    const PermanentPanel = {
+        template: `
+<div>
+    <div class="grid-list">
+        <button v-for="p in availablePermanents" :key="p" class="card-btn perm-btn" :class="affordClass(p)" :data-permanent="p" @click="buy(p)" v-tooltip="() => permanentTooltip(p)"><b>{{ permName(p) }}</b></button>
+    </div>
+    <template v-if="researchedPermanents.length">
+        <h3>已研究永恒升级</h3>
+        <div class="grid-list">
+            <span v-for="p in researchedPermanents" :key="p" class="card-btn researched-item" :data-permanent="p" v-tooltip="() => permanentTooltip(p)">{{ permName(p) }}</span>
+        </div>
+    </template>
+    <p v-if="availablePermanents.length === 0 && researchedPermanents.length === 0">暂无永恒升级</p>
+</div>
+`,
+        computed: {
+            // 未研究且满足前置条件的永恒升级
+            availablePermanents() {
+                const result = [];
+                for (let p in this.GS.permanent) {
+                    const perm = this.GS.permanent[p];
+                    if (perm.researched) continue;
+                    let canShow = true;
+                    if (perm.prereq) {
+                        for (let prereq of perm.prereq) {
+                            if (!this.GS.permanent[prereq]?.researched) {
+                                canShow = false;
+                                break;
+                            }
+                        }
                     }
+                    if (canShow) result.push(p);
                 }
-            }
-            if (canShow) {
-                notResearched.push(p);
-            }
-        }
-    }
-    
-    let html = '<div class="grid-list">';
-    for (let p of notResearched) {
-        const perm = GameState.permanent[p];
-        const status = getAffordabilityStatus(perm.price);
-        let colorClass = '';
-        if (status === 'insufficient') colorClass = 'insufficient-name';
-        else if (status === 'cap-exceeded') colorClass = 'unaffordable-name';
-        
-        // 显示趣味名称，data-permanent 仍保存 key 用于购买
-        const displayName = perm.name || p;
-        html += `<button class="card-btn perm-btn ${colorClass}" data-permanent="${p}"><b>${displayName}</b></button>`;
-    }
-    html += '</div>';
-    
-    if (researched.length) {
-        html += '<h3>已研究永恒升级</h3><div class="grid-list">';
-        for (let p of researched) {
-            const perm = GameState.permanent[p];
-            const displayName = perm.name || p;
-            html += `<span class="card-btn researched-item" data-permanent="${p}">${displayName}</span>`;
-        }
-        html += '</div>';
-    }
-    
-    if (notResearched.length === 0 && researched.length === 0) {
-        html = '<p>暂无永恒升级</p>';
-    }
-    panel.innerHTML = html;
-
-    // tooltip 绑定
-    document.querySelectorAll('.perm-btn, .researched-item[data-permanent]').forEach(el => {
-        const permNameKey = el.dataset.permanent;
-        const perm = GameState.permanent[permNameKey];
-        if (!perm) return;
-        
-        const displayName = perm.name || permNameKey;
-        
-        // 价格字符串（带颜色标记）
-        let priceHtml = Object.entries(perm.price).map(([r, amt]) => {
-            const enough = (GameState.resources[r]?.amount || 0) >= amt;
-            const color = enough ? '' : 'red';
-            return `<span style="color: ${color};">${r} ${formatNumber(amt)}</span>`;
-        }).join('\n');
-        
-        let text = `${perm.desc}<hr>${priceHtml}`;
-        if (perm.researched) text += '<br>✓ 已获得';
-        el.addEventListener('mouseenter', () => showTooltip(el, text));
-    });
-}
-function refreshPermanentPanel() {
-    const panel = document.getElementById('panel-permanent');
-    if (!panel) return;
-
-    // 更新永恒升级按钮的颜色状态（仅未研究的）
-    document.querySelectorAll('.perm-btn').forEach(btn => {
-        const permKey = btn.dataset.permanent;
-        if (!permKey) return;
-        const perm = GameState.permanent[permKey];
-        if (!perm || perm.researched) return;
-        const status = getAffordabilityStatus(perm.price);
-        btn.classList.remove('insufficient-name', 'unaffordable-name');
-        if (status === 'insufficient') btn.classList.add('insufficient-name');
-        else if (status === 'cap-exceeded') btn.classList.add('unaffordable-name');
-    });
-}
+                return result;
+            },
+            researchedPermanents() {
+                return Object.keys(this.GS.permanent).filter(p => this.GS.permanent[p].researched);
+            },
+        },
+        methods: {
+            permName(p) {
+                return this.GS.permanent[p].name || p;
+            },
+            buy(p) {
+                Core.buyPermanent(p);
+            },
+            affordClass(p) {
+                const status = getAffordabilityStatus(this.GS.permanent[p].price);
+                if (status === 'insufficient') return 'insufficient-name';
+                if (status === 'cap-exceeded') return 'unaffordable-name';
+                return '';
+            },
+            permanentTooltip(p) {
+                const perm = this.GS.permanent[p];
+                if (!perm) return '';
+                const priceHtml = Object.entries(perm.price).map(([r, amt]) => {
+                    const enough = (this.GS.resources[r]?.amount || 0) >= amt;
+                    const color = enough ? '' : 'red';
+                    return `<span style="color: ${color};">${r} ${formatNumber(amt)}</span>`;
+                }).join('\n');
+                let text = `${perm.desc}<hr>${priceHtml}`;
+                if (perm.researched) text += '<br>✓ 已获得';
+                return text;
+            },
+        },
+    };
+    UI.registerComponent('PermanentPanel', PermanentPanel);
+})();
