@@ -329,6 +329,40 @@ function assertSoon(fn, msg, timeout = 3000) {
     console.log('== 24. 无渲染报错 ==');
     assert(errors.length === 0, '全过程无 jsdom/console 错误' + (errors.length ? '：' + errors.join(' | ') : ''));
 
+    console.log('== 25. 回归：页面刷新后已解锁的建筑仍显示 ==');
+    // 用户报告：刷新页面后，已解锁的建筑从建筑面板消失。
+    // 根因：Vue 挂载时若建筑已解锁（来自存档），buildingClasses 计算属性首次即为非空且不再变化，
+    // 原非 immediate 的 watcher 不会触发，ui.currentBuildingClass 永远为 null，categories 返回空导致面板空白。
+    // 这里启动一个"刷新后的新页面"（同一 localStorage），验证建筑卡片仍然渲染。
+    const savedForReload = window.localStorage.getItem('civilizationRebuilder');
+    assert(!!savedForReload, '存在可用的存档（含已解锁建筑）');
+    const savedObjForReload = JSON.parse(savedForReload);
+    assert(savedObjForReload.buildings['帐篷'] && savedObjForReload.buildings['帐篷'].visible === true,
+        '存档中 帐篷 为可见（解锁状态已持久化）');
+    const dom2 = new JSDOM(indexHtml, {
+        url: 'http://localhost/',
+        runScripts: 'outside-only',
+        pretendToBeVisual: true,
+        virtualConsole: vc,
+    });
+    dom2.window.localStorage.setItem('civilizationRebuilder', savedForReload);
+    const context2 = vm.createContext(dom2.window);
+    for (const src2 of srcs) {
+        const p2 = path.join(root, src2);
+        if (!fs.existsSync(p2)) throw new Error(`脚本不存在: ${src2}`);
+        vm.runInContext(fs.readFileSync(p2, 'utf8'), context2, { filename: src2 });
+    }
+    dom2.window.dispatchEvent(new dom2.window.Event('load'));
+    await wait(300);
+    const $2 = (sel) => dom2.window.document.querySelector(sel);
+    const visibleAfterReload = vm.runInContext('Object.keys(GameState.buildings).filter(k => GameState.buildings[k].visible).length', context2);
+    assert(visibleAfterReload > 0, '刷新后 GameState 中仍有可见建筑: ' + visibleAfterReload);
+    assert(!!$2('.building-card[data-building="帐篷"]'), '刷新后建筑面板渲染出 帐篷 卡片');
+    assert(!!$2('#panel-building .sub-tab-btn[data-class="ground"]'), '刷新后建筑面板渲染出大分类子标签');
+    assert(dom2.window.UI.state.currentBuildingClass !== null, '刷新后当前大分类已自动选择（不再为 null）: ' + dom2.window.UI.state.currentBuildingClass);
+    dom2.window.GameLoop.stop();
+    dom2.window.close();
+
     console.log(`\n==== 结果: ${passed} 通过, ${failed} 失败 ====`);
     window.GameLoop.stop();
     dom.window.close();

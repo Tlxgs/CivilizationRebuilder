@@ -58,7 +58,7 @@
             },
             // 当前大分类下的建筑，按 type 分组
             categories() {
-                const cls = this.ui.currentBuildingClass;
+                const cls = this.effectiveBuildingClass;
                 if (!cls) return [];
                 const typeMap = {};
                 for (let b in this.GS.buildings) {
@@ -76,17 +76,28 @@
                     localResources: UI.getLocalResourcesForType(type),
                 }));
             },
+            // 当前生效的大分类：选中项失效（如刷新后仍为 null）时回退到第一个可见分类
+            effectiveBuildingClass() {
+                const classes = this.buildingClasses;
+                if (classes.includes(this.ui.currentBuildingClass)) return this.ui.currentBuildingClass;
+                return classes[0] || null;
+            },
             // 大类通用局域资源
             classLocalResources() {
-                return UI.getLocalResourcesForClass(this.ui.currentBuildingClass);
+                return UI.getLocalResourcesForClass(this.effectiveBuildingClass);
             },
         },
         watch: {
             // 当可见大分类变化且当前选中项失效时，回退到第一个分类
-            buildingClasses(classes) {
-                if (!this.ui.currentBuildingClass || !classes.includes(this.ui.currentBuildingClass)) {
-                    this.ui.currentBuildingClass = classes[0];
-                }
+            // immediate：页面刷新后建筑已解锁（来自存档），初始 buildingClasses 不会变化，
+            // 非 immediate 的 watcher 不会触发，导致 currentBuildingClass 永远为 null、面板空白。
+            buildingClasses: {
+                immediate: true,
+                handler(classes) {
+                    if (!this.ui.currentBuildingClass || !classes.includes(this.ui.currentBuildingClass)) {
+                        this.ui.currentBuildingClass = classes[0];
+                    }
+                },
             },
         },
         methods: {
