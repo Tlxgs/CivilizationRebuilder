@@ -188,6 +188,13 @@ function assertSoon(fn, msg, timeout = 3000) {
     assert(G().policies['税收政策'].currentValue === beforeVal + 1, '点击 +1 政策值变化: ' + beforeVal + '→' + G().policies['税收政策'].currentValue);
     const policyTitle = $('.policy-title');
     assert(policyTitle.textContent.includes(String(beforeVal + 1)), '政策面板数值显示更新');
+    // 蓝色进度条宽度应反映当前值（修复 Vue 3 属性内插值不生效导致蓝条不动）
+    const barFill = $('#panel-policy .policy-bar-fill');
+    const pol = G().policies['税收政策'];
+    const expectedWidth = ((pol.currentValue - pol.min) / (pol.max - pol.min)) * 100;
+    const actualWidth = barFill ? parseFloat(barFill.style.width) : NaN;
+    assert(!isNaN(actualWidth) && Math.abs(actualWidth - expectedWidth) < 0.5,
+        `政策蓝色进度条宽度反映当前值（实际 ${actualWidth}%，期望 ${expectedWidth.toFixed(1)}%）`);
 
     console.log('== 12. 科技研究 + 队列 ==');
     const techTab2 = $('.tab-btn[data-tab="tech"]');

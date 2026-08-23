@@ -14,7 +14,7 @@
             <button class="btn-square policy-dec" :data-policy="p" data-amount="10" @click="adjust(p, -10)">-10</button>
             <button class="btn-square policy-dec" :data-policy="p" data-amount="1" @click="adjust(p, -1)">-1</button>
             <div style="flex:1; height:6px; background:var(--border); border-radius:3px; overflow:hidden;">
-                <div style="height:100%; background:var(--accent); border-radius:3px; width:{{ barWidth(p) }}%; transition:width 0.1s;"></div>
+                <div class="policy-bar-fill" :style="{ height: '100%', background: 'var(--accent)', borderRadius: '3px', transition: 'width 0.1s', width: barWidth(p) + '%' }"></div>
             </div>
             <button class="btn-square policy-inc" :data-policy="p" data-amount="1" @click="adjust(p, 1)">+1</button>
             <button class="btn-square policy-inc" :data-policy="p" data-amount="10" @click="adjust(p, 10)">+10</button>
