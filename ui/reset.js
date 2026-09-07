@@ -6,12 +6,12 @@
     <div class="reset-area">
         <button class="btn-rect" title="重新开始游戏,只保留成就、永恒等" @click="softResetClick">软重置</button>
         <button class="btn-rect" title="彻底清除存档" @click="hardResetClick">硬重置</button>
-        <button class="btn-rect" @click="saveGame()">手动保存</button>
+        <button class="btn-rect" @click="manualSave()">手动保存</button>
         <button class="btn-rect" @click="toggleTheme">{{ themeBtnText }}</button>
     </div>
     <div class="reset-area" style="margin-top: 1rem;">
-        <button class="btn-rect" @click="exportGame()">导出存档文件</button>
-        <button class="btn-rect" @click="copyGameExportText()">导出存档文本</button>
+        <button class="btn-rect" @click="exportSave()">导出存档文件</button>
+        <button class="btn-rect" @click="copyExportText()">导出存档文本</button>
         <button class="btn-rect" @click="ui.importModalOpen = true">导入存档文本</button>
         <button class="btn-rect" @click="importFile">导入存档文件</button>
     </div>
@@ -52,6 +52,18 @@
                 const isDark = document.body.classList.toggle('dark-theme');
                 localStorage.setItem('theme', isDark ? 'dark' : 'light');
                 this.ui.theme = isDark ? 'dark' : 'light';
+            },
+            // 以下三个全局函数（saveGame/exportGame/copyGameExportText）不能直接在 Vue 3 模板中调用
+            // （模板标识符只解析组件实例，不会回退到 window 全局，直接调用会抛 TypeError 导致点击无反应），
+            // 因此包一层组件方法，与其它面板"模板只调方法、方法内调全局"的约定保持一致。
+            manualSave() {
+                saveGame();
+            },
+            exportSave() {
+                exportGame();
+            },
+            copyExportText() {
+                copyGameExportText();
             },
             importFile() {
                 const input = document.createElement('input');

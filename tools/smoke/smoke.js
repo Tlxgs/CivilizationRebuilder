@@ -370,6 +370,38 @@ function assertSoon(fn, msg, timeout = 3000) {
     dom2.window.GameLoop.stop();
     dom2.window.close();
 
+    console.log('== 26. 回归：选项面板导出/手动保存按钮可点击（修复 Vue3 模板直接调用全局函数失效） ==');
+    const resetTab26 = $('.tab-btn[data-tab="reset"]');
+    resetTab26.click();
+    await wait(50);
+    const exportFileBtn = $$('#panel-reset .btn-rect').find(b => b.textContent.includes('导出存档文件'));
+    const exportTextBtn = $$('#panel-reset .btn-rect').find(b => b.textContent.includes('导出存档文本'));
+    const manualSaveBtn = $$('#panel-reset .btn-rect').find(b => b.textContent.includes('手动保存'));
+    assert(!!exportFileBtn && !!exportTextBtn && !!manualSaveBtn, '选项面板渲染导出/手动保存按钮');
+    // 这些函数依赖浏览器能力（Blob 下载/剪贴板/alert），测试中用计数桩替换，
+    // 只验证「点击按钮确实调用了对应全局函数」（修复前模板里直接调用会抛 TypeError，桩永远不会被调用）。
+    vm.runInContext(`
+        window.__exportCalls = 0; window.__copyCalls = 0; window.__saveCalls = 0;
+        window.__realExportGame = exportGame;
+        window.__realCopyExport = copyGameExportText;
+        window.__realSaveGame = saveGame;
+        exportGame = () => { window.__exportCalls++; };
+        copyGameExportText = () => { window.__copyCalls++; };
+        saveGame = () => { window.__saveCalls++; window.__realSaveGame(); };
+    `, context);
+    exportFileBtn.click();
+    exportTextBtn.click();
+    manualSaveBtn.click();
+    // 点击处理器为同步调用，无需等待；避免 10s 自动保存定时器干扰计数
+    assert(vm.runInContext('window.__exportCalls', context) === 1, '点击「导出存档文件」调用 exportGame()');
+    assert(vm.runInContext('window.__copyCalls', context) === 1, '点击「导出存档文本」调用 copyGameExportText()');
+    assert(vm.runInContext('window.__saveCalls', context) === 1, '点击「手动保存」调用 saveGame()');
+    vm.runInContext(`
+        exportGame = window.__realExportGame;
+        copyGameExportText = window.__realCopyExport;
+        saveGame = window.__realSaveGame;
+    `, context);
+
     console.log(`\n==== 结果: ${passed} 通过, ${failed} 失败 ====`);
     window.GameLoop.stop();
     dom.window.close();
