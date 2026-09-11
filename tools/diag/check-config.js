@@ -163,5 +163,7 @@ for (const [name, cfg] of Object.entries(R)) {
     }
 }
 
-fs.writeFileSync(path.join(root, 'config-check.txt'), out.join('\n'), 'utf8');
+// 同时落盘一份，便于在 PowerShell 下查看（本环境 stdout 不易捕获）。
+// 写到脚本同级目录，避免污染项目根。
+fs.writeFileSync(path.join(__dirname, 'config-check.txt'), out.join('\n'), 'utf8');
 console.log(out.join('\n'));
