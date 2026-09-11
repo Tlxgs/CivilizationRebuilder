@@ -16,12 +16,14 @@ onload = () => {
     initGameData();
     loadGame();
 
-    // 处理离线时间
-    processOfflineTime();
-
     // 将 GameState 包装为 Vue 响应式代理。
     // 引擎代码仍然通过全局 GameState 读写数据，所有修改都会被 Vue 追踪并驱动 UI 更新。
     GameState = Vue.reactive(GameState);
+
+    // 处理离线时间。
+    // 必须放在响应式包装之后：离线发放的"时间晶体"和事件日志需要触发 UI 更新，
+    // 若在包装前执行，写入的是原始对象，UI 不会刷新（表现为首帧看不到奖励）。
+    processOfflineTime();
 
     // 挂载 Vue UI
     mountGameUI();
@@ -31,7 +33,7 @@ onload = () => {
 
 addEventListener('beforeunload', () => {
     if (_hardResetting) return;
-    GameState.lastSaveTime = Date.now();
+    // saveGame() 内部已负责刷新 lastSaveTime，此处无需重复设置
     saveGame();
     GameLoop.stop();
 });
@@ -41,15 +43,23 @@ function processOfflineTime() {
     if (!lastTime) return;
     const now = Date.now();
     const elapsed = Math.floor((now - lastTime) / 1000);
-    if (elapsed <= 1) return;
+    if (elapsed <= 1) {
+        // 即使离线时间过短而不结算，也要把基准推进到当前时刻，
+        // 避免基准长期停留在旧存档点、造成后续离线时长被重复累加或错算。
+        GameState.lastSaveTime = now;
+        return;
+    }
     const maxOffline = 36000;
-    const crystalGain = 0.5*Math.min(elapsed, maxOffline);
-    ResourcesManager.add({"时间晶体":crystalGain});
+    const crystalGain = 0.5 * Math.min(elapsed, maxOffline);
     const hours = Math.floor(elapsed / 3600);
     const minutes = Math.floor((elapsed % 3600) / 60);
     const seconds = elapsed % 60;
     let timeStr = `${hours}时${minutes}分${seconds}秒`;
     GameState.lastSaveTime = now;
+    // 注意：ResourcesManager.add 与 addEventLog 必须在 GameState 被
+    // Vue.reactive 包装之后才能正确驱动 UI，因此本函数由 main.js 中
+    // 调整到 GameState = Vue.reactive(GameState) 之后再调用。
+    ResourcesManager.add({ "时间晶体": crystalGain });
     addEventLog(`离线 ${timeStr}，获得 ${crystalGain} 时间晶体。`);
 }
 const IS_LOCAL = location.protocol === 'file:';

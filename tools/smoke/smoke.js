@@ -322,6 +322,39 @@ function assertSoon(fn, msg, timeout = 3000) {
     assert(G().resources['时间晶体'].visible === true, '时间晶体变为可见');
     assert(G().eventLogs[0].text.includes('离线'), '日志记录离线结算');
 
+    console.log('== 22b. 回归：强杀/崩溃场景下离线时长不丢失 ==');
+    // 复现玩家反馈：上次存档后浏览器被强杀（beforeunload 未触发），
+    // 下次打开时应按 距上次存档 的真实间隔结算，而非被基准停滞吞掉。
+    const savedBackup22b = window.localStorage.getItem('civilizationRebuilder');
+    vm.runInContext('GameState.lastSaveTime = Date.now() - 60000', context);
+    vm.runInContext('saveGame()', context);
+    // saveGame 必须同步刷新基准，使存档与离线计时严格一致
+    const driftAfterSave = Math.abs(G().lastSaveTime - Date.now());
+    assert(driftAfterSave < 2000, 'saveGame 后 lastSaveTime 与当前时刻一致（漂移 ' + driftAfterSave + 'ms）');
+    const rawSaved = JSON.parse(
+        vm.runInContext("localStorage.getItem('civilizationRebuilder')", context)
+    );
+    assert(
+        Math.abs(rawSaved.lastSaveTime - G().lastSaveTime) < 1000,
+        '落盘的 lastSaveTime 与内存基准一致'
+    );
+    // 还原存档，避免污染后续依赖 localStorage 的用例（如第 25 组刷新回归）
+    if (savedBackup22b === null) window.localStorage.removeItem('civilizationRebuilder');
+    else window.localStorage.setItem('civilizationRebuilder', savedBackup22b);
+
+    console.log('== 22c. 回归：极短离线也推进基准，避免时长被重复累加 ==');
+    vm.runInContext('GameState.lastSaveTime = Date.now()', context);
+    const crystalBeforeShort = G().resources['时间晶体'].amount;
+    vm.runInContext('processOfflineTime()', context);
+    assert(
+        G().resources['时间晶体'].amount === crystalBeforeShort,
+        '不足 2 秒的离线不发放水晶'
+    );
+    assert(
+        Math.abs(G().lastSaveTime - Date.now()) < 2000,
+        '不足 2 秒的离线仍把基准推进到当前时刻'
+    );
+
     console.log('== 23. Tooltip 指令 ==');
     const tipTarget = $('.resource-item');
     assert(!!tipTarget, '存在可见资源项作为 Tooltip 目标');

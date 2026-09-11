@@ -128,6 +128,13 @@ function getSaveData() {
 
 // ==================== 保存/加载 ====================
 function saveGame() {
+    // 保存的同时刷新离线计时基准。
+    // 原因：lastSaveTime 是 processOfflineTime 计算离线时长的唯一依据，
+    // 若只在 beforeunload 更新，则浏览器崩溃、手机划掉后台、系统重启等
+    // beforeunload 未触发的场景下，基准会停留在最后一次自动存档点，
+    // 导致离线时长被截短甚至完全清零（玩家反馈的"有时有有时没有"）。
+    // 这里改为每次存档都与磁盘内容一同落盘，保证基准与存档严格一致。
+    GameState.lastSaveTime = Date.now();
     const saveData = getSaveData();
     localStorage.setItem('civilizationRebuilder', JSON.stringify(saveData));
 }
