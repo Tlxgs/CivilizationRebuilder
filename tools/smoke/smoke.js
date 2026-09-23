@@ -10,7 +10,8 @@ const root = path.join(__dirname, '..', '..');
 const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 
 // 收集页面中的 script src（按顺序）
-const srcs = [...indexHtml.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
+// index.html 给资源带了 ?v= 版本查询串（防浏览器缓存），拼接本地路径前要去掉
+const srcs = [...indexHtml.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1].split('?')[0]);
 if (srcs.length === 0) throw new Error('index.html 中未找到任何 <script src>');
 
 // 收集加载错误
