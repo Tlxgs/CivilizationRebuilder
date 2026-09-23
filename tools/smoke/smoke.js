@@ -180,8 +180,12 @@ function assertSoon(fn, msg, timeout = 3000) {
         assert(maxVol > 0, '建造市场后单次贸易量上限 > 0，实际 ' + maxVol);
         assert(!volEl().disabled, '上限 > 0 时输入框可用');
 
-        // 模拟点一次减号箭头
-        const target = Math.max(0, G().userTradeVolume - Number(volEl().getAttribute('step')));
+        // step 必须是 "any"：动态步长会让非网格值被「吸附」而不是「加减」，表现为乱跳。
+        assert(volEl().getAttribute('step') === 'any',
+            '贸易量输入框 step 固定为 any，实际 ' + volEl().getAttribute('step'));
+
+        // 模拟点一次减号箭头（step="any" 时原生箭头用规范默认步长 1）
+        const target = Math.max(0, G().userTradeVolume - 1);
         volEl().value = String(target);
         volEl().dispatchEvent(new window.Event('input', { bubbles: true }));
         await wait(50);

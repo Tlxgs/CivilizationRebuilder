@@ -1,6 +1,9 @@
 const ChangelogData = {
-    version: "v0.8.3",
+    version: "v0.8.4",
     logs: [
+        { version: "v0.8.4", date: "2026-09-23", changes: [
+            "修复按箭头调整单次贸易量时数值乱跳的问题",
+        ]},
         { version: "v0.8.3", date: "2026-09-23", changes: [
             "修复调整单次贸易量时数字跳回的问题",
         ]},

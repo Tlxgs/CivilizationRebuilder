@@ -1,120 +1,95 @@
-// 只读验证：贸易量输入框 step 与 max 的实际关系（数值层）。
-// 注意：本文件只回答「step/max 取值是否合理」，
-//       「按了没反应 / 数字跳回」的交互层根因见 tools/diag/check-trade-ui.js。
-// 目的一：确认 maxTradeVolume 与 step 的取值组合，不修改任何游戏状态。
+// 数值层验证：贸易量输入框的 step 语义。
+//
+// 结论（已固化）：动态 step（floor(maxTradeVolume * 0.05)）会让手输的小数落在
+// step 网格之外，此时原生箭头执行的是「吸附到最近网格点」而不是「加减一个步长」，
+// 值与 max 的组合不同、结果就不同 —— 表现为「有概率乱跳」。
+// 因此 ui/trade.js 把该输入框的 step 固定为 "any"。
+// 交互层的完整回归见 tools/diag/check-trade-ui.js。
+//
+// 本脚本用 jsdom（独立 DOM 实现，按 HTML 规范实现 step/validity）取证，不修改游戏状态。
+// 运行：node tools/diag/check-trade-volume.js
 const fs = require('fs');
 const path = require('path');
-const vm = require('vm');
 
 const root = path.resolve(__dirname, '..', '..');
-const load = (f) => fs.readFileSync(path.join(root, f), 'utf8');
+const { JSDOM } = require(path.join(root, 'node_modules', 'jsdom'));
 
-const sandbox = {
-    console, Math, Date, JSON, TextEncoder, TextDecoder,
-    btoa: (s) => Buffer.from(s, 'binary').toString('base64'),
-    atob: (s) => Buffer.from(s, 'base64').toString('binary'),
-    localStorage: { _d: {}, getItem(k){return this._d[k]??null;}, setItem(k,v){this._d[k]=String(v);},
-        removeItem(k){delete this._d[k];}, clear(){this._d={};} },
-    alert: () => {}, confirm: () => true,
-    renderAll: () => {}, refreshUI: () => {}, renderLogPanel: () => {},
-    addEventLog: () => {}, setInterval: () => 0, clearInterval: () => {},
-};
-sandbox.window = sandbox;
-sandbox.globalThis = sandbox;
-const ctx = vm.createContext(sandbox);
-
-for (const f of [
-    'config/resourcesConfig.js','config/buildingsConfig.js','config/techsConfig.js',
-    'config/upgradesConfig.js','config/permanentConfig.js','config/policiesConfig.js',
-    'config/achievementConfig.js','config/eventsConfig.js','config/localResourceConfig.js',
-    'utils.js','formulas.js','data.js','recourcesManager.js','effectsManager.js',
-    'eventEffects.js','production.js','tradeEngine.js','queue.js','logic.js']) {
-    try { vm.runInContext(load(f), ctx, { filename: f }); }
-    catch (e) { console.log('LOAD FAIL', f, e.message); }
-}
-const run = (s) => vm.runInContext(s, ctx);
 const out = [];
 const log = (...a) => out.push(a.join(' '));
+let fail = 0;
+const check = (name, ok, extra) => {
+    if (!ok) fail++;
+    log(`  [${ok ? 'OK' : 'FAIL'}] ${name}${extra ? '  — ' + extra : ''}`);
+};
 
-log('=== 1. maxTradeVolume 与 step 的对齐情况 ===');
-log('公式：max = 市场x50 + 星际x10000 + 物流x25000，研究贸易III则 x1.5');
-log('      step = Math.floor(max * 0.05)   ← ui/trade.js:69');
-log('');
-log('市场数  max       step   max%step  点+是否被clamp(at max)  最大可调值');
-for (const m of [1, 2, 3, 4, 5, 6, 7, 8, 10, 15, 20]) {
-    const max = m * 50;
-    const step = Math.floor(max * 0.05);
-    const rem = max % step;
-    // 初始 userTradeVolume = max（见 updateMaxTradeVolume / resetTradeRates）
-    // 点 + 时浏览器把值 +step，超过 max 则 clamp 回 max → 值不变
-    const clampPlus = (max + step) > max ? true : false;   // 只要在 max 就必被 clamp
-    log(`${String(m).padEnd(6)} ${String(max).padEnd(8)} ${String(step).padEnd(6)} ${String(rem).padEnd(9)} ${clampPlus ? '是（值不变）' : '否'}`);
+const doc = new JSDOM('<!doctype html><body></body>').window.document;
+
+function makeInput(step, value, max) {
+    const el = doc.createElement('input');
+    el.type = 'number';
+    el.setAttribute('min', '0');
+    el.setAttribute('max', String(max));
+    el.setAttribute('step', String(step));
+    el.value = String(value);
+    doc.body.appendChild(el);
+    return el;
 }
 
+log('=== 1. 动态 step 的问题（取证：为什么不能这么写）===');
+log('step = floor(maxTradeVolume * 0.05)，市场 1/2 座时分别是 2 / 5。');
+for (const [max, step] of [[50, 2], [100, 5], [75, 3]]) {
+    const row = [];
+    for (const v of [0.5, 1.5]) {
+        const el = makeInput(step, v, max);
+        const mismatch = el.validity.stepMismatch;
+        el.stepUp();
+        row.push(`v=${v}(mismatch=${mismatch}) 点上=${el.value}`);
+    }
+    const el2 = makeInput(step, 1.5, max);
+    log(`  max=${max} step=${step}: ${row.join('  |  ')}  valid=${el2.checkValidity()}`);
+}
+log('  → 点上不是 +step，而是被吸附到网格点（0.5 和 1.5 都变成 2/5/3）。');
+log('  → 非网格值的 stepMismatch=true，表单校验判为非法。');
+
 log('');
-log('=== 2. 市场可见但未建造时（maxTradeVolume = 0）===');
+log('=== 2. step="any" 的行为（当前实现）===');
 {
-    run('initGameData();');
-    const st = JSON.parse(run(`JSON.stringify({
-        maxTradeVolume: GameState.maxTradeVolume,
-        userTradeVolume: GameState.userTradeVolume,
-        marketCount: GameState.buildings['市场'] ? GameState.buildings['市场'].count : 'n/a',
-        marketVisible: GameState.buildings['市场'] ? GameState.buildings['市场'].visible : 'n/a',
-    })`));
-    log('  initGameData 后:', JSON.stringify(st));
-    log('  → UI 的 :max = maxTradeVolume.toFixed(2) = "' + Number(st.maxTradeVolume).toFixed(2) + '"');
-    log('  → UI 的 :step = Math.floor(' + st.maxTradeVolume + ' * 0.05) = ' + Math.floor(st.maxTradeVolume * 0.05));
-    log('  min="0" 且 max="0.00" → 输入框被锁死在 0，点任一箭头都无反应。');
-    log('  step=0 在 HTML 里是非法值（规范要求 step>0），浏览器会忽略它退化为 1。');
+    const el = makeInput('any', 0.5, 50);
+    check('step="any" 时 el.step 读回 any', el.step === 'any', '实际 ' + el.step);
+    check('v=0.5 不再 stepMismatch', el.validity.stepMismatch === false);
+    check('v=0.5 通过校验', el.checkValidity() === true);
+    el.value = '1.5';
+    check('手输 1.5 被原样接受（不被改写）', el.value === '1.5', '实际 ' + el.value);
+    el.value = '0.001';
+    check('任意小数可接受', el.value === '0.001', '实际 ' + el.value);
+    el.value = '999';
+    check('超上限仍被标记 rangeOverflow（max=50 由上层夹取）',
+        el.validity.rangeOverflow === true);
+}
+log('  说明：step="any" 表示没有允许步长，原生箭头回到规范默认步长 1，');
+log('        所以 0.5 点上正好是 1.5，符合玩家直觉。');
+
+log('');
+log('=== 3. ui/trade.js 源码断言 ===');
+{
+    const src = fs.readFileSync(path.join(root, 'ui', 'trade.js'), 'utf8');
+    check('贸易量输入框使用 step="any"', /id="user-trade-volume"[\s\S]{0,200}?step="any"/.test(src));
+    check('已移除动态 volumeStep 计算属性', !/volumeStep\(\)/.test(src));
+    check('未再出现 :step="volumeStep"', !/:step="volumeStep"/.test(src));
 }
 
 log('');
-log('=== 3. 市场可见条件（判断 max=0 面板是否真的会显示）===');
+log('=== 4. 同类风险：持续贸易速率输入框 ===');
 {
-    const cfg = run(`(function(){
-        const c = BUILDINGS_CONFIG['市场'];
-        return JSON.stringify({
-            unlock: c.unlockCondition ? JSON.stringify(c.unlockCondition) : null,
-            desc: c.desc,
-        });
-    })()`);
-    log('  市场配置:', cfg);
-    // 模拟：研究解锁科技后，市场 visible 会怎样
-    run(`initGameData(); GameState.resources['金'].visible = true;`);
-    run(`ProductionEngine.updateBuildingPrices(); ProductionEngine.computeProductionAndCaps();`);
-    const vis = run(`JSON.stringify({
-        marketVisible: GameState.buildings['市场'].visible,
-        marketCount: GameState.buildings['市场'].count,
-    })`);
-    log('  给金可见后:', vis);
+    const src = fs.readFileSync(path.join(root, 'ui', 'trade.js'), 'utf8');
+    const hasRateStep = /:step="rateStep"/.test(src);
+    log('  rate 输入框仍使用动态 :step="rateStep"（floor(max * 0.0001)）: ' + hasRateStep);
+    log('  rateStep 同样随 max 变化，同样会让非网格值被吸附。');
+    log('  该输入框另用 :value + @change（单向绑定），存在同类同步问题。');
+    log('  —— 属同类风险，尚未改动，待确认后处理。');
 }
 
 log('');
-log('=== 4. updateMaxTradeVolume 的 clamp 行为 ===');
-{
-    run(`initGameData();
-        GameState.buildings['市场'].count = 3;
-        GameState.buildings['市场'].active = 3;
-        TradeEngine.updateMaxTradeVolume(GameState);`);
-    let r = JSON.parse(run(`JSON.stringify({
-        max: GameState.maxTradeVolume, user: GameState.userTradeVolume })`));
-    log('  建 3 座市场后: max=' + r.max + ', user=' + r.user);
-    log('  → userTradeVolume 被设为 max（' + r.max + '），此时点 + 必然无效。');
-
-    // 玩家手动调小
-    run(`GameState.userTradeVolume = 100;`);
-    run(`TradeEngine.updateMaxTradeVolume(GameState);`);
-    r = JSON.parse(run(`JSON.stringify({
-        max: GameState.maxTradeVolume, user: GameState.userTradeVolume })`));
-    log('  手动设为 100 后再 update: user=' + r.user + '（未被改动，正常）');
-
-    // 玩家手动调 0
-    run(`GameState.userTradeVolume = 0;`);
-    run(`TradeEngine.updateMaxTradeVolume(GameState);`);
-    r = JSON.parse(run(`JSON.stringify({
-        max: GameState.maxTradeVolume, user: GameState.userTradeVolume })`));
-    log('  手动设为 0 后再 update: user=' + r.user + '  ← 被弹回 max（tradeEngine.js:23）');
-    log('  → 这就是"调小到 0 又突然跳回最大值"的来源。');
-}
-
+log(fail === 0 ? '结果: 全部 ' + (out.filter((l) => l.includes('[OK]')).length) + ' 项通过'
+    : '结果: ' + fail + ' 项失败');
 console.log(out.join('\n'));

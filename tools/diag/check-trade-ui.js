@@ -62,7 +62,7 @@ async function spin(newValue) {
     }
 
     log('');
-    log('=== 场景 B：建造 1 座市场（max=50, step=2）===');
+    log('=== 场景 B：建造 1 座市场（max=50）===');
     window.debugBuild('市场', 1);
     await wait(150);
     log('  maxTradeVolume =', G().maxTradeVolume, '  userTradeVolume =', G().userTradeVolume);
@@ -71,26 +71,31 @@ async function spin(newValue) {
         log('  input: max=' + el.getAttribute('max') + ' step=' + el.getAttribute('step') +
             ' disabled=' + el.disabled + ' value=' + el.value);
         check('输入框启用', !el.disabled);
+        // 回归点：动态 step（floor(max*0.05)=2）会让 0.5 / 1.5 这类非网格值
+        // 在点箭头时被吸附到 2，而不是加减一个步长 → 表现为乱跳。
+        check('step 固定为 any', el.getAttribute('step') === 'any',
+            '实际 ' + el.getAttribute('step'));
     }
 
     log('');
-    log('=== 场景 C：按减号箭头（50 → 48）后状态是否同步、是否会被弹回 ===');
-    await spin(48);
+    // step="any" 时原生箭头用规范默认步长 1，所以每次按动是 ±1
+    log('=== 场景 C：按减号箭头（50 → 49）后状态是否同步、是否会被弹回 ===');
+    await spin(49);
     log('  立即: DOM=' + input().value + '  状态=' + G().userTradeVolume);
-    check('状态同步为 48', Math.abs(G().userTradeVolume - 48) < 1e-9, '实际 ' + G().userTradeVolume);
+    check('状态同步为 49', Math.abs(G().userTradeVolume - 49) < 1e-9, '实际 ' + G().userTradeVolume);
     check('DOM 与状态一致', input().value === String(G().userTradeVolume), 'DOM=' + input().value);
     await wait(500);   // 真实 gameloop 跑数轮
     log('  等 500ms 后: DOM=' + input().value + '  状态=' + G().userTradeVolume);
-    check('未被弹回（500ms 后仍是 48）', Math.abs(G().userTradeVolume - 48) < 1e-9,
+    check('未被弹回（500ms 后仍是 49）', Math.abs(G().userTradeVolume - 49) < 1e-9,
         '实际 ' + G().userTradeVolume);
-    check('DOM 未被重置', input().value === '48', '实际 ' + input().value);
+    check('DOM 未被重置', input().value === '49', '实际 ' + input().value);
 
     log('');
-    log('=== 场景 D：连续按箭头（48 → 46 → 44）===');
-    await spin(46);
-    await spin(44);
+    log('=== 场景 D：连续按箭头（49 → 48 → 47）===');
+    await spin(48);
+    await spin(47);
     log('  结果: DOM=' + input().value + '  状态=' + G().userTradeVolume);
-    check('连续步进每次都生效', Math.abs(G().userTradeVolume - 44) < 1e-9, '实际 ' + G().userTradeVolume);
+    check('连续步进每次都生效', Math.abs(G().userTradeVolume - 47) < 1e-9, '实际 ' + G().userTradeVolume);
 
     log('');
     log('=== 场景 E：手动输入超上限（999，max=50）===');
@@ -120,6 +125,7 @@ async function spin(newValue) {
     await spin(0.5);
     log('  DOM=' + input().value + '  状态=' + G().userTradeVolume);
     check('小数被正确接受', Math.abs(G().userTradeVolume - 0.5) < 1e-9, '实际 ' + G().userTradeVolume);
+    check('0.5 不再被判为 stepMismatch', input().validity.stepMismatch === false);
     await spin(1.5);
     log('  再设为 1.5: DOM=' + input().value + '  状态=' + G().userTradeVolume);
     check('0.5 → 1.5 生效且不回退', Math.abs(G().userTradeVolume - 1.5) < 1e-9,

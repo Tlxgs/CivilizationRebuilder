@@ -13,7 +13,7 @@
             <div style="margin-bottom: 0.8rem;">
                 <span style="font-weight: bold;">自定义单次贸易量：</span>
                 <input type="number" id="user-trade-volume" class="trade-volume-input"
-                       :value="GS.userTradeVolume" :step="volumeStep" min="0" :max="maxVolume"
+                       :value="GS.userTradeVolume" step="any" min="0" :max="maxVolume"
                        :disabled="maxVolume <= 0"
                        @input="onVolumeInput" @change="onVolumeCommit">
                 <span v-if="maxVolume <= 0" style="font-size: 0.8rem; color: var(--text-dim); margin-left: 0.5rem;">需先建造市场</span>
@@ -66,9 +66,6 @@
             },
             usedThroughput() {
                 return TradeEngine.getTotalTradeRateAbs(this.GS);
-            },
-            volumeStep() {
-                return Math.floor(this.GS.maxTradeVolume * 0.05);
             },
             rateStep() {
                 return Math.floor(this.GS.maxTradeVolume * 0.0001);
@@ -157,6 +154,12 @@
             // 原实现是单向 `:value` + `@change`：原生步进箭头改动 DOM 后状态不更新，
             // 之后任意一次重渲染都会按旧状态把显示值改回去，表现为「按了没反应 / 值跳回」。
             // 另外显示值不能用 toFixed，否则字符串与状态值永不相等，每次 diff 都重写 DOM → 数字闪烁。
+            //
+            // step 固定为 "any"（见模板）。曾用 floor(maxTradeVolume * 0.05) 当步长，
+            // 该值随市场数量在 2/3/5 之间变化，而玩家手输的小数（0.5、1.5）不在 step 网格上：
+            // 此时原生箭头执行的是「吸附到最近网格点」而不是「加减一个步长」——
+            // step=2 时 0.5 和 1.5 点上都会变成 2，值与 max 的组合不同结果就不同，
+            // 所以表现为「有概率乱跳」。stepMismatch 同时会把输入判为非法。
             onVolumeInput(e) {
                 const raw = e.target.value;
                 if (raw === '') return;   // 清空重输的中间态，不打断输入
@@ -172,7 +175,9 @@
                 if (!Number.isFinite(v)) v = this.GS.maxTradeVolume;
                 v = Math.min(this.GS.maxTradeVolume, Math.max(0, v));
                 this.GS.userTradeVolume = v;
-                e.target.value = String(v);
+                // 只在显示值与状态真的不一致时回写，避免无谓地改写 DOM
+                // 打断原生箭头的连续点击。
+                if (e.target.value !== String(v)) e.target.value = String(v);
             },
             onRateChange(r, e) {
                 let newRate = parseFloat(e.target.value);
