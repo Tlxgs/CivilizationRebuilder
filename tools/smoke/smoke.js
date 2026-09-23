@@ -170,6 +170,42 @@ function assertSoon(fn, msg, timeout = 3000) {
     assert($$('#panel-trade .trade-single-card').length > 0, '贸易面板渲染资源卡片');
     assert($('#user-trade-volume') !== null, '贸易量输入框存在');
 
+    // 贸易量输入框：DOM 与 GameState 必须双向同步。
+    // 回归背景：原实现是单向 `:value="...toFixed(2)"` + `@change`，
+    // 原生步进箭头改掉 DOM 后状态不更新，任意一次重渲染又会按旧状态把显示值改回去，
+    // 表现为「按小三角没反应 / 值改完又立刻跳回」。
+    {
+        const volEl = () => window.document.querySelector('#user-trade-volume');
+        const maxVol = G().maxTradeVolume;
+        assert(maxVol > 0, '建造市场后单次贸易量上限 > 0，实际 ' + maxVol);
+        assert(!volEl().disabled, '上限 > 0 时输入框可用');
+
+        // 模拟点一次减号箭头
+        const target = Math.max(0, G().userTradeVolume - Number(volEl().getAttribute('step')));
+        volEl().value = String(target);
+        volEl().dispatchEvent(new window.Event('input', { bubbles: true }));
+        await wait(50);
+        assert(Math.abs(G().userTradeVolume - target) < 1e-9,
+            '输入框改动即时同步到 GameState（期望 ' + target + '，实际 ' + G().userTradeVolume + '）');
+        assert(volEl().value === String(G().userTradeVolume),
+            'DOM 与 GameState 显示值一致');
+
+        // 关键回归点：等真实 gameloop 跑几轮后，值不应被弹回
+        const held = G().userTradeVolume;
+        await wait(400);
+        assert(Math.abs(G().userTradeVolume - held) < 1e-9,
+            '等待数轮 tick 后值未被弹回（期望 ' + held + '，实际 ' + G().userTradeVolume + '）');
+        assert(volEl().value === String(held), 'DOM 未被重置，实际 ' + volEl().value);
+
+        // 超过上限应被夹到上限，且 DOM 同步显示
+        volEl().value = String(maxVol * 10 + 7);
+        volEl().dispatchEvent(new window.Event('input', { bubbles: true }));
+        await wait(50);
+        assert(G().userTradeVolume === maxVol,
+            '超上限输入被夹到上限 ' + maxVol + '，实际 ' + G().userTradeVolume);
+        assert(volEl().value === String(maxVol), 'DOM 同步显示夹取后的值，实际 ' + volEl().value);
+    }
+
     console.log('== 11. 政策面板（解锁银行学 → 显示政策） ==');
     window.debugUnlockTech('银行学');
     await wait(100);

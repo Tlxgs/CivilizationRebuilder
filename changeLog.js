@@ -1,6 +1,9 @@
 const ChangelogData = {
-    version: "v0.8.2",
+    version: "v0.8.3",
     logs: [
+        { version: "v0.8.3", date: "2026-09-23", changes: [
+            "修复调整单次贸易量时数字跳回的问题",
+        ]},
         { version: "v0.8.2", date: "2026-09-11", changes: [
             "修复离线时间晶体有时不结算的问题",
             "修复离线奖励和日志不刷新界面的问题",

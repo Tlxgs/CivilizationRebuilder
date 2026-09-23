@@ -14,3 +14,6 @@ Thumbs.db
 .vscode/
 .idea/
 *.swp
+
+# 工具目录（不属于游戏代码）
+.workbuddy/

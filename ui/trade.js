@@ -13,8 +13,10 @@
             <div style="margin-bottom: 0.8rem;">
                 <span style="font-weight: bold;">自定义单次贸易量：</span>
                 <input type="number" id="user-trade-volume" class="trade-volume-input"
-                       :value="GS.userTradeVolume.toFixed(2)" :step="volumeStep" min="0" :max="GS.maxTradeVolume.toFixed(2)"
-                       @change="onVolumeChange">
+                       :value="GS.userTradeVolume" :step="volumeStep" min="0" :max="maxVolume"
+                       :disabled="maxVolume <= 0"
+                       @input="onVolumeInput" @change="onVolumeCommit">
+                <span v-if="maxVolume <= 0" style="font-size: 0.8rem; color: var(--text-dim); margin-left: 0.5rem;">需先建造市场</span>
             </div>
             <div style="margin-top: 0.8rem; padding-top: 0.5rem; border-top: 1px solid var(--border);">
                 <strong>持续贸易吞吐量上限 (取决于单次贸易量)</strong><br>
@@ -151,11 +153,26 @@
                 if (goldFlow < 0) return `-${formatNumber(-goldFlow)} 金/秒`;
                 return '';
             },
-            onVolumeChange(e) {
-                let newVal = parseFloat(e.target.value);
-                if (isNaN(newVal)) newVal = this.GS.maxTradeVolume;
-                newVal = Math.min(this.GS.maxTradeVolume, Math.max(0, newVal));
-                this.GS.userTradeVolume = newVal;
+            // 输入框与 GameState 必须双向同步。
+            // 原实现是单向 `:value` + `@change`：原生步进箭头改动 DOM 后状态不更新，
+            // 之后任意一次重渲染都会按旧状态把显示值改回去，表现为「按了没反应 / 值跳回」。
+            // 另外显示值不能用 toFixed，否则字符串与状态值永不相等，每次 diff 都重写 DOM → 数字闪烁。
+            onVolumeInput(e) {
+                const raw = e.target.value;
+                if (raw === '') return;   // 清空重输的中间态，不打断输入
+                const v = parseFloat(raw);
+                if (!Number.isFinite(v)) return;
+                this.GS.userTradeVolume = Math.min(this.GS.maxTradeVolume, Math.max(0, v));
+            },
+            // 失焦 / 回车时收尾：清空或非法输入回落到上限，并把规范化后的值写回 DOM。
+            // 直接写 DOM 是因为 clamp 后数值可能没变，Vue 不会重渲染，输入框会停在
+            // 用户敲的原始文本上，与 GameState 不一致。
+            onVolumeCommit(e) {
+                let v = parseFloat(e.target.value);
+                if (!Number.isFinite(v)) v = this.GS.maxTradeVolume;
+                v = Math.min(this.GS.maxTradeVolume, Math.max(0, v));
+                this.GS.userTradeVolume = v;
+                e.target.value = String(v);
             },
             onRateChange(r, e) {
                 let newRate = parseFloat(e.target.value);
