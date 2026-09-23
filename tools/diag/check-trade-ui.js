@@ -8,7 +8,8 @@ const { JSDOM, VirtualConsole } = require(path.join(__dirname, '..', '..', 'node
 
 const root = path.join(__dirname, '..', '..');
 const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
-const srcs = [...indexHtml.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1]);
+// index.html 给资源带了 ?v= 版本查询串（防浏览器缓存），拼接本地路径前要去掉
+const srcs = [...indexHtml.matchAll(/<script src="([^"]+)"><\/script>/g)].map(m => m[1].split('?')[0]);
 
 const errors = [];
 const vc = new VirtualConsole();
@@ -134,6 +135,56 @@ async function spin(newValue) {
     log('  等 400ms 后: DOM=' + input().value + '  状态=' + G().userTradeVolume);
     check('未被弹回（仍是 1.5）', Math.abs(G().userTradeVolume - 1.5) < 1e-9,
         '实际 ' + G().userTradeVolume);
+
+    log('');
+    // 根因回归：Vue 对 input 的 value 属性是「每次重渲染无条件写回 DOM」
+    // （见 vendor/vue.global.prod.js 中 `(s !== l || "value" === r) && a(...)`）。
+    // 贸易面板每个 tick 都重渲染，所以绑数值时用户敲到一半的文本会被覆盖。
+    // 判据：重渲染前后 DOM 必须逐字符不变。
+    log('=== 场景 H：手输中途停留（不应被重渲染改写）===');
+    {
+        const el = input();
+        const setV = async (v, waitMs) => {
+            el.value = v;
+            el.dispatchEvent(new window.Event('input', { bubbles: true }));
+            await wait(waitMs);
+        };
+        await setV('2.', 600);            // 半截输入（小数点在尾部）
+        check('半截输入 "2." 未被改写', el.value === '2.' || el.value === '',
+            '实际 "' + el.value + '"');
+        await setV('2.50', 600);          // 带尾随零
+        log('  DOM="' + el.value + '"  状态=' + G().userTradeVolume);
+        check('尾随零 "2.50" 未被磨成 "2.5"', el.value === '2.50', '实际 "' + el.value + '"');
+        check('状态为 2.5', Math.abs(G().userTradeVolume - 2.5) < 1e-9,
+            '实际 ' + G().userTradeVolume);
+        await setV('2.55', 600);
+        check('小数位完整保留', el.value === '2.55', '实际 "' + el.value + '"');
+        check('状态为 2.55', Math.abs(G().userTradeVolume - 2.55) < 1e-9,
+            '实际 ' + G().userTradeVolume);
+    }
+
+    log('');
+    log('=== 场景 I：速率框中途停留（提交前不写状态）===');
+    {
+        const rateEl = window.document.querySelector('.trade-rate-input');
+        if (!rateEl) {
+            log('  （当前无可贸易资源卡片，跳过）');
+        } else {
+            const r = rateEl.getAttribute('data-resource');
+            const before = (G().tradeRates[r] || 0);
+            rateEl.value = '0.05';
+            rateEl.dispatchEvent(new window.Event('input', { bubbles: true }));
+            await wait(600);
+            check('速率半截输入未被改写', rateEl.value === '0.05', '实际 "' + rateEl.value + '"');
+            check('未提交时不写状态', Math.abs((G().tradeRates[r] || 0) - before) < 1e-9,
+                '实际 ' + G().tradeRates[r]);
+            rateEl.dispatchEvent(new window.Event('change', { bubbles: true }));
+            await wait(200);
+            log('  提交后: DOM="' + rateEl.value + '"  速率=' + G().tradeRates[r]);
+            check('提交后速率生效', Math.abs((G().tradeRates[r] || 0) - 0.05) < 1e-9,
+                '实际 ' + G().tradeRates[r]);
+        }
+    }
 
     log('');
     if (errors.length) log('页面错误: ' + errors.slice(0, 3).join(' | '));

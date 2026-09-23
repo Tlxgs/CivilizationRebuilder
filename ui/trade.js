@@ -13,7 +13,7 @@
             <div style="margin-bottom: 0.8rem;">
                 <span style="font-weight: bold;">自定义单次贸易量：</span>
                 <input type="number" id="user-trade-volume" class="trade-volume-input"
-                       :value="GS.userTradeVolume" step="any" min="0" :max="maxVolume"
+                       :value="volumeDraft" step="any" min="0" :max="maxVolume"
                        :disabled="maxVolume <= 0"
                        @input="onVolumeInput" @change="onVolumeCommit">
                 <span v-if="maxVolume <= 0" style="font-size: 0.8rem; color: var(--text-dim); margin-left: 0.5rem;">需先建造市场</span>
@@ -36,8 +36,8 @@
                 <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 0.5rem;">
                     <input type="number" class="trade-rate-input" :data-resource="r"
                            style="width: 120px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 0.4rem; padding: 0.3rem 0.6rem;"
-                           :value="rateText(r)" :step="rateStep" placeholder="速率"
-                           @change="onRateChange(r, $event)">
+                           :value="rateDraft(r)" step="any" placeholder="速率"
+                           @input="onRateInput(r, $event)" @change="onRateChange(r, $event)">
                     <span style="font-size: 0.85rem;">资源/秒</span>
                     <span class="trade-status-label" :class="statusClass(r)">{{ statusText(r) }}</span>
                 </div>
@@ -53,6 +53,21 @@
     </template>
 </div>
 `,
+        data() {
+            // 两个输入框都绑草稿字符串而不是 GameState 里的数值：
+            // Vue 对 input 的 value 属性是「每次重渲染无条件写回 DOM」（源码里
+            // `(s !== l || "value" === r) && a(...)` 对 value 不做相等判断）。
+            // 贸易面板每个 tick（200ms）都会重渲染，若绑定的是数值，用户敲到一半的
+            // 文本（如 "2." 被 parseFloat 成 2）会在下一帧被覆盖，表现为「手输的值跳回、
+            // 必须抢在下一帧前回车」。草稿与 DOM 完全一致，Vue 便没有写回的机会。
+            return {
+                volumeDraft: '',
+                rateDrafts: {},
+            };
+        },
+        created() {
+            this.volumeDraft = this.volumeText(this.GS.userTradeVolume);
+        },
         computed: {
             marketVisible() {
                 const market = this.GS.buildings["市场"];
@@ -66,9 +81,6 @@
             },
             usedThroughput() {
                 return TradeEngine.getTotalTradeRateAbs(this.GS);
-            },
-            rateStep() {
-                return Math.floor(this.GS.maxTradeVolume * 0.0001);
             },
             // 可贸易资源列表（金除外，且可见或有存量或已设置速率）
             tradeResources() {
@@ -102,13 +114,30 @@
             trade3Researched() {
                 TradeEngine.updateMaxTradeVolume(this.GS);
             },
+            // 状态被外部改动（读档、重置、上限变化）时同步显示值。
+            // 注意别打断输入：草稿解析出的数值与状态一致就说明用户正在编辑，保持原样。
+            'GS.userTradeVolume'(val) {
+                const parsed = parseFloat(this.volumeDraft);
+                if (!Number.isFinite(parsed) || parsed !== val) {
+                    this.volumeDraft = this.volumeText(val);
+                }
+            },
         },
         methods: {
             fmt(n) {
                 return formatNumber(n);
             },
+            // 数值 → 输入框显示文本。空 / 非法一律给空串，避免把 "NaN" 塞进 DOM。
+            volumeText(v) {
+                return Number.isFinite(Number(v)) ? String(v) : '';
+            },
             rateText(r) {
                 return (this.GS.tradeRates[r] || 0).toFixed(2);
+            },
+            // 速率框的显示值：用户正在编辑时用草稿原文，否则用状态值。
+            rateDraft(r) {
+                const draft = this.rateDrafts[r];
+                return draft !== undefined ? draft : this.rateText(r);
             },
             statusClass(r) {
                 const rate = this.GS.tradeRates[r] || 0;
@@ -150,40 +179,39 @@
                 if (goldFlow < 0) return `-${formatNumber(-goldFlow)} 金/秒`;
                 return '';
             },
-            // 输入框与 GameState 必须双向同步。
-            // 原实现是单向 `:value` + `@change`：原生步进箭头改动 DOM 后状态不更新，
-            // 之后任意一次重渲染都会按旧状态把显示值改回去，表现为「按了没反应 / 值跳回」。
-            // 另外显示值不能用 toFixed，否则字符串与状态值永不相等，每次 diff 都重写 DOM → 数字闪烁。
-            //
-            // step 固定为 "any"（见模板）。曾用 floor(maxTradeVolume * 0.05) 当步长，
-            // 该值随市场数量在 2/3/5 之间变化，而玩家手输的小数（0.5、1.5）不在 step 网格上：
-            // 此时原生箭头执行的是「吸附到最近网格点」而不是「加减一个步长」——
-            // step=2 时 0.5 和 1.5 点上都会变成 2，值与 max 的组合不同结果就不同，
-            // 所以表现为「有概率乱跳」。stepMismatch 同时会把输入判为非法。
+            // 输入框与 GameState 必须双向同步，且草稿要原样留着（见 data 里的说明）。
+            // step 固定为 "any"：曾用 floor(maxTradeVolume * 0.05) 当步长，该值随市场数量变化，
+            // 玩家手输的小数不在 step 网格上时，原生箭头执行的是「吸附到最近网格点」而不是
+            // 「加减一个步长」，表现为「有概率乱跳」，且 stepMismatch 会把输入判为非法。
             onVolumeInput(e) {
                 const raw = e.target.value;
+                this.volumeDraft = raw;   // 先原样保留，别让重渲染把 "2." 这类中间态冲掉
                 if (raw === '') return;   // 清空重输的中间态，不打断输入
                 const v = parseFloat(raw);
-                if (!Number.isFinite(v)) return;
-                this.GS.userTradeVolume = Math.min(this.GS.maxTradeVolume, Math.max(0, v));
+                if (!Number.isFinite(v)) return;   // "-"、"1e" 等中间态
+                const clamped = Math.min(this.GS.maxTradeVolume, Math.max(0, v));
+                this.GS.userTradeVolume = clamped;
+                // 超出范围时立刻回显被夹后的值，让玩家看到真实生效的数字；
+                // 范围内的半截输入（"2."）保持原样，等玩家敲完。
+                if (clamped !== v) this.volumeDraft = this.volumeText(clamped);
             },
-            // 失焦 / 回车时收尾：清空或非法输入回落到上限，并把规范化后的值写回 DOM。
-            // 直接写 DOM 是因为 clamp 后数值可能没变，Vue 不会重渲染，输入框会停在
-            // 用户敲的原始文本上，与 GameState 不一致。
+            // 失焦 / 回车时收尾：清空或非法输入回落到上限，并把规范化后的值写回显示。
             onVolumeCommit(e) {
                 let v = parseFloat(e.target.value);
                 if (!Number.isFinite(v)) v = this.GS.maxTradeVolume;
                 v = Math.min(this.GS.maxTradeVolume, Math.max(0, v));
                 this.GS.userTradeVolume = v;
-                // 只在显示值与状态真的不一致时回写，避免无谓地改写 DOM
-                // 打断原生箭头的连续点击。
-                if (e.target.value !== String(v)) e.target.value = String(v);
+                this.volumeDraft = this.volumeText(v);
+            },
+            // 速率框每次输入只记草稿，不调引擎——避免把用户的半截输入当成速率反复裁剪。
+            onRateInput(r, e) {
+                this.rateDrafts[r] = e.target.value;
             },
             onRateChange(r, e) {
                 let newRate = parseFloat(e.target.value);
                 if (isNaN(newRate)) newRate = 0;
-                const result = TradeEngine.setTradeRate(this.GS, r, newRate);
-                // setTradeRate 可能裁剪速率，状态更新后输入框自动回显实际值
+                TradeEngine.setTradeRate(this.GS, r, newRate);
+                this.rateDrafts[r] = undefined;   // 交还给状态回显（可能已被裁剪）
                 computeProductionAndCaps();
             },
             oneTimeTrade(r, type) {

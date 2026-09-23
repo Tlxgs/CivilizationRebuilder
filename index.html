@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>文明重建者</title>
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=0.8.3">
     <style>
         /* 防止 Vue 挂载前闪现未编译模板 */
         [v-cloak] { display: none; }
@@ -77,59 +77,59 @@
     </div>
 
     <!-- 框架：Vue 3（本地全局构建包，含模板编译器；无需构建步骤，file:// 与 GitHub Pages 均可直接运行） -->
-    <script src="vendor/vue.global.prod.js"></script>
+    <script src="vendor/vue.global.prod.js?v=0.8.3"></script>
 
     <!-- 基础数据和工具 -->
-    <script src="config/resourcesConfig.js"></script>
-    <script src="config/localResourceConfig.js"></script>
-    <script src="config/buildingsConfig.js"></script>
-    <script src="config/achievementConfig.js"></script>
-    <script src="config/techsConfig.js"></script>
-    <script src="config/eventsConfig.js"></script>
-    <script src="config/upgradesConfig.js"></script>
-    <script src="config/policiesConfig.js"></script>
-    <script src="config/permanentConfig.js"></script>
+    <script src="config/resourcesConfig.js?v=0.8.3"></script>
+    <script src="config/localResourceConfig.js?v=0.8.3"></script>
+    <script src="config/buildingsConfig.js?v=0.8.3"></script>
+    <script src="config/achievementConfig.js?v=0.8.3"></script>
+    <script src="config/techsConfig.js?v=0.8.3"></script>
+    <script src="config/eventsConfig.js?v=0.8.3"></script>
+    <script src="config/upgradesConfig.js?v=0.8.3"></script>
+    <script src="config/policiesConfig.js?v=0.8.3"></script>
+    <script src="config/permanentConfig.js?v=0.8.3"></script>
 
     <!-- 游戏引擎（与 UI 解耦，逻辑保持不变） -->
-    <script src="effectsManager.js"></script>
-    <script src="recourcesManager.js"></script>
-    <script src="logic.js"></script>
-    <script src="data.js"></script>
-    <script src="utils.js"></script>
-    <script src="core.js"></script>
-    <script src="queue.js"></script>
-    <script src="formulas.js"></script>
-    <script src="tradeEngine.js"></script>
-    <script src="gameloop.js"></script>
-    <script src="saveLoad.js"></script>
-    <script src="debug.js"></script>
-    <script src="production.js"></script>
-    <script src="eventEffects.js"></script>
-    <script src="changeLog.js"></script>
+    <script src="effectsManager.js?v=0.8.3"></script>
+    <script src="recourcesManager.js?v=0.8.3"></script>
+    <script src="logic.js?v=0.8.3"></script>
+    <script src="data.js?v=0.8.3"></script>
+    <script src="utils.js?v=0.8.3"></script>
+    <script src="core.js?v=0.8.3"></script>
+    <script src="queue.js?v=0.8.3"></script>
+    <script src="formulas.js?v=0.8.3"></script>
+    <script src="tradeEngine.js?v=0.8.3"></script>
+    <script src="gameloop.js?v=0.8.3"></script>
+    <script src="saveLoad.js?v=0.8.3"></script>
+    <script src="debug.js?v=0.8.3"></script>
+    <script src="production.js?v=0.8.3"></script>
+    <script src="eventEffects.js?v=0.8.3"></script>
+    <script src="changeLog.js?v=0.8.3"></script>
 
     <!-- UI 模块（Vue 组件；common 最先加载，index 最后装配） -->
-    <script src="ui/common.js"></script>
-    <script src="ui/tooltip.js"></script>
-    <script src="ui/population.js"></script>
-    <script src="ui/resourceBar.js"></script>
-    <script src="ui/actions.js"></script>
-    <script src="ui/tabs.js"></script>
-    <script src="ui/buildings.js"></script>
-    <script src="ui/tech.js"></script>
-    <script src="ui/policy.js"></script>
-    <script src="ui/permanent.js"></script>
-    <script src="ui/reset.js"></script>
-    <script src="ui/trade.js"></script>
-    <script src="ui/crystal.js"></script>
-    <script src="ui/changelog.js"></script>
-    <script src="ui/achievements.js"></script>
-    <script src="ui/log.js"></script>
-    <script src="ui/queue.js"></script>
-    <script src="ui/importModal.js"></script>
-    <script src="ui/app.js"></script>
-    <script src="ui/index.js"></script>   <!-- 装配入口 -->
+    <script src="ui/common.js?v=0.8.3"></script>
+    <script src="ui/tooltip.js?v=0.8.3"></script>
+    <script src="ui/population.js?v=0.8.3"></script>
+    <script src="ui/resourceBar.js?v=0.8.3"></script>
+    <script src="ui/actions.js?v=0.8.3"></script>
+    <script src="ui/tabs.js?v=0.8.3"></script>
+    <script src="ui/buildings.js?v=0.8.3"></script>
+    <script src="ui/tech.js?v=0.8.3"></script>
+    <script src="ui/policy.js?v=0.8.3"></script>
+    <script src="ui/permanent.js?v=0.8.3"></script>
+    <script src="ui/reset.js?v=0.8.3"></script>
+    <script src="ui/trade.js?v=0.8.3"></script>
+    <script src="ui/crystal.js?v=0.8.3"></script>
+    <script src="ui/changelog.js?v=0.8.3"></script>
+    <script src="ui/achievements.js?v=0.8.3"></script>
+    <script src="ui/log.js?v=0.8.3"></script>
+    <script src="ui/queue.js?v=0.8.3"></script>
+    <script src="ui/importModal.js?v=0.8.3"></script>
+    <script src="ui/app.js?v=0.8.3"></script>
+    <script src="ui/index.js?v=0.8.3"></script>   <!-- 装配入口 -->
 
     <!-- 主入口 -->
-    <script src="main.js"></script>
+    <script src="main.js?v=0.8.3"></script>
 </body>
 </html>
