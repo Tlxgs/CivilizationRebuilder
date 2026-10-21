@@ -86,14 +86,30 @@ function assertSoon(fn, msg, timeout = 3000) {
     assert(!!$('#happiness-display') && $('#happiness-display').textContent.includes('幸福度'), '幸福度显示渲染');
     assert(!!$('#current-date') && $('#current-date').textContent.includes('年'), '日期显示渲染: ' + $('#current-date').textContent);
     assert(!!$('#current-season'), '季节显示渲染');
-    // 初始可见标签：建筑/科技/成就/选项/更新日志（政策/贸易/晶体/永恒未解锁）
+    // 初始可见标签：建筑/科技/成就/统计/选项/更新日志（政策/贸易/晶体/永恒未解锁）
     const tabIds = $$('.tab-btn').map(b => b.dataset.tab);
-    assert(JSON.stringify(tabIds) === JSON.stringify(['building', 'tech', 'achievements', 'reset', 'changelog']),
+    assert(JSON.stringify(tabIds) === JSON.stringify(['building', 'tech', 'achievements', 'stats', 'reset', 'changelog']),
         '初始可见标签正确: ' + tabIds.join(','));
     assert($$('#panel-building .sub-tab-btn').length > 0, '建筑面板渲染了大分类子标签');
     assert($('#panel-tech .sub-tab-btn[data-subtab="tech"]') !== null, '科技面板渲染了子标签');
     assert($('#panel-building').style.display !== 'none' && $('#panel-tech').style.display === 'none',
         '仅建筑面板可见（v-show）');
+
+    console.log('== 2b. 统计界面 ==');
+    const statsTab = $('.tab-btn[data-tab="stats"]');
+    assert(!!statsTab, '统计标签始终显示');
+    statsTab.click();
+    await wait(50);
+    assert($('#panel-stats').style.display !== 'none' && $('#panel-building').style.display === 'none',
+        '点击统计标签后切换到统计面板');
+    const statsText = $('#panel-stats').textContent;
+    assert(statsText.includes('当前周目游戏天数') && statsText.includes('总计游戏天数') && statsText.includes('周目数'),
+        '统计面板显示天数与周目数');
+    assert(statsText.includes('永恒升级总计加成'), '统计面板显示永恒升级总计加成');
+    // 初始没有已研究的永恒升级，不应出现 0% 的加成行
+    assert($$('#panel-stats .stats-bonus-row').length === 0, '没有永恒升级时不渲染 0% 加成行');
+    $('.tab-btn[data-tab="building"]').click();
+    await wait(50);
 
     console.log('== 3. 行动面板 + 响应式资源条 ==');
     const woodBtn = $$('.action-btn').find(b => b.dataset.action === 'collect_wood');
@@ -114,6 +130,7 @@ function assertSoon(fn, msg, timeout = 3000) {
 
     console.log('== 5. 游戏循环推进日期 ==');
     await assertSoon(() => (G().gameDays || 0) >= 1, '游戏循环运行，gameDays 达到 1');
+    assert((G().totalGameDays || 0) >= 1, '游戏循环同步累计 totalGameDays: ' + G().totalGameDays);
     const dateText = $('#current-date').textContent;
     assert(/\d+年\d+日/.test(dateText) && dateText !== '0年1日', '日期随天数推进: ' + dateText);
 
@@ -338,6 +355,17 @@ function assertSoon(fn, msg, timeout = 3000) {
     permBtn.click();
     await wait(50);
     assert(G().permanent['节约成本I'].researched === true, '购买永恒升级成功');
+    // 统计界面应汇总该永恒升级的加成，且不显示 0% 的行
+    $('.tab-btn[data-tab="stats"]').click();
+    await wait(50);
+    const bonusValues = $$('#panel-stats .stats-bonus-value').map(el => el.textContent.trim());
+    const bonusLabels = $$('#panel-stats .stats-bonus-label').map(el => el.textContent.trim());
+    assert(bonusValues.includes('-5.00%'), '统计界面显示建筑成本总计 -5.00%: ' + bonusValues.join(','));
+    assert(bonusValues.every(v => v !== '+0.00%' && v !== '0.00%' && v !== '-0.00%'),
+        '统计界面不显示 0% 加成行: ' + bonusValues.join(','));
+    assert(bonusLabels.every(label => !/[（(]/.test(label)), '永恒加成名称不含括号: ' + bonusLabels.join(','));
+    $('.tab-btn[data-tab="permanent"]').click();
+    await wait(50);
 
     console.log('== 20. 成就面板（F12 彩蛋） ==');
     window.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'F12' }));
@@ -351,10 +379,14 @@ function assertSoon(fn, msg, timeout = 3000) {
 
     console.log('== 21. 软重置 ==');
     window.debugBuild('帐篷', 5);
+    const totalDaysBeforeReset = G().totalGameDays;
+    const runsBeforeReset = G().runCount;
     vm.runInContext('softReset(0, 0)', context);
     await wait(100);
     assert(G().buildings['帐篷'].count === 0, '软重置清空建筑数量');
     assert(G().gameDays <= 1, '软重置清零游戏天数（循环可能已推进 1 天）');
+    assert(G().totalGameDays >= totalDaysBeforeReset, '软重置不清空总计游戏天数');
+    assert(G().runCount === runsBeforeReset + 1, '软重置后周目数 +1: ' + runsBeforeReset + '→' + G().runCount);
 
     console.log('== 22. 离线时间结算 ==');
     vm.runInContext('GameState.lastSaveTime = Date.now() - 10000', context);
@@ -475,6 +507,24 @@ function assertSoon(fn, msg, timeout = 3000) {
         copyGameExportText = window.__realCopyExport;
         saveGame = window.__realSaveGame;
     `, context);
+
+    console.log('== 27. 回归：旧存档缺少统计字段时的默认值 ==');
+    const savedWithStats = window.localStorage.getItem('civilizationRebuilder');
+    assert(!!savedWithStats, '存在可修改的存档');
+    if (savedWithStats) {
+        const legacySave = JSON.parse(savedWithStats);
+        legacySave.gameDays = 321;
+        delete legacySave.totalGameDays;
+        delete legacySave.runCount;
+        window.localStorage.setItem('civilizationRebuilder', JSON.stringify(legacySave));
+        window.loadGame();
+        await wait(50);
+        assert(G().totalGameDays === 321, '旧存档缺少 totalGameDays 时用当前游戏天数初始化: ' + G().totalGameDays);
+        assert(G().runCount === 1, '旧存档缺少 runCount 时初始化为 1（第 1 周目）');
+        $('.tab-btn[data-tab="stats"]').click();
+        await wait(50);
+        assert($('#panel-stats').textContent.includes('当前周目游戏天数'), '旧存档下统计界面正常渲染');
+    }
 
     console.log(`\n==== 结果: ${passed} 通过, ${failed} 失败 ====`);
     window.GameLoop.stop();

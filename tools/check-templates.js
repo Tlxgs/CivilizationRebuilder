@@ -103,7 +103,7 @@ globals.forEach(g => {
 // 按 index.html 中的顺序加载 UI 文件
 const uiFiles = ['common.js', 'tooltip.js', 'population.js', 'resourceBar.js', 'actions.js',
     'tabs.js', 'buildings.js', 'tech.js', 'policy.js', 'permanent.js', 'reset.js', 'trade.js',
-    'crystal.js', 'changelog.js', 'achievements.js', 'log.js', 'queue.js', 'importModal.js',
+    'crystal.js', 'changelog.js', 'achievements.js', 'stats.js', 'log.js', 'queue.js', 'importModal.js',
     'app.js', 'index.js'];
 
 for (const f of uiFiles) {

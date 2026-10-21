@@ -47,6 +47,8 @@ function getSaveData() {
     const saveData = {
         version: "1.0",
         gameDays: GameState.gameDays,
+        totalGameDays: GameState.totalGameDays || 0,
+        runCount: GameState.runCount || 1,
         lastSaveTime: GameState.lastSaveTime,
         speed: GameState.speed,  
         seed: GameState.seed, 
@@ -271,6 +273,11 @@ function refreshGameStateFromSave(saveData) {
     if (saveData.lastSaveTime !== undefined) GameState.lastSaveTime = saveData.lastSaveTime;
     if (saveData.speed !== undefined) GameState.speed = saveData.speed;
     if (saveData.gameDays !== undefined) GameState.gameDays = saveData.gameDays;
+    // 旧存档没有统计字段：累计天数用当前游戏天数初始化，周目数按第 1 周目处理，避免出现 undefined / NaN。
+    GameState.totalGameDays = Number.isFinite(saveData.totalGameDays)
+        ? Math.max(0, Math.floor(saveData.totalGameDays))
+        : Math.max(0, Math.floor(GameState.gameDays) || 0);
+    GameState.runCount = Number.isFinite(saveData.runCount) ? Math.max(1, Math.floor(saveData.runCount)) : 1;
     if (saveData.autoWarEnabled !== undefined) GameState.autoWarEnabled = saveData.autoWarEnabled;
 
     // 7. 处理 activeRandomEvents（需要重建对象结构）

@@ -1,6 +1,8 @@
 function softReset(extraRelic = 0, extraDarkEnergy = 0,extraSpore=0,extraSingularity=0,extraWisdom=0) {
     clearQueue();
     GameState.gameDays = 0;
+    // 周目统计：累计天数不清零，已完成的周目数 +1。
+    GameState.runCount = (GameState.runCount || 0) + 1;
     GameState.speed = 1;
     GameState.activeRandomEvents = [];
     for (let r in GameState.resources) {

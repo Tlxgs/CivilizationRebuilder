@@ -1180,3 +1180,81 @@ body.dark-theme .building-card.highlight {
         min-height: 125%;
     }
 }
+/* ===== 统计界面 ===== */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 0.8rem;
+    margin-bottom: 1.4rem;
+}
+
+.stat-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 0.8rem;
+    padding: 1rem 1.2rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.stat-card-label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    margin-bottom: 0.4rem;
+}
+
+.stat-card-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--accent);
+    word-break: break-all;
+}
+
+.stat-card-unit {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    margin-left: 0.25rem;
+}
+
+.stats-section-title {
+    margin: 0 0 0.4rem 0;
+    font-size: 1rem;
+    color: var(--text-heading);
+}
+
+.stats-summary,
+.stats-empty {
+    margin: 0 0 0.8rem 0;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.stats-bonus-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 0.5rem;
+}
+
+.stats-bonus-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-card);
+    border-radius: 0.5rem;
+    padding: 0.55rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+.stats-bonus-label {
+    color: var(--text-secondary);
+}
+
+.stats-bonus-value {
+    color: var(--accent);
+    font-weight: 600;
+    white-space: nowrap;
+}

@@ -23,6 +23,7 @@
             <div id="panel-crystal" class="panel" v-show="ui.currentTab === 'crystal'"><crystal-panel></crystal-panel></div>
             <div id="panel-permanent" class="panel" v-show="ui.currentTab === 'permanent'"><permanent-panel></permanent-panel></div>
             <div id="panel-achievements" class="panel" v-show="ui.currentTab === 'achievements'"><achievements-panel></achievements-panel></div>
+            <div id="panel-stats" class="panel" v-show="ui.currentTab === 'stats'"><stats-panel></stats-panel></div>
             <div id="panel-reset" class="panel" v-show="ui.currentTab === 'reset'"><reset-panel></reset-panel></div>
             <div id="panel-changelog" class="panel" v-show="ui.currentTab === 'changelog'"><changelog-panel></changelog-panel></div>
         </div>

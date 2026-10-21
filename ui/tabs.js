@@ -9,6 +9,7 @@
         { id: 'crystal', label: '晶体' },
         { id: 'permanent', label: '永恒' },
         { id: 'achievements', label: '成就' },
+        { id: 'stats', label: '统计' },
         { id: 'reset', label: '选项' },
         { id: 'changelog', label: '更新日志' },
     ];

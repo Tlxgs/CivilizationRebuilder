@@ -129,6 +129,8 @@
  * @property {Object.<string, PermanentState>} permanent
  * @property {Object.<string, AchievementState>} achievements
  * @property {number} gameDays
+ * @property {number} totalGameDays - 所有周目累计的游戏天数（软重置不清零）
+ * @property {number} runCount - 当前周目数（初始为 1，每次软重置 +1；界面直接显示该值）
  * @property {number} happiness
  * @property {number} speed
  * @property {Object.<string, number>} tradeRates
@@ -290,6 +292,10 @@ function initGameData() {
     GameState.season = 0;
     GameState.seasonDayCounter = 0;
     GameState.gameDays = 0;
+    // 统计字段：累计天数从 0 开始，当前周目数从第 1 周目开始；
+    // 旧存档缺少字段时由 saveLoad 分别兜底为当前游戏天数 / 1。
+    GameState.totalGameDays = 0;
+    GameState.runCount = 1;
     GameState.activeRandomEvents = [];
     GameState.eventLogs = [];
     GameState.happinessContributions = [];

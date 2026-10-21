@@ -31,6 +31,7 @@ const GameLoop = (function() {
 
     function advanceDay() {
         GameState.gameDays++;
+        GameState.totalGameDays = (GameState.totalGameDays || 0) + 1;
         // 日期与季节由 UI 层根据 gameDays 响应式派生，此处不再直接操作 DOM
 
         // 事件过期检查
